@@ -50,8 +50,8 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       '@pandacss/preset-panda':
-        specifier: ^2.4.0
-        version: 2.4.0
+        specifier: ^2.5.0
+        version: 2.5.0
       '@playwright/test':
         specifier: ^1.64.1
         version: 1.64.1
@@ -446,12 +446,8 @@ packages:
     resolution: {integrity: sha512-1g2LxmmZqyT/JPUWTeooegPfK3S5LkPqusbAKdl+ZBCjyZN0qIHMgGOvoSck4LotSD7BUwSReDaOLRMO7GCTpg==}
     engines: {node: '>=22'}
 
-  '@pandacss/preset-panda@2.4.0':
-    resolution: {integrity: sha512-fXG9fYUp/uAv7WUKV1EWfnYnt9yWR/V4NbRYTV5nRTRZYZvpS365bpEsE5oaJTihnOqe9nR8uBH4FWZ9+gTSqQ==}
-    engines: {node: '>=22'}
-
-  '@pandacss/types@2.4.0':
-    resolution: {integrity: sha512-W2ELCg6MjSyHXOa5/Z9pQ+S39jKcYWRQIC0bu3Ycg6NPDh/qOz8cc9Kr5LMO9Iskd3F8a2MdBl3BuUR+PvR6oQ==}
+  '@pandacss/preset-panda@2.5.0':
+    resolution: {integrity: sha512-snArKcPnoAd3sHsTqUomaGjpar1oit2HCoS19oUJfme+FA6u0wN+7vbU3OVOdDcHfR4zN4GD00Qfw816hPM55Q==}
     engines: {node: '>=22'}
 
   '@pandacss/types@2.5.0':
@@ -2013,11 +2009,9 @@ snapshots:
     dependencies:
       '@pandacss/types': 2.5.0
 
-  '@pandacss/preset-panda@2.4.0':
+  '@pandacss/preset-panda@2.5.0':
     dependencies:
-      '@pandacss/types': 2.4.0
-
-  '@pandacss/types@2.4.0': {}
+      '@pandacss/types': 2.5.0
 
   '@pandacss/types@2.5.0': {}
 
