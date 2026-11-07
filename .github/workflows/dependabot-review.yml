@@ -52,7 +52,7 @@ jobs:
           node-version: "24"
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
       # Dependabot はコミットメッセージ末尾に updated-dependencies ブロックを埋め込む。
       # ここから update-type を取り出す（グループ更新では複数エントリになる）。
@@ -84,7 +84,7 @@ jobs:
 
       - name: Run Claude Code review
         id: claude
-        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6 # v1.0.264
+        uses: anthropics/claude-code-action@4845bacbb38b3c4b15d948f035349786f678e068 # v1.0.267
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
