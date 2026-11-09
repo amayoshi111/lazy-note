@@ -13,7 +13,7 @@ t-wada的なTest-Driven Developmentのサイクル（Red-Green-Refactor）に従
 - 実装コードより先にテストを書く
 - テストが失敗することを確認してから実装に進む
 - 一度に扱うテストケースは1つに絞る
-- masterへの直接コミット禁止、ブランチを切ってから作業すること
+- mainへの直接コミット禁止、ブランチを切ってから作業すること
 - テストランナー・アサーションは**Vitestに完全に寄せる**（`describe` / `it` / `expect` / `vi` は `vitest` から import）
 - **`node:assert` の使用禁止**: `node:assert` / `assert` / `node:assert/strict` からの import は禁止。アサーションは必ず `expect` を使う
 - テストリストを先に作り、優先順位をつけてから着手する（t-wadaの「TODOリスト」方式）

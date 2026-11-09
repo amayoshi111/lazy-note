@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 ## 起動時の絶対遵守事項
 
-- masterブランチへの直接コミットは禁止
+- mainブランチへの直接コミットは禁止
 - 作業前に必ずブランチを作成すること（プレフィックス: `feat/`, `fix/`, `chore/`, `refactor/`, `update/`, `posts/`）
 - force-push禁止、rebase禁止
 - PRはテンプレート（`.github/pull_request_template.md`）に従って作成

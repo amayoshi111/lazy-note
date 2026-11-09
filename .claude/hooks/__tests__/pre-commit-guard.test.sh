@@ -86,7 +86,7 @@ MAIN_REPO="$TEST_ROOT/main-repo"
 WORKTREE="$TEST_ROOT/work-tree"
 
 setup_test_repo() {
-  git init -q -b master "$MAIN_REPO"
+  git init -q -b main "$MAIN_REPO"
   (
     cd "$MAIN_REPO"
     git config user.email test@example.com
@@ -97,7 +97,7 @@ setup_test_repo() {
     git config core.hooksPath "$GITHOOKS_DIR"
     echo init > README.md
     git add README.md
-    # 初回 init commit は master 上で行うため、本来 native pre-commit が block する。
+    # 初回 init commit は main 上で行うため、本来 native pre-commit が block する。
     # ここは setup なので明示的に --no-verify を使う (現実のリポ運用と分離した
     # テスト fixture 整備のため許容)。
     git -c commit.gpgsign=false commit -q --no-verify -m init
@@ -256,7 +256,7 @@ add_case() {
 # --- baseline (sanity) -------------------------------------------------------
 add_case "S01" "block" "sanity" \
   "$MAIN_REPO" "$GIT commit -m x" \
-  "direct commit on master is blocked"
+  "direct commit on main is blocked"
 
 add_case "S02" "pass" "sanity" \
   "$WORKTREE" "$GIT commit -m x" \
@@ -284,7 +284,7 @@ add_case "R05" "pass" "fix-required" \
   "consecutive cd: cd worktree && cd subdir && commit"
 
 # Issue #592: cd 後の subshell で shell hook の cwd 解析は main-repo に
-# 落ちて「master 判定 → block」となるが、実際にコマンドを eval すると
+# 落ちて「main 判定 → block」となるが、実際にコマンドを eval すると
 # subshell 内で cwd は worktree (= feat/test) なので native hook は pass する。
 # 本ケースは shell hook が安全側に block する挙動を block-via-native (= 両層で
 # どちらかが block すれば OK) として固定する。Issue #592 完了後に shell hook の
@@ -377,7 +377,7 @@ add_case "CA11" "pass" "literal-newline" \
 
 # --- rebase / force push (regression sanity) ---------------------------------
 add_case "RB01" "block" "sanity" \
-  "$WORKTREE" "$GIT rebase master" \
+  "$WORKTREE" "$GIT rebase main" \
   "git rebase is blocked"
 
 add_case "FP01" "block" "sanity" \
@@ -566,7 +566,7 @@ print(json.dumps({"tool_input": {"command": sys.argv[1]}}))
 # 既存の $MAIN_REPO は他テストとの兼ね合いで core.hooksPath=$GITHOOKS_DIR (本リポの)
 # が固定されているため、preflight 検証では別リポを作る。
 PREFLIGHT_REPO="$TEST_ROOT/preflight-repo"
-git init -q -b master "$PREFLIGHT_REPO"
+git init -q -b main "$PREFLIGHT_REPO"
 (
   cd "$PREFLIGHT_REPO"
   git config user.email test@example.com

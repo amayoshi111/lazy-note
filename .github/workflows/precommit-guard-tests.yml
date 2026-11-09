@@ -13,14 +13,14 @@ name: pre-commit-guard tests
 #                  別途 TOTAL 行の literal 一致 grep で SKIP 件数 (known-limitation)
 #                  の regression を検知する (Issue #569 AC: SKIP 件数を CI 上で固定化)。
 #
-# トリガーは pull_request のみ。CLAUDE.md で master への直接 commit / push は
+# トリガーは pull_request のみ。CLAUDE.md で main への直接 commit / push は
 # 禁止されており、既存の lint / test workflow (ci.yml / test.yml / a11y.yml /
 # playwright.yml) もすべて pull_request トリガーで統一されているため、本
 # workflow もそれに揃える。
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
 
 # 本 workflow は repo を読むだけで write は不要。明示的に最小権限へ縛る。
 permissions:

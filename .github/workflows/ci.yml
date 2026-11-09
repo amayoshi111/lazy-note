@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   lint-and-typecheck:
@@ -53,7 +53,7 @@ jobs:
       #   (例: `walkDirectory` の 4 引数版 ↔ 3 引数版を取り違える TS2554)。
       #   src 変更ごとに strict match (key 完全一致) のみで cache 採用するよう、4 entry すべての
       #   restoreKeys を撤去し、stale cache 起因の誤診断を根絶する。trade-off:
-      #     - cache hit 率は下がる (master 取り込み等で src hash が変わると毎回 clean build)
+      #     - cache hit 率は下がる (main 取り込み等で src hash が変わると毎回 clean build)
       #     - CI 時間増加分は main / test / scripts / api 各 entry で数十秒程度
       #     - 信頼性 > 速度 と判断
       - name: Cache tsc main build info (Issue #640)
@@ -97,7 +97,7 @@ jobs:
       # Issue #730: PR #640 で `tsc-api-*` cache step を ci.yml にも追加したが、ci.yml では
       # `type-check:api` を実行する step が無く、cache が read/write されない「片肺運用」に
       # なっていた。`type-check:api` step を追加することで以下を解消する:
-      #   - api 型エラーを PR 段階で検知できる (従来は master push 時の deploy.yml まで未検知)
+      #   - api 型エラーを PR 段階で検知できる (従来は main push 時の deploy.yml まで未検知)
       #   - tsc-api cache を ci.yml ↔ deploy.yml の双方向で活用できる (cache key 整合性の回復)
       - name: Type check (api) (Issue #730)
         run: pnpm type-check:api
