@@ -33,7 +33,7 @@ disable-model-invocation: true
 - `git status`
 
 以下を確認:
-- 現在ブランチがmasterではない
+- 現在ブランチがmainではない
 - ブランチ名が指定プレフィックスで始まる
 - 未コミットの変更が残っていない
 
