@@ -4,7 +4,7 @@
 # 規約の **単一情報源 (SSOT)** (Issue #649 / Moderate 4)。
 #
 # 設計方針:
-#   - 「master / main 直 commit 禁止」と「AI bot 由来 Co-Authored-By 禁止」の
+#   - 「main 直 commit 禁止」と「AI bot 由来 Co-Authored-By 禁止」の
 #     2 規約は、これまで `.githooks/pre-commit` / `.githooks/commit-msg` /
 #     `.claude/hooks/pre-commit-guard.sh` の 3 箇所に literal で散在しており、
 #     片方を更新し忘れる二重管理リスクがあった。
@@ -13,7 +13,7 @@
 #
 # 提供インターフェース:
 #   - PROTECTED_BRANCHES         : 直接 commit を禁止するブランチ名の配列
-#                                  例: PROTECTED_BRANCHES=("master" "main")
+#                                  例: PROTECTED_BRANCHES=("main")
 #   - PROTECTED_BRANCHES_RE      : パイプ区切り版 (POSIX grep -E 向け)
 #   - COAUTHOR_HEADER_RE         : `Co-Authored-By:` 行検出用 ERE (本文向け)
 #   - COAUTHOR_LITERAL_HEADER_RE : `Co-Authored-By:` 検出用 ERE (literal 引数向け)
@@ -26,7 +26,7 @@
 #                                    が含まれれば exit 0 (行単位 AND 判定)
 #
 # 適用箇所:
-#   - .githooks/pre-commit  (master / main 直 commit 拒否)
+#   - .githooks/pre-commit  (main 直 commit 拒否)
 #   - .githooks/commit-msg  (AI bot 由来 Co-Authored-By 検出)
 #   - .claude/hooks/pre-commit-guard.sh (Bash PreToolUse hook の早期 FB 層)
 #
@@ -38,10 +38,10 @@
 
 # 直接 commit を禁止するブランチ名 (SSOT)
 # 追加する場合はここに足すだけで全 hook に伝播する。
-PROTECTED_BRANCHES=("master" "main")
+PROTECTED_BRANCHES=("main")
 
 # パイプ区切り版 (POSIX grep -E などで使う)。
-# 例: "master|main"
+# 例: PROTECTED_BRANCHES=("main" "develop") なら "main|develop"
 PROTECTED_BRANCHES_RE=$(IFS='|'; printf '%s' "${PROTECTED_BRANCHES[*]}")
 
 # ----------------------------------------------------------------------------
@@ -134,7 +134,7 @@ COAUTHOR_LITERAL_PATTERN="$COAUTHOR_LITERAL_HEADER_RE"
 
 # ブランチ名が保護対象に含まれているかを判定する。
 # 含まれていれば exit 0、それ以外は exit 1。
-# 引数: $1 = ブランチ名 (例: master / feat/foo / 空文字)
+# 引数: $1 = ブランチ名 (例: main / feat/foo / 空文字)
 is_protected_branch() {
   local name="${1:-}"
   if [ -z "$name" ]; then

@@ -14,7 +14,7 @@
 #   が起動されても、本 hook を bypass することは git の動作上不可能になる。
 #
 # 本 hook の責務:
-#   1. master / main ブランチへの直接 commit を拒否する
+#   1. main ブランチへの直接 commit を拒否する
 #      (HEAD detached や rebase 中の特殊状態では何も判定しない)
 #
 # 適用方法 (各開発者がローカルで一度だけ設定する):
@@ -37,7 +37,7 @@ fi
 . "$_LIB"
 
 # 現在のブランチ名を取得する。
-# - 通常コミット: `git symbolic-ref --short HEAD` で feat/xxx / master 等が取れる
+# - 通常コミット: `git symbolic-ref --short HEAD` で feat/xxx / main 等が取れる
 # - detached HEAD (rebase / cherry-pick 中等): symbolic-ref は失敗するので skip
 # - merge commit や revert 中も symbolic-ref は有効なので通常通り判定する
 

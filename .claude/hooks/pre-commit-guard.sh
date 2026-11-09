@@ -10,9 +10,9 @@
 #   shell の文字列解析ですべての bypass を塞ぐのは本質的に不可能。
 #
 #   そのため、本 hook の責務は「shell コマンド文字列で素直に判定できるもの」に
-#   絞り、bypass 不可能性を要求する判定 (= master/main 直 commit, Co-Authored-By)
+#   絞り、bypass 不可能性を要求する判定 (= main 直 commit, Co-Authored-By)
 #   は **git ネイティブ hook が真の防御層** となる:
-#     - `.githooks/pre-commit`  → master/main 直 commit を必ず block
+#     - `.githooks/pre-commit`  → main 直 commit を必ず block
 #     - `.githooks/commit-msg`  → Co-Authored-By を必ず block
 #   本 shell hook は **同じ規約に対する補助的な早期フィードバック層** として残す
 #   (= 防御深さ / UX 向上)。理由:
@@ -29,11 +29,11 @@
 #      (native hook 側の対応は本 Issue #592 のスコープ外。shell hook が唯一の防御)
 #   3. コミットメッセージ内に `Co-Authored-By` を含めない — `-m`/`--message` 引数の文字列判定
 #      ※ 真の防御は `.githooks/commit-msg`。本 hook は -m "..." の literal のみ早期検知
-#   4. 保護ブランチ (master/main) への直接 commit/push 拒否 (best-effort)
+#   4. 保護ブランチ (main) への直接 commit/push 拒否 (best-effort)
 #      ※ 真の防御は `.githooks/pre-commit`。本 hook は素朴な経路のみ早期検知
 #
 # 規約 SSOT (Issue #649 / Moderate 4):
-#   「保護ブランチ名 (master/main)」「Co-Authored-By 検出 regex」は
+#   「保護ブランチ名 (main)」「Co-Authored-By 検出 regex」は
 #   `.githooks/_lib.sh` に集約済み。本 hook 起動時に source して
 #   PROTECTED_BRANCHES / COAUTHOR_PATTERN / is_protected_branch を共有する。
 #
@@ -242,7 +242,7 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
     {
       printf '\n'
       printf '[pre-commit-guard] WARNING: core.hooksPath が .githooks に設定されていません (現在値: %s)\n' "$_hp_display"
-      printf '[pre-commit-guard]   → master/main 直 commit や Co-Authored-By を block する git ネイティブ hook が発火しません\n'
+      printf '[pre-commit-guard]   → main 直 commit や Co-Authored-By を block する git ネイティブ hook が発火しません\n'
       printf '[pre-commit-guard]   → リポジトリルートで次のコマンドを実行してください:\n'
       printf '[pre-commit-guard]       git config core.hooksPath .githooks\n'
       printf '\n'
@@ -498,7 +498,7 @@ if cwd:
 PY
 }
 
-# master/main への直接 commit / push 拒否
+# main への直接 commit / push 拒否
 if printf '%s\n' "$GIT_INVOCATIONS" | grep -Eq '^git[[:space:]]+(commit|push)([[:space:]]|$)'; then
   # base_cwd は hook プロセスの cwd (= Bash ツール実行時の cwd)
   BASE_CWD=$(pwd)
