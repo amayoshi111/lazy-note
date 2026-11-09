@@ -71,7 +71,7 @@
  *     1. biome.jsonc の上記 3 ルールを `"error"` + `maxAllowedComplexity: 8` に上げる
  *     2. `pnpm lint` を実行し、scripts/calculateContrast.ts の違反 0 を確認
  *     3. `pnpm test:run` で挙動の regression がないことを確認
- *     4. `node scripts/calculateContrast.ts --csv` の出力が master HEAD と
+ *     4. `node scripts/calculateContrast.ts --csv` の出力が main HEAD と
  *        完全一致することを `md5sum` で確認
  *
  *   ## CI 常設化を見送る理由

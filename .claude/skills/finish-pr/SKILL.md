@@ -10,12 +10,12 @@ disable-model-invocation: true
 
 以下は本skill実行中、常に遵守する。hooks等の外部機構に依存せず、本skill自身が確認する。
 
-- **masterブランチへの直接コミット禁止**
+- **mainブランチへの直接コミット禁止**
 - **force-push禁止**（`git push --force`および`--force-with-lease`は使用しない）
 - **rebase禁止**（`git rebase`は使用しない。コンフリクトは`git merge`で解決）
 - **コミットメッセージにCo-Authored-By行を含めない**
 - **PR説明文にアシスタントツールへの言及を含めない**
-- **masterへの直接マージ禁止**（必ずPull Request経由）
+- **mainへの直接マージ禁止**（必ずPull Request経由）
 - **ブランチ名プレフィックス必須**（`feat/`, `fix/`, `chore/`, `refactor/`, `update/`, `posts/`のいずれか）
 - **既存ブランチへの無関係な変更禁止**
 
@@ -39,16 +39,16 @@ disable-model-invocation: true
 
 ### ステップ2: コミット履歴の検証
 
-`git log master..HEAD --format="%H %s%n%b"` を実行。
+`git log main..HEAD --format="%H %s%n%b"` を実行。
 
 以下を確認:
 - Co-Authored-By行が含まれていない
 - コミットメッセージがプロジェクト規約に沿う
 - 作業範囲外のファイル変更が含まれていない
 
-### ステップ3: masterとの差分確認
+### ステップ3: mainとの差分確認
 
-`git diff master...HEAD --stat` を実行し、変更ファイル一覧がPRの目的と一致するか検証。
+`git diff main...HEAD --stat` を実行し、変更ファイル一覧がPRの目的と一致するか検証。
 
 ### ステップ4: テスト・リント実行
 
@@ -72,7 +72,7 @@ PR本文にアシスタントツールへの言及を含めない。
 
 - 禁止事項違反を検知→即中断、ユーザーに違反内容と修正案を報告
 - テスト失敗→修正してから再実行
-- コンフリクト発生→masterを作業ブランチにmergeして解決（rebaseは使わない）
+- コンフリクト発生→mainを作業ブランチにmergeして解決（rebaseは使わない）
 
 ## 終了条件
 
