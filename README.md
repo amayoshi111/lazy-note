@@ -35,25 +35,38 @@ React 19 + TypeScript + Panda CSSを使用したシンプルなブログアプ�
 - **Biome** - 高速なリンター・フォーマッター
 - **GitHub Actions** - CI/CDパイプライン
 
+### ランタイム・パッケージ管理
+
+- **Bun** - JavaScript ランタイム兼パッケージマネージャ（依存のインストールと、スクリプト・各 CLI の実行に使用）
+
 ## セットアップ
 
 ### 前提条件
 
-- Node.js 24以上（`.nvmrc` に準拠）
-- pnpm
+- [Bun](https://bun.com/) 1.4.4（`package.json` の `packageManager` に準拠）
+
+Node.js と pnpm は不要です。`bun run` で起動する CLI（Vite / Vitest / Panda CSS / tsc / Biome / Playwright）は、`bunfig.toml` の `run.bun` により、Node.js が入っている環境でも Bun 上で実行されます。
 
 ### インストール
 
 ```bash
 # 依存関係のインストール
-pnpm install
+bun install
 
 # git ネイティブ hooks を有効化 (初回 clone 時に一度だけ実行)
 git config core.hooksPath .githooks
 
 # 開発サーバー起動
-pnpm dev
+bun run dev
 ```
+
+`bun install` の最後に `Blocked 1 postinstall` と表示されますが、これは意図した動作です。`@parcel/watcher`（Panda CSS の依存）のソースビルド用スクリプトを実行せず、同梱済みのビルド済みバイナリを使っています。依存パッケージのスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行されます。
+
+### Bun 上で実行するうえでの注意
+
+- **スクリプトは必ず `bun run <名前>` で実行する**: `bun test` と `bun build` は Bun 組み込みのテストランナーとバンドラを起動するコマンドで、`package.json` の `test` / `build` は実行されません。`bun test` は取り違え防止のため、案内を出して失敗するようにしてあります（`bunfig.toml` の `test.preload`）
+- **Bun のバージョンは `package.json` の `packageManager` で固定している**: CI（`oven-sh/setup-bun`）もこの値を読みます。Dependabot はこの値を更新しないため、Bun を上げるときは手動で書き換えます
+- **Bun を上げるときはテスト・E2E・ビルドを通して確認する**: Vite / Vitest / Playwright / Panda CSS は公式には Node.js を動作対象としており、Bun 上での実行は Bun の Node.js 互換機能に依存しています
 
 ### git hooks の有効化 (必須)
 
@@ -73,7 +86,7 @@ git config core.hooksPath .githooks
 `postinstall` での自動セットアップは採用していません。理由は以下:
 
 - `git config core.hooksPath` はリポジトリローカルの設定を書き換える副作用を持ち、ユーザーが意図的に別の hooks path (例: husky / lefthook) を併用している場合に上書きしてしまう
-- CI 環境 (GitHub Actions 等) では hooks は不要なため、`pnpm install --frozen-lockfile` 時に毎回実行される副作用は避けたい
+- CI 環境 (GitHub Actions 等) では hooks は不要なため、`bun install --frozen-lockfile` 時に毎回実行される副作用は避けたい
 - 一度実行すれば永続するため、README に書く方が運用上シンプル
 
 ### 利用可能なコマンド
@@ -81,73 +94,73 @@ git config core.hooksPath .githooks
 ```bash
 # --- 開発・ビルド ---
 # 開発サーバー起動（Panda CSS ウォッチモード付き）
-pnpm dev
+bun run dev
 
 # プロダクションビルド（リント・テスト・型チェック・ビルドを順次実行）
-pnpm build
+bun run build
 
 # ビルドプレビュー
-pnpm preview
+bun run preview
 
 # Panda CSSコード生成
-pnpm prepare
+bun run prepare
 
 # --- テスト ---
 # テスト実行（ウォッチモード）
-pnpm test
+bun run test
 
 # テスト実行（1回のみ）
-pnpm test:run
+bun run test:run
 
 # テストUI起動
-pnpm test:ui
+bun run test:ui
 
 # アクセシビリティ E2E テスト（Playwright + axe-core）
-pnpm test:a11y
+bun run test:a11y
 
 # E2E テスト（Playwright）
-pnpm e2e
+bun run e2e
 
 # --- リント・フォーマット ---
 # リント実行
-pnpm lint
+bun run lint
 
 # フォーマット実行
-pnpm fmt
+bun run fmt
 
 # デザイントークン lint（生 CSS 値の混入検知）
-pnpm lint:tokens
+bun run lint:tokens
 
 # --- 型チェック ---
 # src の型チェック
-pnpm type-check
+bun run type-check
 
 # API（src/api）の型チェック
-pnpm type-check:api
+bun run type-check:api
 
 # テストコードの型チェック
-pnpm type-check:test
+bun run type-check:test
 
 # scripts の型チェック
-pnpm type-check:scripts
+bun run type-check:scripts
 
 # --- コントラスト検証 ---
 # コントラスト比チェック（WCAG）
-pnpm contrast:check
+bun run contrast:check
 
 # コントラスト比マトリクスを CSV 出力
-pnpm contrast:matrix
+bun run contrast:matrix
 
 # --- フォント ---
 # self-host フォントの再取得
-pnpm fonts:download
+bun run fonts:download
 
 # フォントの SHA-256 検証
-pnpm fonts:verify
+bun run fonts:verify
 
 # --- 記事 ---
 # 新しい記事を作成
-pnpm new-post
+bun run new-post
 ```
 
 ## プロジェクト構造
@@ -267,7 +280,7 @@ styled-system/       # Panda CSS 自動生成ファイル（.gitignore 済み、
 - `src/api/__tests__/` - API のテスト
 - `scripts/__tests__/` - スクリプトのテスト
 
-E2E / アクセシビリティテスト（Playwright）は `e2e/` 配下に配置されています（`pnpm e2e` / `pnpm test:a11y` で実行）。
+E2E / アクセシビリティテスト（Playwright）は `e2e/` 配下に配置されています（`bun run e2e` / `bun run test:a11y` で実行）。
 
 全てのテストケース名は日本語で記述されており、TDD（テスト駆動開発）の原則に従って開発されています。
 

@@ -6,22 +6,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 基本コマンド
 
-**重要**: `pnpm dev`を実行する前に、必ず`pnpm i`で最新の依存関係をインストールしてください。
+**重要**: `bun run dev`を実行する前に、必ず`bun install`で最新の依存関係をインストールしてください。
 
-- `pnpm i` - 依存関係のインストール（最初に必ず実行）
-- `pnpm dev` - 開発サーバー起動（Panda CSS ウォッチモード付き）
-- `pnpm build` - プロダクションビルド（lint・テスト・型チェック(src/api/scripts)を全て通した後、Panda CSS生成 → tsc(src + api) → Vite ビルド）
-- `pnpm test` - テストをウォッチモードで実行
-- `pnpm test:run` - テストを1回実行
-- `pnpm test:ui` - Vitest UIでテスト実行
-- `pnpm fmt` - Biomeによるフォーマット実行
-- `pnpm lint` - Biomeによるリント実行
-- `pnpm prepare` - Panda CSS コード生成
+- `bun install` - 依存関係のインストール（最初に必ず実行）
+- `bun run dev` - 開発サーバー起動（Panda CSS ウォッチモード付き）
+- `bun run build` - プロダクションビルド（lint・テスト・型チェック(src/api/scripts)を全て通した後、Panda CSS生成 → tsc(src + api) → Vite ビルド）
+- `bun run test` - テストをウォッチモードで実行
+- `bun run test:run` - テストを1回実行
+- `bun run test:ui` - Vitest UIでテスト実行
+- `bun run fmt` - Biomeによるフォーマット実行
+- `bun run lint` - Biomeによるリント実行
+- `bun run prepare` - Panda CSS コード生成
+
+**スクリプトは必ず `bun run <名前>` で実行すること**。`bun test` と `bun build` は Bun 組み込みのテストランナーとバンドラを起動するコマンドで、`package.json` の `test`（Vitest）/ `build` は実行されない。`bun test` は取り違え防止のため、案内を出して失敗するようにしてある（`bunfig.toml` の `test.preload` → `scripts/bunTestGuard.ts`）。
+
+`node_modules/.bin` の CLI を直接使うときも `bun run <CLI 名>`（例: `bun run biome lint src/api/posts.ts`）で実行する。`bunx` は `bunfig.toml` の `run.bun` が効かず Node.js で動くうえ、ローカルに無いパッケージを自動で取得してしまう。
 
 ## アーキテクチャ概要
 
 ### 技術スタック
 
+- **ランタイム / パッケージマネージャ**: Bun（Node.js と pnpm は使わない。`bun run` で起動する Vite / Vitest / Panda CSS / tsc / Biome / Playwright は、`bunfig.toml` の `run.bun` により Bun 上で実行される。バージョンは `package.json` の `packageManager` で固定）
 - **フロントエンド**: React 19 + TypeScript
 - **ビルドツール**: Vite 8
 - **テスト**: Vitest + React Testing Library + jsdom
@@ -135,6 +140,7 @@ Tripwire テスト用に吐く data-* 属性の命名は以下を指針とする
 
 ### 設定ファイル
 
+- Bun: `bunfig.toml` で次の 3 点を設定している。公開から 1 日未満のバージョンを新規解決の対象から外す（`install.minimumReleaseAge`）、`bun run` で起動する CLI を Node.js ではなく Bun で実行する（`run.bun`）、`bun test` を案内付きで失敗させる（`test.preload`）。依存パッケージのライフサイクルスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行される（現在は空で、どのパッケージのスクリプトも実行しない）
 - TypeScript: 厳格モード、ES2020ターゲット、バンドラー解決
 - Biome: ダブルクォート、セミコロン必須、スペース2個インデント
 - Vite: React JSX 変換プラグイン（`@vitejs/plugin-react`）と、Markdown コピー / API ミドルウェア登録 / 画像コピーを担う独自インラインプラグイン（`vite.config.ts` 内、現状名 `datasources-plugin`）を設定。自動ルート生成方式のプラグイン（`vite-plugin-pages` 等）は導入していない
