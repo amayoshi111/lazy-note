@@ -4,7 +4,7 @@ name: pre-commit-guard tests
 # ハーネスを CI に統合し、regression を検出可能にする。
 #
 # 実行対象は `.claude/hooks/__tests__/pre-commit-guard.test.sh` のみで、
-# pnpm install や Panda CSS 生成といった重い手順は不要。shell だけで動くため
+# bun install や Panda CSS 生成といった重い手順は不要。shell だけで動くため
 # 既存の lint / test workflow とは分離して短時間で完結させる。
 #
 # harness exit code contract (テスト側と共有):

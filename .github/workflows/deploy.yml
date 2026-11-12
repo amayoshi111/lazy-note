@@ -21,19 +21,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7.1.0
-        with:
-          node-version: "24"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6.1.1
+      # Bun のバージョンは package.json の packageManager (bun@x.y.z) から決まる。
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       # Issue #655: ci.yml (lint-and-typecheck job) と同じ cache key を共有し、
-      # deploy 時の tsc (pnpm run build 内の `tsc` / `type-check` / `type-check:scripts` / `type-check:api`) の
+      # deploy 時の tsc (bun run build 内の `tsc` / `type-check` / `type-check:scripts` / `type-check:api`) の
       # cold ビルドを回避する。
       # Issue #640: PR #580 では 4 つの .tsbuildinfo を `.tsbuildinfo/` 1 entry でまとめていたため、
       # test ファイル変更で本体 buildinfo の cache key まで invalidate される過剰 invalidation が
@@ -58,7 +54,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.tsbuildinfo
-          key: tsc-main-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
+          key: tsc-main-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
 
       # test 側 cache: tsconfig.test.json は tsconfig.json を継承するため、本体ソースの変更でも
       # invalidate する必要がある (本体 + テストファイル両方を hash 対象に含める)。
@@ -66,14 +62,14 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.test.tsbuildinfo
-          key: tsc-test-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.test.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
+          key: tsc-test-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.test.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
 
       # scripts 側 cache: tsconfig.scripts.json は scripts/ のみを対象 (Issue #634)。
       - name: Cache tsc scripts build info (Issue #640)
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.scripts.tsbuildinfo
-          key: tsc-scripts-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
+          key: tsc-scripts-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
 
       # api 側 cache: tsconfig.api.json は src/api/ のみを対象 (Issue #667)。
       # ただし src/api/posts.ts は ../lib/markdownParser を import するため、src/lib も hash 対象に含める。
@@ -81,10 +77,10 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.api.tsbuildinfo
-          key: tsc-api-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
+          key: tsc-api-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
 
       - name: Build project
-        run: pnpm run build
+        run: bun run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
