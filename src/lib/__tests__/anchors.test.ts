@@ -666,7 +666,7 @@ describe("型定義: status / tags / updatedAt を露出しない", () => {
  * `@ts-expect-error` で固定する。
  *
  * Vitest の `// @ts-expect-error` ディレクティブは型エラーが発生しなければ
- * 「Unused @ts-expect-error directive」として `pnpm type-check` (tsc --noEmit)
+ * 「Unused @ts-expect-error directive」として `bun run type-check` (tsc --noEmit)
  * が失敗するため、回帰テストとして機能する。
  *
  * 実行時アサーションは行わない (型レベルでの検証が目的)。

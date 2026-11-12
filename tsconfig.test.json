@@ -7,7 +7,7 @@
   // 本体 tsconfig は src/api/** を exclude しているが (Issue #667)、
   // テスト側は src/api/__tests__/posts.test.ts と src/lib/__tests__/*.ts (node:fs 等を
   // 使うもの) を含めて型チェックする必要があるため、exclude を空配列で上書きし、
-  // types に "node" を追加して Node API を型付き参照可能にする。
+  // types に "node" を追加して Node.js 互換 API を型付き参照可能にする。
   "extends": "./tsconfig.json",
   "compilerOptions": {
     // vite/client は src 配下のテストが import.meta.env 等を参照するため必要。

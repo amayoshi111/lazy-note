@@ -32,7 +32,7 @@ type StartViewTransitionFn = (callback: () => void | Promise<void>) => void;
 /**
  * `document.startViewTransition` が利用可能か判定する。
  *
- * - SSR / Node 環境では document が undefined のため false を返す。
+ * - SSR などブラウザ外の実行環境では document が undefined のため false を返す。
  * - Safari 17 以前など View Transitions API 未対応ブラウザでは
  *   "startViewTransition" プロパティが document に存在せず false を返す。
  *
@@ -48,7 +48,7 @@ const isViewTransitionSupported = (): boolean => {
 /**
  * `prefers-reduced-motion: reduce` が指定されているか判定する。
  *
- * - SSR / Node 環境では window が undefined のため false を返す。
+ * - SSR などブラウザ外の実行環境では window が undefined のため false を返す。
  * - matchMedia 自体が存在しない (古いブラウザ等) 場合も false を返す
  *   (アニメーション続行扱い: 視覚的に moderate motion のため)。
  *

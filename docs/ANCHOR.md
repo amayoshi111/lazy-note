@@ -35,7 +35,7 @@ Anchor は epic #487 で導入された「個人史座標」機能の総称。3 
 - **Resurface**: HomePage の新着エリア下に独立スロットを設け、
   過去記事を 1 件浮上させる経路。3 経路 (沈黙トリガー / 暦の節目 /
   節目記念日) を `selectResurfaced` でまとめて扱う
-- **Cast**: `pnpm new-post` 実行時に生成される .md の本文直前に
+- **Cast**: `bun run new-post` 実行時に生成される .md の本文直前に
   「今日の座標」HTML コメントを仕込む経路。読者画面では
   `sanitizePostHtml` により除去され、運営者向けメモとして機能する
 
@@ -333,7 +333,7 @@ import を削除する。
 
 ### 3. Cast の撤退手順
 
-Cast は `pnpm new-post` 実行時にのみ動く (=記事生成時の付加情報)。**既存記事の
+Cast は `bun run new-post` 実行時にのみ動く (=記事生成時の付加情報)。**既存記事の
 .md には Cast の火種コメントが入っていない**。仮に火種が入った .md があっても、
 公開ページでは `sanitizePostHtml` (DOMPurify) が HTML コメントを除去するため、
 読者の画面には現れない。
@@ -362,8 +362,8 @@ Cast に `show` フラグは無い。撤退するときは下記の「旧版に�
   revert 対象から外す
 
 影響範囲:
-- これ以降 `pnpm new-post` で生成される .md に火種コメントが入らなくなる
-- **`pnpm new-post` 実行時の stdout に出る節目サマリ** (📍 現在登録されて
+- これ以降 `bun run new-post` で生成される .md に火種コメントが入らなくなる
+- **`bun run new-post` 実行時の stdout に出る節目サマリ** (📍 現在登録されて
   いる節目... の行) **も消える** (`formatMilestonesSummary` の出力ごと
   落ちる)
 - **既存記事への影響は無い** (火種は HTML コメントとして .md に残るが、

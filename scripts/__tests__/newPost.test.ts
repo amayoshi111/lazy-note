@@ -731,7 +731,7 @@ describe("buildPostMarkdown: 完全な .md 出力", () => {
 // 本テスト群はこれらの回帰を `@ts-expect-error` で固定する。
 //
 // 検証手段: `// @ts-expect-error` ディレクティブは型エラーが発生しなければ
-// 「Unused @ts-expect-error directive」として `pnpm type-check:test` が失敗
+// 「Unused @ts-expect-error directive」として `bun run type-check:test` が失敗
 // するため、回帰テストとして機能する (`anchors.test.ts` の Issue #497 型レベル
 // テストと同様の方式)。実行時アサーションは行わない。
 describe("型レベル: IgnitionInput.coordinates の discriminator 化 (Issue #523)", () => {

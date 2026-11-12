@@ -17,9 +17,9 @@
  *   - --csv: docs/contrast-matrix.csv 用の CSV (surface × fg 全組合せ)
  *
  * 使い方:
- *   pnpm contrast:check                # ペアの AAA / AA 検証 (CI 用)
- *   pnpm contrast:matrix               # docs/contrast-matrix.csv を生成
- *   node scripts/calculateContrast.ts --strict
+ *   bun run contrast:check                # ペアの AAA / AA 検証 (CI 用)
+ *   bun run contrast:matrix               # docs/contrast-matrix.csv を生成
+ *   bun scripts/calculateContrast.ts --strict
  *     # マージン僅少 (1.05 倍以内) も fail にする
  *
  * Biome 厳格化耐性 (Issue #623 で実機検証、2026-05-17 / Issue #653 で SSoT 化):
@@ -69,9 +69,9 @@
  *   ## 再現手順 (任意の検証ブランチで)
  *
  *     1. biome.jsonc の上記 3 ルールを `"error"` + `maxAllowedComplexity: 8` に上げる
- *     2. `pnpm lint` を実行し、scripts/calculateContrast.ts の違反 0 を確認
- *     3. `pnpm test:run` で挙動の regression がないことを確認
- *     4. `node scripts/calculateContrast.ts --csv` の出力が main HEAD と
+ *     2. `bun run lint` を実行し、scripts/calculateContrast.ts の違反 0 を確認
+ *     3. `bun run test:run` で挙動の regression がないことを確認
+ *     4. `bun scripts/calculateContrast.ts --csv` の出力が main HEAD と
  *        完全一致することを `md5sum` で確認
  *
  *   ## CI 常設化を見送る理由

@@ -80,7 +80,7 @@ PR 時点では CI の `validateMilestonesStrict` テストが検出する。
 - **Resurface (節目記念日)**: 節目記念日経路のみ `heavy` を除外する
   (沈黙トリガー / 暦の節目は `milestones.json` を参照しないので影響なし。
   詳細は本ドキュメント末尾の「Resurface の `heavy` 除外スコープ」節を参照)
-- **Cast (.md 火種コメント)**: `pnpm new-post` 実行時に .md 本文直前へ仕込む
+- **Cast (.md 火種コメント)**: `bun run new-post` 実行時に .md 本文直前へ仕込む
   HTML コメント。`heavy` は `[重い節目]` の補助マーク付きで残る
   (詳細は次節「補助マークの注意」を参照)
 
@@ -89,7 +89,7 @@ PR 時点では CI の `validateMilestonesStrict` テストが検出する。
 - 上表の「Cast」列にある補助マーク (`[重い節目]`) は **`.md` 火種コメント** に
   入る文字列のことで、`scripts/newPost.ts` の `buildIgnitionComment` が
   `coord.tone === "heavy"` のときだけ付加する (`light` / `neutral` は素のラベル)。
-- 一方、`pnpm new-post` 実行時の **stdout サマリ** (📍 現在登録されている節目...
+- 一方、`bun run new-post` 実行時の **stdout サマリ** (📍 現在登録されている節目...
   の行) は別経路 (`formatMilestonesSummary`) で、こちらは `light` に `[軽め]` /
   `heavy` に `[重い節目]` の 2 種類のマークが付く。同じ「マーク表示」でも出力先と
   ルールが違うため混同しないこと。

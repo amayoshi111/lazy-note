@@ -8,8 +8,8 @@ import { useEffect } from "react";
  * 再現手順:
  *   1. `biome.jsonc` の `noExcessiveCognitiveComplexity` の `maxAllowedComplexity`
  *      を 8 に下げる
- *   2. `pnpm exec biome lint src/hooks/useCodeBlockCopy.ts` で違反 0 を確認
- *   3. `pnpm test:run` で既存テスト全 pass を確認
+ *   2. `bun run biome lint src/hooks/useCodeBlockCopy.ts` で違反 0 を確認
+ *   3. `bun run test:run` で既存テスト全 pass を確認
  *
  * 公開 API シグネチャ (`useCodeBlockCopy` の引数・戻り値) は不変。
  */
