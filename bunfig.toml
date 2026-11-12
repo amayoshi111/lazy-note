@@ -7,6 +7,11 @@
 # Bun の既定は無効。bun.lock に記録済みのバージョンには影響しない。
 minimumReleaseAge = 86400
 
+# node_modules を isolated レイアウトにする。トップレベルには package.json に書いた依存だけが
+# 置かれ、書いていない推移依存は import できなくなる (pnpm と同じ厳密さ)。
+# Bun の既定は、ワークスペースを使わない単一パッケージでは hoisted (フラットな配置)。
+linker = "isolated"
+
 [run]
 # package.json の scripts と node_modules/.bin の CLI (vite / vitest / panda / tsc /
 # biome / playwright) を、Node.js ではなく Bun で実行する。これらの CLI は
