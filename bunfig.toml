@@ -14,3 +14,9 @@ minimumReleaseAge = 86400
 # `bun run` のたびに `--bun` を付けるのと同じ意味。`bunx` と、`bun install` が
 # 実行する prepare スクリプトには効かない (prepare は package.json 側で `--bun` を付けている)。
 bun = true
+
+[test]
+# `bun test` は Bun 組み込みのテストランナーを起動するコマンドで、このプロジェクトの
+# Vitest (`bun run test`) は実行されない。取り違えて実行しても大量の失敗が出るだけなので、
+# 起動時に案内を出して終了させる。preload は `bun test` のときだけ読み込まれる。
+preload = ["./scripts/bunTestGuard.ts"]
