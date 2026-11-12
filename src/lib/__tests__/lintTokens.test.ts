@@ -15,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
  * R-5 (Issue #393) `pnpm lint:tokens` (scripts/lintTokens.ts) の動作テスト。
  *
  * scripts/ 配下のスクリプトはアプリ src の外側にあり、Vitest の include 対象外。
- * そのため subprocess (Node) で実行し、stdout / exit code を検証する形を取る。
+ * そのため subprocess (Bun) で実行し、stdout / exit code を検証する形を取る。
  *
  * - 旧 token を含むダミーソースファイルを tmp ディレクトリに書き出して
  *   scripts/lintTokens.ts を import する単体テストは難しいため、E2E 形式で
@@ -45,7 +45,7 @@ const PROJECT_ROOT = resolve(HERE, "..", "..", "..");
 const SCRIPT_PATH = join(PROJECT_ROOT, "scripts", "lintTokens.ts");
 
 const runScript = (envOverrides: NodeJS.ProcessEnv = {}) => {
-  return spawnSync("node", [SCRIPT_PATH], {
+  return spawnSync("bun", [SCRIPT_PATH], {
     cwd: PROJECT_ROOT,
     encoding: "utf8",
     env: {
