@@ -65,6 +65,7 @@ bun run dev
 ### Bun 上で実行するうえでの注意
 
 - **スクリプトは必ず `bun run <名前>` で実行する**: `bun test` と `bun build` は Bun 組み込みのテストランナーとバンドラを起動するコマンドで、`package.json` の `test` / `build` は実行されません。`bun test` は取り違え防止のため、案内を出して失敗するようにしてあります（`bunfig.toml` の `test.preload`）
+- **`package.json` に書いていない依存は import できない**: `bunfig.toml` の `install.linker = "isolated"` により、`node_modules` のトップレベルには `package.json` に書いた依存だけが置かれます。他のパッケージ経由で入っているだけの推移依存を使いたいときは、`bun add` で明示的に追加します
 - **Bun のバージョンは `package.json` の `packageManager` で固定している**: CI（`oven-sh/setup-bun`）もこの値を読みます。Dependabot はこの値を更新しないため、Bun を上げるときは手動で書き換えます
 - **Bun を上げるときはテスト・E2E・ビルドを通して確認する**: Vite / Vitest / Playwright / Panda CSS は公式には Node.js を動作対象としており、Bun 上での実行は Bun の Node.js 互換機能に依存しています
 

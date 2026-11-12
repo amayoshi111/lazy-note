@@ -140,7 +140,7 @@ Tripwire テスト用に吐く data-* 属性の命名は以下を指針とする
 
 ### 設定ファイル
 
-- Bun: `bunfig.toml` で次の 3 点を設定している。公開から 1 日未満のバージョンを新規解決の対象から外す（`install.minimumReleaseAge`）、`bun run` で起動する CLI を Node.js ではなく Bun で実行する（`run.bun`）、`bun test` を案内付きで失敗させる（`test.preload`）。依存パッケージのライフサイクルスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行される（現在は空で、どのパッケージのスクリプトも実行しない）
+- Bun: `bunfig.toml` で次の 4 点を設定している。公開から 1 日未満のバージョンを新規解決の対象から外す（`install.minimumReleaseAge`）、`node_modules` を isolated レイアウトにして `package.json` に書いていない推移依存を import できないようにする（`install.linker`）、`bun run` で起動する CLI を Node.js ではなく Bun で実行する（`run.bun`）、`bun test` を案内付きで失敗させる（`test.preload`）。依存パッケージのライフサイクルスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行される（現在は空で、どのパッケージのスクリプトも実行しない）
 - TypeScript: 厳格モード、ES2020ターゲット、バンドラー解決
 - Biome: ダブルクォート、セミコロン必須、スペース2個インデント
 - Vite: React JSX 変換プラグイン（`@vitejs/plugin-react`）と、Markdown コピー / API ミドルウェア登録 / 画像コピーを担う独自インラインプラグイン（`vite.config.ts` 内、現状名 `datasources-plugin`）を設定。自動ルート生成方式のプラグイン（`vite-plugin-pages` 等）は導入していない
