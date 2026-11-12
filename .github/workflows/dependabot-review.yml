@@ -43,10 +43,12 @@ jobs:
         with:
           fetch-depth: 1
 
-      # ランナーに Bun が無いため、Claude が bun install / bun audit を
-      # 実行できるようツールだけを用意する。依存のインストールはここでは行わない
-      # （bun audit は bun.lock だけを読むため、インストールしなくても実行できる）。
-      # Bun のバージョンは package.json の packageManager (bun@x.y.z) から決まる。
+      # Claude が bun install / bun audit を実行できるよう、Bun を用意する。
+      # 依存のインストールはこのステップでは行わない（PR head の prepare などの
+      # スクリプトを実行させないため。必要なら Claude が --ignore-scripts 付きで実行する）。
+      # ここで入るのは package.json の packageManager (bun@x.y.z) の版だが、後続の
+      # claude-code-action も内部で Bun を同じ場所に入れる。アクションが固定する版と
+      # 違う場合は、アクション側の版が使われる。
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 

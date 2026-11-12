@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **スクリプトは必ず `bun run <名前>` で実行すること**。`bun test` と `bun build` は Bun 組み込みのテストランナーとバンドラを起動するコマンドで、`package.json` の `test`（Vitest）/ `build` は実行されない。`bun test` は取り違え防止のため、案内を出して失敗するようにしてある（`bunfig.toml` の `test.preload` → `scripts/bunTestGuard.ts`）。
 
-`node_modules/.bin` の CLI を直接使うときも `bun run <CLI 名>`（例: `bun run biome lint src/api/posts.ts`）で実行する。`bunx` は `bunfig.toml` の `run.bun` が効かず Node.js で動くうえ、ローカルに無いパッケージを自動で取得してしまう。
+`node_modules/.bin` の CLI を直接使うときも `bun run <CLI 名>`（例: `bun run biome lint src/api/posts.ts`）で実行する。`bunx` には `bunfig.toml` の `run.bun` が効かないため、Node.js が入っている環境では Node.js で動いてしまう。また、ローカルに無いパッケージを自動で取得する。
 
 ## アーキテクチャ概要
 

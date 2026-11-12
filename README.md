@@ -60,7 +60,7 @@ git config core.hooksPath .githooks
 bun run dev
 ```
 
-`bun install` の最後に `Blocked 1 postinstall` と表示されますが、これは意図した動作です。`@parcel/watcher`（Panda CSS の依存）のソースビルド用スクリプトを実行せず、同梱済みのビルド済みバイナリを使っています。依存パッケージのスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行されます。
+`bun install` の最後に `Blocked 1 postinstall` と表示されますが、これは意図した動作です。`@parcel/watcher`（Panda CSS の依存）の install スクリプト（ソースからビルドするためのもの）を実行していません。ビルド済みのバイナリは、プラットフォーム別の依存パッケージ（`@parcel/watcher-<OS>-<CPU>`）として入ります。依存パッケージのスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行されます。
 
 ### Bun 上で実行するうえでの注意
 
