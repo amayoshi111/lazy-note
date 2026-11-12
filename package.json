@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "packageManager": "pnpm@11.2.2",
+  "packageManager": "bun@1.4.4",
   "scripts": {
     "dev": "panda --watch & vite",
     "build": "pnpm run lint && pnpm run test:run && pnpm run type-check && pnpm run type-check:api && pnpm run type-check:scripts && panda && tsc && tsc --project tsconfig.api.json && vite build",
@@ -58,5 +58,9 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "vitest": "^5.1.0"
-  }
+  },
+  "overrides": {
+    "axe-core": "4.11.4"
+  },
+  "trustedDependencies": []
 }
