@@ -43,16 +43,12 @@ jobs:
         with:
           fetch-depth: 1
 
-      # ランナーに pnpm が無いため、Claude が pnpm install / pnpm audit を
+      # ランナーに Bun が無いため、Claude が bun install / bun audit を
       # 実行できるようツールだけを用意する。依存のインストールはここでは行わない
-      # （公開直後の版が minimumReleaseAge で弾かれるとジョブ自体が落ちるため）。
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "24"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      # （bun audit は bun.lock だけを読むため、インストールしなくても実行できる）。
+      # Bun のバージョンは package.json の packageManager (bun@x.y.z) から決まる。
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
       # Dependabot はコミットメッセージ末尾に updated-dependencies ブロックを埋め込む。
       # ここから update-type を取り出す（グループ更新では複数エントリになる）。
@@ -99,7 +95,7 @@ jobs:
           # PR head のコードを実行させないため
           claude_args: >-
             --setting-sources user
-            --allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr checks:*),Bash(gh pr comment:*),Bash(gh api:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh release view:*),Bash(pnpm install --frozen-lockfile --ignore-scripts),Bash(pnpm audit),Bash(cat:*),Bash(grep:*),Write(//tmp/dependabot-review.md),Edit(//tmp/dependabot-review.md),WebSearch,WebFetch"
+            --allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr checks:*),Bash(gh pr comment:*),Bash(gh api:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh release view:*),Bash(bun install --frozen-lockfile --ignore-scripts),Bash(bun audit),Bash(cat:*),Bash(grep:*),Write(//tmp/dependabot-review.md),Edit(//tmp/dependabot-review.md),WebSearch,WebFetch"
           prompt: |
             あなたはこのリポジトリの依存関係更新レビュー担当です。
             対象PR: ${{ github.repository }}#${{ github.event.pull_request.number }}
@@ -110,7 +106,7 @@ jobs:
 
             1. `.github/DEPENDABOT_REVIEW_TEMPLATE.md` を読み、確認する観点と出力形式を把握する。
             2. `CLAUDE.md` を読み、依存関係に関する注意事項を確認する。
-            3. `gh pr diff` で `package.json` / `pnpm-lock.yaml` の差分を確認し、影響範囲を特定する。
+            3. `gh pr diff` で `package.json` / `bun.lock` の差分を確認し、影響範囲を特定する。
             4. CI の結果を確認し、観点表の CI 行と判定に反映する。
                確認には `gh pr checks ${{ github.event.pull_request.number }}` を使う。
                ビルドやテストはこのジョブでは実行せず、CI の結果を根拠とする（PR head のコードを実行させないため）。
@@ -120,10 +116,10 @@ jobs:
                `gh search issues` や WebSearch を使い、当該バージョンに対する不具合報告、
                リリース直後の revert / 追従リリースの有無を確認する。
                確認したクエリと結果（該当なしを含む）は調査ログに記載する。
-            7. セキュリティ観点を確認する。CVE/GHSA 修正の有無、pnpm-lock.yaml で新規に入る推移依存、
+            7. セキュリティ観点を確認する。CVE/GHSA 修正の有無、bun.lock で新規に入る推移依存、
                postinstall スクリプトの追加などサプライチェーン上のリスク。
-               可能なら `pnpm install --frozen-lockfile --ignore-scripts` の後
-               `pnpm audit` を実行する。
+               可能なら `bun install --frozen-lockfile --ignore-scripts` の後
+               `bun audit` を実行する。
             8. 調査結果を `.github/DEPENDABOT_REVIEW_TEMPLATE.md` の形式どおりにまとめ、
                レビュー本文を Write で `/tmp/dependabot-review.md` に書き出す。
                書き出した本文を記述ルールと照合し、違反があれば Edit で直してから、
