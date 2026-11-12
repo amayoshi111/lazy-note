@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
  * 新しい Markdown 記事を生成するスクリプト (Anchor / Cast 対応版)

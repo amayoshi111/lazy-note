@@ -5,3 +5,12 @@
 # pnpm 11 が既定で有効にしていた minimumReleaseAge (1440 分) と同じ保護を維持する。
 # Bun の既定は無効。bun.lock に記録済みのバージョンには影響しない。
 minimumReleaseAge = 86400
+
+[run]
+# package.json の scripts と node_modules/.bin の CLI (vite / vitest / panda / tsc /
+# biome / playwright) を、Node.js ではなく Bun で実行する。これらの CLI は
+# `#!/usr/bin/env node` で始まるため、この設定が無いと Node.js が入っている環境
+# (GitHub Actions のランナーなど) では Node.js で動いてしまう。
+# `bun run` のたびに `--bun` を付けるのと同じ意味。`bunx` と、`bun install` が
+# 実行する prepare スクリプトには効かない (prepare は package.json 側で `--bun` を付けている)。
+bun = true

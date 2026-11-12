@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
  * R-5 (Issue #393) で追加した、旧 5 段階パレット参照を CI で検出する Tripwire スクリプト。
