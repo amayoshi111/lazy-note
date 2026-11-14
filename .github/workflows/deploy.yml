@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.tsbuildinfo
-          key: tsc-main-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
+          key: tsc-main-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
 
       # test 側 cache: tsconfig.test.json は tsconfig.json を継承するため、本体ソースの変更でも
       # invalidate する必要がある (本体 + テストファイル両方を hash 対象に含める)。
@@ -62,14 +62,14 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.test.tsbuildinfo
-          key: tsc-test-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.test.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
+          key: tsc-test-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.test.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
 
       # scripts 側 cache: tsconfig.scripts.json は scripts/ のみを対象 (Issue #634)。
       - name: Cache tsc scripts build info (Issue #640)
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.scripts.tsbuildinfo
-          key: tsc-scripts-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
+          key: tsc-scripts-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
 
       # api 側 cache: tsconfig.api.json は src/api/ のみを対象 (Issue #667)。
       # ただし src/api/posts.ts は ../lib/markdownParser を import するため、src/lib も hash 対象に含める。
@@ -77,7 +77,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.api.tsbuildinfo
-          key: tsc-api-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
+          key: tsc-api-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
 
       - name: Build project
         run: bun run build

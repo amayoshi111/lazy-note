@@ -41,6 +41,10 @@ jobs:
       # 本体 cache の hashFiles から `src/**/*.{test,spec}.{ts,tsx}` を negation pattern で除外する
       # ことで、test 専用ファイルの変更が本体 cache key に波及しないようにする (Issue #640 の主目的)。
       #
+      # cache key に bunfig.toml を含める理由: .tsbuildinfo は node_modules 内のファイルのパスを
+      # 記録しており、そのパスは bunfig.toml の install.linker が決める node_modules のレイアウトで
+      # 変わる。linker を変えたときに、古いレイアウトで作った .tsbuildinfo を復元しないようにする。
+      #
       # restoreKeys 削除の経緯 (Issue #722 follow-up / PR #731):
       #   旧設定では各 entry に `tsc-<entry>-<OS>-<tsconfig-hash>-` および `tsc-<entry>-<OS>-` を
       #   restoreKeys として保持していたが、src/scripts の hash が不一致な過去 cache を fallback で
@@ -56,7 +60,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.tsbuildinfo
-          key: tsc-main-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
+          key: tsc-main-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
 
       # test 側 cache: tsconfig.test.json は tsconfig.json を継承するため、本体ソースの変更でも
       # invalidate する必要がある (本体 + テストファイル両方を hash 対象に含める)。
@@ -64,14 +68,14 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.test.tsbuildinfo
-          key: tsc-test-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.test.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
+          key: tsc-test-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.test.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
 
       # scripts 側 cache: tsconfig.scripts.json は scripts/ のみを対象 (Issue #634)。
       - name: Cache tsc scripts build info (Issue #640)
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.scripts.tsbuildinfo
-          key: tsc-scripts-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
+          key: tsc-scripts-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
 
       # api 側 cache: tsconfig.api.json は src/api/ のみを対象 (Issue #667)。
       # ただし src/api/posts.ts は ../lib/markdownParser を import するため、src/lib も hash 対象に含める。
@@ -79,7 +83,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.api.tsbuildinfo
-          key: tsc-api-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
+          key: tsc-api-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
 
       # tsc のエラーを、PR の該当ファイル・該当行への注釈として表示するための problem matcher を
       # 登録する。以前は actions/setup-node が登録していたが、oven-sh/setup-bun は登録しない。
