@@ -62,6 +62,8 @@ bun run dev
 
 `bun install` の最後に `Blocked 1 postinstall` と表示されますが、これは意図した動作です。`@parcel/watcher`（Panda CSS の依存）の install スクリプト（ソースからビルドするためのもの）を実行していません。ビルド済みのバイナリは、プラットフォーム別の依存パッケージ（`@parcel/watcher-<OS>-<CPU>`）として入ります。依存パッケージのスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行されます。
 
+スクリプトがブロックされても `bun install` は失敗しません（終了コードは 0 のままで、CI も通ります）。依存の更新後に `Blocked` の件数が増えていたら、install スクリプトを持つ依存が新しく入っています。`bun pm untrusted` で対象を確認し、スクリプトの実行が必要なものだけを `trustedDependencies` に追加してください。
+
 ### Bun 上で実行するうえでの注意
 
 - **スクリプトは必ず `bun run <名前>` で実行する**: `bun test` と `bun build` は Bun 組み込みのテストランナーとバンドラを起動するコマンドで、`package.json` の `test` / `build` は実行されません。`bun test` は取り違え防止のため、案内を出して失敗するようにしてあります（`bunfig.toml` の `test.preload`）
