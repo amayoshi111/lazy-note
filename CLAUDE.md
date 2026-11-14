@@ -22,11 +22,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `node_modules/.bin` の CLI を直接使うときも `bun run <CLI 名>`（例: `bun run biome lint src/api/posts.ts`）で実行する。`bunx` には `bunfig.toml` の `run.bun` が効かないため、Node.js が入っている環境では Node.js で動いてしまう。また、ローカルに無いパッケージを自動で取得する。
 
+**`bun run` と `bun test` はリポジトリのルートで実行すること**。どちらも実行したディレクトリにある `bunfig.toml` しか読み込まないため、`src/` などのサブディレクトリから実行すると、`run.bun` が効かず（Node.js が入っている環境では Node.js で動く）、`bun test` の取り違え防止も働かない。
+
 ## アーキテクチャ概要
 
 ### 技術スタック
 
-- **ランタイム / パッケージマネージャ**: Bun（Node.js と pnpm は使わない。`bun run` で起動する Vite / Vitest / Panda CSS / tsc / Biome / Playwright は、`bunfig.toml` の `run.bun` により Bun 上で実行される。バージョンは `package.json` の `packageManager` で固定）
+- **ランタイム / パッケージマネージャ**: Bun（Node.js と pnpm は使わない。`bun run` で起動する Vite / Vitest / Panda CSS / tsc / Biome / Playwright は、リポジトリのルートで実行すれば、`bunfig.toml` の `run.bun` により Bun 上で実行される。バージョンは `package.json` の `packageManager` で固定）
 - **フロントエンド**: React 19 + TypeScript
 - **ビルドツール**: Vite 8
 - **テスト**: Vitest + React Testing Library + jsdom
@@ -140,7 +142,7 @@ Tripwire テスト用に吐く data-* 属性の命名は以下を指針とする
 
 ### 設定ファイル
 
-- Bun: `bunfig.toml` で次の 4 点を設定している。公開から 1 日未満のバージョンを新規解決の対象から外す（`install.minimumReleaseAge`）、`node_modules` を isolated レイアウトにして `package.json` に書いていない推移依存を import できないようにする（`install.linker`）、`bun run` で起動する CLI を Node.js ではなく Bun で実行する（`run.bun`）、`bun test` を案内付きで失敗させる（`test.preload`）。依存パッケージのライフサイクルスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行される（現在は空で、どのパッケージのスクリプトも実行しない）
+- Bun: `bunfig.toml` で次の 4 点を設定している。公開から 1 日未満のバージョンを新規解決の対象から外す（`install.minimumReleaseAge`）、`node_modules` を isolated レイアウトにして `package.json` に書いていない推移依存を import できないようにする（`install.linker`）、`bun run` で起動する CLI を Node.js ではなく Bun で実行する（`run.bun`）、`bun test` を案内付きで失敗させる（`test.preload`）。このうち `run` と `test` の設定が読み込まれるのは、リポジトリのルートで実行したときだけ。依存パッケージのライフサイクルスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行される（現在は空で、どのパッケージのスクリプトも実行しない）
 - TypeScript: 厳格モード、ES2020ターゲット、バンドラー解決
 - Biome: ダブルクォート、セミコロン必須、スペース2個インデント
 - Vite: React JSX 変換プラグイン（`@vitejs/plugin-react`）と、Markdown コピー / API ミドルウェア登録 / 画像コピーを担う独自インラインプラグイン（`vite.config.ts` 内、現状名 `datasources-plugin`）を設定。自動ルート生成方式のプラグイン（`vite-plugin-pages` 等）は導入していない

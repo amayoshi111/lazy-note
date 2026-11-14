@@ -19,10 +19,14 @@ linker = "isolated"
 # (GitHub Actions のランナーなど) では Node.js で動いてしまう。
 # `bun run` のたびに `--bun` を付けるのと同じ意味。`bunx` と、`bun install` が
 # 実行する prepare スクリプトには効かない (prepare は package.json 側で `--bun` を付けている)。
+# また、効くのはリポジトリのルートで `bun run` を実行したときだけ。`bun run` と `bun test` は
+# 実行したディレクトリにある bunfig.toml しか読み込まないため、src/ などのサブディレクトリから
+# 実行すると、この [run] と下の [test] の設定は読み込まれない ([install] は読み込まれる)。
 bun = true
 
 [test]
 # `bun test` は Bun 組み込みのテストランナーを起動するコマンドで、このプロジェクトの
 # Vitest (`bun run test`) は実行されない。取り違えて実行しても大量の失敗が出るだけなので、
 # 起動時に案内を出して終了させる。preload は `bun test` のときだけ読み込まれる。
+# サブディレクトリから `bun test` を実行した場合は、上の [run] と同じ理由で読み込まれない。
 preload = ["./scripts/bunTestGuard.ts"]
