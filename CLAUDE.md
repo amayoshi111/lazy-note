@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 基本コマンド
 
-**重要**: `bun run dev`を実行する前に、必ず`bun install`で最新の依存関係をインストールしてください。
+**重要**: `git pull` やブランチの切り替えで `bun.lock` が変わったら、`bun run` でスクリプトを実行する前に、必ず`bun install`で最新の依存関係をインストールしてください。`bun run` は `node_modules` が `bun.lock` と合っているかを確認しないため、実行し忘れると古い依存のまま警告なしに動きます。
 
 - `bun install` - 依存関係のインストール（最初に必ず実行）
 - `bun run dev` - 開発サーバー起動（Panda CSS ウォッチモード付き）
