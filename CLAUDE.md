@@ -218,12 +218,21 @@ mainとコンフリクトした場合の解決手順：
 2. **最新の変更を取得**: `git pull origin main`
 3. **作業ブランチに戻る**: `git checkout [作業ブランチ名]`
 4. **mainをmerge**: `git merge main`
-5. **コンフリクト解決**: エディタでコンフリクトを手動解決
+5. **コンフリクト解決**: エディタでコンフリクトを手動解決（`bun.lock` は手動で編集せず、下の「`bun.lock` がコンフリクトした場合」の手順で解決する）
 6. **解決済みファイルをステージング**: `git add [解決済みファイル]`
 7. **マージコミット**: `git commit` (デフォルトメッセージを使用)
 8. **変更をpush**: `git push origin [作業ブランチ名]`
 
 **注意**: 絶対に`git rebase`は使用しないこと
+
+#### `bun.lock` がコンフリクトした場合
+
+コンフリクトマーカーが残った `bun.lock` に対して `bun install` を実行してはならない。Bun はロックファイルを読めないと、警告（`warn: Ignoring lockfile`）を 1 行出すだけで全依存を解決し直し、無関係なパッケージのバージョンまで変わった `bun.lock` を、エラーにせず保存する。次の順で解決すること:
+
+1. `package.json` のコンフリクトを先に手動で解決する
+2. `git checkout --theirs bun.lock` で main 側の `bun.lock` を採用する
+3. `bun install` を実行する（`package.json` との差分だけが `bun.lock` に反映される）
+4. `git diff main -- bun.lock` で、作業ブランチが変えた依存以外に差分が無いことを確認する
 
 ## TypeScriptコーディングルールについて
 
