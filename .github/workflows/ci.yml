@@ -81,6 +81,13 @@ jobs:
           path: .tsbuildinfo/tsconfig.api.tsbuildinfo
           key: tsc-api-${{ runner.os }}-${{ hashFiles('bun.lock', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
 
+      # tsc のエラーを、PR の該当ファイル・該当行への注釈として表示するための problem matcher を
+      # 登録する。以前は actions/setup-node が登録していたが、oven-sh/setup-bun は登録しない。
+      # 定義は actions/setup-node v7.1.0 の .github/tsc.json (MIT License) と同じもの。
+      # https://github.com/actions/toolkit/blob/main/docs/commands.md#problem-matchers
+      - name: Register tsc problem matcher
+        run: echo "::add-matcher::.github/problem-matchers/tsc.json"
+
       - name: Type check
         run: bun run type-check
 
