@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 技術スタック
 
-- **ランタイム / パッケージマネージャ**: Bun（Node.js と pnpm は使わない。`bun run` で起動する Vite / Vitest / Panda CSS / tsc / Biome / Playwright は、リポジトリのルートで実行すれば、`bunfig.toml` の `run.bun` により Bun 上で実行される。バージョンは `package.json` の `packageManager` で固定）
+- **ランタイム / パッケージマネージャ**: Bun（Node.js と pnpm は使わない。`bun run` で起動する Vite / Vitest / Panda CSS / tsc / Biome / Playwright は、リポジトリのルートで実行すれば、`bunfig.toml` の `run.bun` により Bun 上で実行される。CI が使うバージョンは `package.json` の `packageManager` で決まる。Bun 自身はこの値を検査しないため、手元の Bun は同じバージョンに揃える）
 - **フロントエンド**: React 19 + TypeScript
 - **ビルドツール**: Vite 8
 - **テスト**: Vitest + React Testing Library + jsdom

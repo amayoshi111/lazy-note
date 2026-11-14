@@ -43,7 +43,7 @@ React 19 + TypeScript + Panda CSSを使用したシンプルなブログアプ�
 
 ### 前提条件
 
-- [Bun](https://bun.com/) 1.4.4（`package.json` の `packageManager` に準拠）
+- [Bun](https://bun.com/)（バージョンは `package.json` の `packageManager` に書かれたもの）
 
 Node.js と pnpm は不要です。`bun run` で起動する CLI（Vite / Vitest / Panda CSS / tsc / Biome / Playwright）は、リポジトリのルートで実行すれば、`bunfig.toml` の `run.bun` により、Node.js が入っている環境でも Bun 上で実行されます。
 
@@ -68,7 +68,7 @@ bun run dev
 - **コマンドはリポジトリのルートで実行する**: `bun run` と `bun test` は、実行したディレクトリにある `bunfig.toml` しか読み込みません。`src/` などのサブディレクトリから実行すると、`run.bun` が効かず（Node.js が入っている環境では Node.js で動きます）、`bun test` の取り違え防止も働きません
 - **`bun.lock` が変わったら `bun install` をやり直す**: `bun run` は `node_modules` が `bun.lock` と合っているかを確認しません。`git pull` やブランチの切り替えの後に `bun install` を忘れると、古い依存のまま警告なしに動きます
 - **`package.json` に書いていない依存は import できない**: `bunfig.toml` の `install.linker = "isolated"` により、`node_modules` のトップレベルには `package.json` に書いた依存だけが置かれます。他のパッケージ経由で入っているだけの推移依存を使いたいときは、`bun add` で明示的に追加します
-- **Bun のバージョンは `package.json` の `packageManager` で固定している**: CI（`oven-sh/setup-bun`）もこの値を読みます。Dependabot はこの値を更新しないため、Bun を上げるときは手動で書き換えます
+- **Bun のバージョンは `package.json` の `packageManager` に書く**: CI（`oven-sh/setup-bun`）はこの値のバージョンを使います。Bun 自身はこの値を検査しないため、手元の Bun は `bun --version` で確認して同じバージョンに揃えます。Dependabot はこの値を更新しないため、Bun を上げるときは手動で書き換えます
 - **Bun を上げるときはテスト・E2E・ビルドを通して確認する**: Vite / Vitest / Playwright / Panda CSS は公式には Node.js を動作対象としており、Bun 上での実行は Bun の Node.js 互換機能に依存しています
 
 ### git hooks の有効化 (必須)
