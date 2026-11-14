@@ -13,24 +13,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7.1.0
-        with:
-          node-version: "24"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6.1.1
+      # Bun のバージョンは package.json の packageManager (bun@x.y.z) から決まる。
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Generate Panda CSS
-        run: pnpm prepare
+        run: bun run prepare
 
       - name: Get Playwright version
         id: playwright-version
         run: |
-          version=$(pnpm list @playwright/test --depth=0 --json | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const j=JSON.parse(d);console.log(j[0].devDependencies['@playwright/test'].version)})")
+          version=$(bun --print "require('./node_modules/@playwright/test/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Cache Playwright browsers
@@ -42,15 +38,15 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install chromium
+        run: bun run playwright install chromium
 
       - name: Install Playwright OS dependencies
-        run: pnpm exec playwright install-deps chromium
+        run: bun run playwright install-deps chromium
         timeout-minutes: 5
         continue-on-error: true
 
       - name: Run Playwright tests
-        run: pnpm exec playwright test
+        run: bun run playwright test
 
       - name: Upload Playwright report
         if: always()

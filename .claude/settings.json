@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && pnpm test:run && pnpm lint && pnpm type-check && pnpm prepare"
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && bun run test:run && bun run lint && bun run type-check && bun run prepare"
           }
         ]
       }

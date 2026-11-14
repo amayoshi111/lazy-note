@@ -107,7 +107,7 @@ describe("tryStat", () => {
       expect(onSkip).toHaveBeenCalledTimes(1);
       const callArgs = onSkip.mock.calls[0];
       expect(callArgs?.[0]).toBe(link);
-      // ENOENT が一般的だが、OS / Node によって ELOOP 等が返る可能性も
+      // ENOENT が一般的だが、OS / ランタイムによって ELOOP 等が返る可能性も
       // 残しておく (errno code が何かしら文字列で来ることだけを保証)。
       expect(typeof callArgs?.[1]).toBe("string");
       expect(String(callArgs?.[1]).length).toBeGreaterThan(0);
@@ -285,7 +285,7 @@ describe("walkDirectory", () => {
       // `realpathSync` は ELOOP を投げるため `tryRealpath` で skip + 通知される。
       //
       // Issue #703 Minor 2 で「少なくとも 1 回」を `toHaveBeenCalledTimes(1)`
-      // に厳密化した。実測 (macOS / Node 22 系) では:
+      // に厳密化した。実測 (macOS / Node 22 系。Bun 1.4 系でも同じ) では:
       //   - tmpDir 配下の entry `self` を `tryStat(self)` で stat した時点で
       //     ELOOP を errno として返し、`onSkip` が 1 回だけ呼ばれる
       //   - entryStats が undefined のため再帰 `walkDirectory(self, ...)` には

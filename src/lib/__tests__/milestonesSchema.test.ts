@@ -7,7 +7,7 @@
  * - 実データ検証: `datasources/milestones.json` を strict 検査
  *
  * 検証タイミングの考え方 (詳細は `milestonesSchema.ts` 冒頭の JSDoc 参照):
- * - 本テストは CI で `pnpm test:run` 実行時に走る。
+ * - 本テストは CI で `bun run test:run` 実行時に走る。
  * - 「本番 JSON が strict を通る」テストにより、不正値を入れた PR を
  *   merge 前に検出できる (PR 時点で Required check を落とす)。
  */

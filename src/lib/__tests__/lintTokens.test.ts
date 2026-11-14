@@ -12,10 +12,10 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 /**
- * R-5 (Issue #393) `pnpm lint:tokens` (scripts/lintTokens.ts) の動作テスト。
+ * R-5 (Issue #393) `bun run lint:tokens` (scripts/lintTokens.ts) の動作テスト。
  *
  * scripts/ 配下のスクリプトはアプリ src の外側にあり、Vitest の include 対象外。
- * そのため subprocess (Node) で実行し、stdout / exit code を検証する形を取る。
+ * そのため subprocess (Bun) で実行し、stdout / exit code を検証する形を取る。
  *
  * - 旧 token を含むダミーソースファイルを tmp ディレクトリに書き出して
  *   scripts/lintTokens.ts を import する単体テストは難しいため、E2E 形式で
@@ -25,7 +25,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
  *
  * R-5 修正 (DA 重大 3 対応):
  *   旧実装は `mkdtempSync(join(PROJECT_ROOT, "src", ...))` で実 src/ 直下に
- *   tmp dir を作っていたため、テスト失敗 / Ctrl-C 時の残置が `pnpm lint:tokens`
+ *   tmp dir を作っていたため、テスト失敗 / Ctrl-C 時の残置が `bun run lint:tokens`
  *   の検査対象に含まれて exit 1 を引き起こす副作用があった。
  *   現実装は OS tmp dir に書き出し、スクリプト側で受け取れる
  *   `LINT_TOKENS_SRC_DIR` env var で対象ディレクトリを切り替える。
@@ -45,7 +45,7 @@ const PROJECT_ROOT = resolve(HERE, "..", "..", "..");
 const SCRIPT_PATH = join(PROJECT_ROOT, "scripts", "lintTokens.ts");
 
 const runScript = (envOverrides: NodeJS.ProcessEnv = {}) => {
-  return spawnSync("node", [SCRIPT_PATH], {
+  return spawnSync("bun", [SCRIPT_PATH], {
     cwd: PROJECT_ROOT,
     encoding: "utf8",
     env: {
@@ -89,7 +89,7 @@ describe("lint:tokens (scripts/lintTokens.ts)", () => {
 
     beforeEach(() => {
       // OS の tmp dir に置く。テスト失敗 / Ctrl-C 時に残置しても
-      // pnpm lint:tokens の通常検査対象 (src/) には影響しない。
+      // bun run lint:tokens の通常検査対象 (src/) には影響しない。
       tmpDir = mkdtempSync(join(tmpdir(), "lint-tokens-test-"));
     });
 

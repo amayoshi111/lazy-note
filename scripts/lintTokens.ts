@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
  * R-5 (Issue #393) で追加した、旧 5 段階パレット参照を CI で検出する Tripwire スクリプト。
@@ -204,7 +204,7 @@ interface Violation {
  * skip された対象 (パスと reason) を呼び出し側に通知するコールバック。
  *
  * - `path`: stat に失敗した絶対パス
- * - `reason`: 失敗の理由。Node の `NodeJS.ErrnoException.code`
+ * - `reason`: 失敗の理由。`NodeJS.ErrnoException.code`
  *   (`ENOENT` / `EACCES` / `EMFILE` 等) をそのまま渡す。code が取得
  *   できない例外は `"unknown"` にフォールバックする
  *
@@ -1149,7 +1149,7 @@ const main = (): void => {
 };
 
 /**
- * `node scripts/lintTokens.ts` で直接起動された場合のみ `main()` を実行する。
+ * `bun scripts/lintTokens.ts` で直接起動された場合のみ `main()` を実行する。
  * テストから `import` した際に副作用 (process.exit) が走らないようにするための
  * エントリポイントガード (Issue #621 / Should #5)。
  *

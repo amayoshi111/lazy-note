@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "packageManager": "pnpm@11.2.2",
+  "packageManager": "bun@1.4.4",
   "scripts": {
     "dev": "panda --watch & vite",
-    "build": "pnpm run lint && pnpm run test:run && pnpm run type-check && pnpm run type-check:api && pnpm run type-check:scripts && panda && tsc && tsc --project tsconfig.api.json && vite build",
+    "build": "bun run lint && bun run test:run && bun run type-check && bun run type-check:api && bun run type-check:scripts && panda && tsc && tsc --project tsconfig.api.json && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
@@ -15,15 +15,15 @@
     "e2e": "playwright test",
     "fmt": "biome check --write --unsafe ./src ./scripts ./e2e",
     "lint": "biome lint ./src ./scripts ./e2e",
-    "lint:tokens": "node scripts/lintTokens.ts",
+    "lint:tokens": "bun scripts/lintTokens.ts",
     "type-check": "tsc --noEmit",
     "type-check:api": "tsc --noEmit --project tsconfig.api.json",
     "type-check:test": "tsc --noEmit --project tsconfig.test.json",
     "type-check:scripts": "tsc --noEmit --project tsconfig.scripts.json",
-    "prepare": "panda codegen",
-    "new-post": "node scripts/newPost.ts",
-    "contrast:check": "node scripts/calculateContrast.ts",
-    "contrast:matrix": "node scripts/calculateContrast.ts --csv > docs/contrast-matrix.csv",
+    "prepare": "bun --bun panda codegen",
+    "new-post": "bun scripts/newPost.ts",
+    "contrast:check": "bun scripts/calculateContrast.ts",
+    "contrast:matrix": "bun scripts/calculateContrast.ts --csv > docs/contrast-matrix.csv",
     "fonts:download": "bash scripts/download-fonts.sh",
     "fonts:verify": "bash scripts/download-fonts.sh --verify"
   },
@@ -58,5 +58,9 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.7",
     "vitest": "^5.1.0"
-  }
+  },
+  "overrides": {
+    "axe-core": "4.11.4"
+  },
+  "trustedDependencies": []
 }

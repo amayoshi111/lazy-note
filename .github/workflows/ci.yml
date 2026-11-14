@@ -12,25 +12,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7.1.0
-        with:
-          node-version: "24"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6.1.1
+      # Bun のバージョンは package.json の packageManager (bun@x.y.z) から決まる。
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Generate Panda CSS
-        run: pnpm prepare
+        run: bun run prepare
 
       - name: Run linter
-        run: pnpm lint
+        run: bun run lint
 
       - name: Lint design tokens (R-5 / Issue #393)
-        run: pnpm lint:tokens
+        run: bun run lint:tokens
 
       # Issue #580: tsc --incremental の .tsbuildinfo を cache し、
       # type-check / type-check:test / type-check:scripts / type-check:api の cold ビルドを高速化する。
@@ -44,6 +40,10 @@ jobs:
       #
       # 本体 cache の hashFiles から `src/**/*.{test,spec}.{ts,tsx}` を negation pattern で除外する
       # ことで、test 専用ファイルの変更が本体 cache key に波及しないようにする (Issue #640 の主目的)。
+      #
+      # cache key に bunfig.toml を含める理由: .tsbuildinfo は node_modules 内のファイルのパスを
+      # 記録しており、そのパスは bunfig.toml の install.linker が決める node_modules のレイアウトで
+      # 変わる。linker を変えたときに、古いレイアウトで作った .tsbuildinfo を復元しないようにする。
       #
       # restoreKeys 削除の経緯 (Issue #722 follow-up / PR #731):
       #   旧設定では各 entry に `tsc-<entry>-<OS>-<tsconfig-hash>-` および `tsc-<entry>-<OS>-` を
@@ -60,7 +60,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.tsbuildinfo
-          key: tsc-main-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
+          key: tsc-main-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
 
       # test 側 cache: tsconfig.test.json は tsconfig.json を継承するため、本体ソースの変更でも
       # invalidate する必要がある (本体 + テストファイル両方を hash 対象に含める)。
@@ -68,14 +68,14 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.test.tsbuildinfo
-          key: tsc-test-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.test.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
+          key: tsc-test-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.test.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
 
       # scripts 側 cache: tsconfig.scripts.json は scripts/ のみを対象 (Issue #634)。
       - name: Cache tsc scripts build info (Issue #640)
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.scripts.tsbuildinfo
-          key: tsc-scripts-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
+          key: tsc-scripts-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
 
       # api 側 cache: tsconfig.api.json は src/api/ のみを対象 (Issue #667)。
       # ただし src/api/posts.ts は ../lib/markdownParser を import するため、src/lib も hash 対象に含める。
@@ -83,16 +83,23 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.api.tsbuildinfo
-          key: tsc-api-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
+          key: tsc-api-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
+
+      # tsc のエラーを、PR の該当ファイル・該当行への注釈として表示するための problem matcher を
+      # 登録する。以前は actions/setup-node が登録していたが、oven-sh/setup-bun は登録しない。
+      # 定義は actions/setup-node v7.1.0 の .github/tsc.json (MIT License) と同じもの。
+      # https://github.com/actions/toolkit/blob/main/docs/commands.md#problem-matchers
+      - name: Register tsc problem matcher
+        run: echo "::add-matcher::.github/problem-matchers/tsc.json"
 
       - name: Type check
-        run: pnpm type-check
+        run: bun run type-check
 
       - name: Type check (test)
-        run: pnpm type-check:test
+        run: bun run type-check:test
 
       - name: Type check (scripts) (Issue #634)
-        run: pnpm type-check:scripts
+        run: bun run type-check:scripts
 
       # Issue #730: PR #640 で `tsc-api-*` cache step を ci.yml にも追加したが、ci.yml では
       # `type-check:api` を実行する step が無く、cache が read/write されない「片肺運用」に
@@ -100,7 +107,7 @@ jobs:
       #   - api 型エラーを PR 段階で検知できる (従来は main push 時の deploy.yml まで未検知)
       #   - tsc-api cache を ci.yml ↔ deploy.yml の双方向で活用できる (cache key 整合性の回復)
       - name: Type check (api) (Issue #730)
-        run: pnpm type-check:api
+        run: bun run type-check:api
 
   # PR の時点で本番用のビルド（Panda CSS の生成と vite build）が通ることを
   # 確認する。型チェックは lint-and-typecheck ジョブで行う。
@@ -111,23 +118,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7.1.0
-        with:
-          node-version: "24"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6.1.1
+      # Bun のバージョンは package.json の packageManager (bun@x.y.z) から決まる。
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       # prepare (panda codegen) は styles.css を出力しないため、panda で
       # CSS も生成する。
       - name: Generate Panda CSS
         run: |
-          pnpm prepare
-          pnpm exec panda
+          bun run prepare
+          bun run panda
 
       - name: Build
-        run: pnpm exec vite build
+        run: bun run vite build

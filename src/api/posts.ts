@@ -11,8 +11,8 @@ import { extractSummaryFromContent } from "../lib/markdownParser";
  * (`servePostList`)」の 2 ヘルパーに分割している。再現手順:
  *   1. `biome.jsonc` の `noExcessiveCognitiveComplexity` の `maxAllowedComplexity`
  *      を 8 に下げる
- *   2. `pnpm exec biome lint src/api/posts.ts` で違反 0 を確認
- *   3. `pnpm test:run` で既存テスト全 pass を確認
+ *   2. `bun run biome lint src/api/posts.ts` で違反 0 を確認
+ *   3. `bun run test:run` で既存テスト全 pass を確認
  *
  * 公開 API シグネチャ (`createPostsMiddleware` の戻り値型) は不変。
  */

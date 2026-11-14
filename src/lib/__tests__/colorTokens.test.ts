@@ -642,7 +642,7 @@ describe("Issue #537: fg.muted 補助情報の WCAG 1.4.3 AA (4.5:1) 検証", ()
   // 機械的に強制できない**。本コメントは Tripwire テスト fixture ではなく純然たる
   // JSDoc コメントであり、token 値が変わっても本ファイルのコメントは自動更新されず、
   // テストも fail しない。**reviewer の目視確認が唯一の防御線** である。
-  // baseline と実測値の乖離を確認する際は、reviewer が手元で `pnpm contrast:check`
+  // baseline と実測値の乖離を確認する際は、reviewer が手元で `bun run contrast:check`
   // を実行し、本コメントの値と差分があれば PR 内で実測値への更新を要求すること
   // (bg.elevated × fg.muted は現状 `contrast:check` スクリプトの出力対象に含まれて
   // いないため、必要に応じて culori `wcagContrast()` で直接検算する)。

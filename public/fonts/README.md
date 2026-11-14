@@ -27,7 +27,7 @@ SHA-256 マニフェスト (`fonts.sha256`) を再生成します。
 ```bash
 ./scripts/download-fonts.sh
 # または
-pnpm fonts:download
+bun run fonts:download
 ```
 
 ## SHA-256 検証 (サプライチェーン保護)
@@ -38,7 +38,7 @@ pnpm fonts:download
 ```bash
 ./scripts/download-fonts.sh --verify
 # または
-pnpm fonts:verify
+bun run fonts:verify
 ```
 
 CI でフォント取得経路の改ざんを検知するためのゲートとして使えます。

@@ -6,22 +6,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 基本コマンド
 
-**重要**: `pnpm dev`を実行する前に、必ず`pnpm i`で最新の依存関係をインストールしてください。
+**重要**: `git pull` やブランチの切り替えで `bun.lock` が変わったら、`bun run` でスクリプトを実行する前に、必ず`bun install`で最新の依存関係をインストールしてください。`bun run` は `node_modules` が `bun.lock` と合っているかを確認しないため、実行し忘れると古い依存のまま警告なしに動きます。
 
-- `pnpm i` - 依存関係のインストール（最初に必ず実行）
-- `pnpm dev` - 開発サーバー起動（Panda CSS ウォッチモード付き）
-- `pnpm build` - プロダクションビルド（lint・テスト・型チェック(src/api/scripts)を全て通した後、Panda CSS生成 → tsc(src + api) → Vite ビルド）
-- `pnpm test` - テストをウォッチモードで実行
-- `pnpm test:run` - テストを1回実行
-- `pnpm test:ui` - Vitest UIでテスト実行
-- `pnpm fmt` - Biomeによるフォーマット実行
-- `pnpm lint` - Biomeによるリント実行
-- `pnpm prepare` - Panda CSS コード生成
+- `bun install` - 依存関係のインストール（最初に必ず実行）
+- `bun run dev` - 開発サーバー起動（Panda CSS ウォッチモード付き）
+- `bun run build` - プロダクションビルド（lint・テスト・型チェック(src/api/scripts)を全て通した後、Panda CSS生成 → tsc(src + api) → Vite ビルド）
+- `bun run test` - テストをウォッチモードで実行
+- `bun run test:run` - テストを1回実行
+- `bun run test:ui` - Vitest UIでテスト実行
+- `bun run fmt` - Biomeによるフォーマット実行
+- `bun run lint` - Biomeによるリント実行
+- `bun run prepare` - Panda CSS コード生成
+
+**スクリプトは必ず `bun run <名前>` で実行すること**。`bun test` と `bun build` は Bun 組み込みのテストランナーとバンドラを起動するコマンドで、`package.json` の `test`（Vitest）/ `build` は実行されない。`bun test` は取り違え防止のため、案内を出して失敗するようにしてある（`bunfig.toml` の `test.preload` → `scripts/bunTestGuard.ts`）。
+
+`node_modules/.bin` の CLI を直接使うときも `bun run <CLI 名>`（例: `bun run biome lint src/api/posts.ts`）で実行する。`bunx` には `bunfig.toml` の `run.bun` が効かないため、Node.js が入っている環境では Node.js で動いてしまう。また、ローカルに無いパッケージを自動で取得する。
+
+**`bun run` と `bun test` はリポジトリのルートで実行すること**。どちらも実行したディレクトリにある `bunfig.toml` しか読み込まないため、`src/` などのサブディレクトリから実行すると、`run.bun` が効かず（Node.js が入っている環境では Node.js で動く）、`bun test` の取り違え防止も働かない。
 
 ## アーキテクチャ概要
 
 ### 技術スタック
 
+- **ランタイム / パッケージマネージャ**: Bun（Node.js と pnpm は使わない。`bun run` で起動する Vite / Vitest / Panda CSS / tsc / Biome / Playwright は、リポジトリのルートで実行すれば、`bunfig.toml` の `run.bun` により Bun 上で実行される。CI が使うバージョンは `package.json` の `packageManager` で決まる。Bun 自身はこの値を検査しないため、手元の Bun は同じバージョンに揃える）
 - **フロントエンド**: React 19 + TypeScript
 - **ビルドツール**: Vite 8
 - **テスト**: Vitest + React Testing Library + jsdom
@@ -135,6 +142,7 @@ Tripwire テスト用に吐く data-* 属性の命名は以下を指針とする
 
 ### 設定ファイル
 
+- Bun: `bunfig.toml` で次の 4 点を設定している。公開から 1 日未満のバージョンを新規解決の対象から外す（`install.minimumReleaseAge`）、`node_modules` を isolated レイアウトにして `package.json` に書いていない推移依存を import できないようにする（`install.linker`）、`bun run` で起動する CLI を Node.js ではなく Bun で実行する（`run.bun`）、`bun test` を案内付きで失敗させる（`test.preload`）。このうち `run` と `test` の設定が読み込まれるのは、リポジトリのルートで実行したときだけ。依存パッケージのライフサイクルスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行される（現在は空で、どのパッケージのスクリプトも実行しない）
 - TypeScript: 厳格モード、ES2020ターゲット、バンドラー解決
 - Biome: ダブルクォート、セミコロン必須、スペース2個インデント
 - Vite: React JSX 変換プラグイン（`@vitejs/plugin-react`）と、Markdown コピー / API ミドルウェア登録 / 画像コピーを担う独自インラインプラグイン（`vite.config.ts` 内、現状名 `datasources-plugin`）を設定。自動ルート生成方式のプラグイン（`vite-plugin-pages` 等）は導入していない
@@ -210,12 +218,21 @@ mainとコンフリクトした場合の解決手順：
 2. **最新の変更を取得**: `git pull origin main`
 3. **作業ブランチに戻る**: `git checkout [作業ブランチ名]`
 4. **mainをmerge**: `git merge main`
-5. **コンフリクト解決**: エディタでコンフリクトを手動解決
+5. **コンフリクト解決**: エディタでコンフリクトを手動解決（`bun.lock` は手動で編集せず、下の「`bun.lock` がコンフリクトした場合」の手順で解決する）
 6. **解決済みファイルをステージング**: `git add [解決済みファイル]`
 7. **マージコミット**: `git commit` (デフォルトメッセージを使用)
 8. **変更をpush**: `git push origin [作業ブランチ名]`
 
 **注意**: 絶対に`git rebase`は使用しないこと
+
+#### `bun.lock` がコンフリクトした場合
+
+コンフリクトマーカーが残った `bun.lock` に対して `bun install` を実行してはならない。Bun はロックファイルを読めないと、警告（`warn: Ignoring lockfile`）を 1 行出すだけで全依存を解決し直し、無関係なパッケージのバージョンまで変わった `bun.lock` を、エラーにせず保存する。次の順で解決すること:
+
+1. `package.json` のコンフリクトを先に手動で解決する
+2. `git checkout --theirs bun.lock` で main 側の `bun.lock` を採用する
+3. `bun install` を実行する（`package.json` との差分だけが `bun.lock` に反映される）
+4. `git diff main -- bun.lock` で、作業ブランチが変えた依存以外に差分が無いことを確認する
 
 ## TypeScriptコーディングルールについて
 
