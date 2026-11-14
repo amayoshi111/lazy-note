@@ -43,7 +43,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      # Claude が bun install / bun audit を実行できるよう、Bun を用意する。
+      # Claude が bun install / bun audit / bun pm untrusted を実行できるよう、Bun を用意する。
       # 依存のインストールはこのステップでは行わない（PR head の prepare などの
       # スクリプトを実行させないため。必要なら Claude が --ignore-scripts 付きで実行する）。
       # ここで入るのは package.json の packageManager (bun@x.y.z) の版だが、後続の
@@ -97,7 +97,7 @@ jobs:
           # PR head のコードを実行させないため
           claude_args: >-
             --setting-sources user
-            --allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr checks:*),Bash(gh pr comment:*),Bash(gh api:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh release view:*),Bash(bun install --frozen-lockfile --ignore-scripts),Bash(bun audit),Bash(cat:*),Bash(grep:*),Write(//tmp/dependabot-review.md),Edit(//tmp/dependabot-review.md),WebSearch,WebFetch"
+            --allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr checks:*),Bash(gh pr comment:*),Bash(gh api:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh release view:*),Bash(bun install --frozen-lockfile --ignore-scripts),Bash(bun audit),Bash(bun pm untrusted),Bash(cat:*),Bash(grep:*),Write(//tmp/dependabot-review.md),Edit(//tmp/dependabot-review.md),WebSearch,WebFetch"
           prompt: |
             あなたはこのリポジトリの依存関係更新レビュー担当です。
             対象PR: ${{ github.repository }}#${{ github.event.pull_request.number }}
@@ -121,7 +121,10 @@ jobs:
             7. セキュリティ観点を確認する。CVE/GHSA 修正の有無、bun.lock で新規に入る推移依存、
                postinstall スクリプトの追加などサプライチェーン上のリスク。
                可能なら `bun install --frozen-lockfile --ignore-scripts` の後
-               `bun audit` を実行する。
+               `bun audit` と `bun pm untrusted` を実行する。
+               `bun pm untrusted` は、install スクリプトの実行がブロックされた依存の一覧を出す
+               （スクリプトは実行しない）。この PR で bun.lock に新しく入ったパッケージが
+               一覧にあれば、install スクリプトの追加として報告する。
             8. 調査結果を `.github/DEPENDABOT_REVIEW_TEMPLATE.md` の形式どおりにまとめ、
                レビュー本文を Write で `/tmp/dependabot-review.md` に書き出す。
                書き出した本文を記述ルールと照合し、違反があれば Edit で直してから、
