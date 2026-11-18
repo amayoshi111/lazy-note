@@ -88,10 +88,12 @@ const createMarkedInstance = (tocItems: TocItem[]): Marked => {
       const titleAttr = title ? ` title="${escapeHtmlAttr(title)}"` : "";
       return `<img src="${escapedHref}" alt="${escapedText}"${titleAttr} loading="lazy" decoding="async">`;
     },
-    heading({ text, depth, tokens }) {
+    heading({ depth, tokens }) {
       const rendered = this.parser.parseInline(tokens);
       if (depth === 2 || depth === 3) {
         const id = `heading-${tocItems.length}`;
+        // 目次は React がテキストとして描画するため、記号を除き HTML エスケープもしない文字列にする
+        const text = this.parser.parseInline(tokens, this.parser.textRenderer);
         tocItems.push({ id, text, level: depth });
         return `<h${depth} id="${id}">${rendered}</h${depth}>`;
       }
