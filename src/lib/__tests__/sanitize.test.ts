@@ -90,7 +90,7 @@ describe("sanitizePostHtml", () => {
     });
   });
 
-  describe("本番設定 (ADD_TAGS: button, ADD_ATTR: data-code) 下の許可挙動", () => {
+  describe("本番設定 (ADD_TAGS: button) 下の許可挙動", () => {
     it("buttonタグが保持される", () => {
       const safe = '<button type="button">クリック</button>';
       const result = sanitizePostHtml(safe);
@@ -99,29 +99,18 @@ describe("sanitizePostHtml", () => {
       expect(result).toContain("クリック</button>");
     });
 
-    it("buttonタグのdata-code属性が保持される", () => {
-      const safe =
-        '<button type="button" class="copy-btn" data-code="const x = 1;">コピー</button>';
-      const result = sanitizePostHtml(safe);
-
-      expect(result).toContain("<button");
-      expect(result).toContain('data-code="const x = 1;"');
-      expect(result).toContain("コピー</button>");
-    });
-
     it("renderer.code が生成するコードブロックラッパー構造が保持される", () => {
       const safe =
-        '<div class="code-block-wrapper"><button type="button" class="copy-btn" data-code="echo hi">コピー</button><pre><code class="language-bash">echo hi</code></pre></div>';
+        '<div class="code-block-wrapper"><button type="button" class="copy-btn">コピー</button><pre><code class="language-bash">echo hi</code></pre></div>';
       const result = sanitizePostHtml(safe);
 
       expect(result).toContain('class="code-block-wrapper"');
       expect(result).toContain('class="copy-btn"');
-      expect(result).toContain('data-code="echo hi"');
-      expect(result).toContain('class="language-bash"');
+      expect(result).toContain('<code class="language-bash">echo hi</code>');
     });
   });
 
-  describe("本番設定下の XSS パターン除去 (button + data-code 許可下のフルパス検証)", () => {
+  describe("本番設定下の XSS パターン除去 (button 許可下のフルパス検証)", () => {
     it("button タグの onclick 属性が除去される", () => {
       const dirty = '<button onclick="alert(1)">XSS</button>';
       const result = sanitizePostHtml(dirty);
@@ -151,25 +140,10 @@ describe("sanitizePostHtml", () => {
       expect(result).not.toContain("javascript:");
     });
 
-    it("data-code 内に javascript: URI を仕込んでも、data-* は実行 sink ではないため許可属性として残るが、HTML 解釈上は無害である", () => {
-      // data-code は単なるカスタムデータ属性のため、属性値内の文字列は実行されない。
-      // useCodeBlockCopy は値を clipboard.writeText に渡すのみで、コード実行 sink ではない。
-      const dirty = '<button data-code="javascript:alert(1)">click</button>';
-      const result = sanitizePostHtml(dirty);
-
-      // data-code は ADD_ATTR で許可されているため保持される
-      expect(result).toContain('data-code="javascript:alert(1)"');
-      // しかし <script> や onclick のような実行コンテキストは生まれない
-      expect(result).not.toContain("<script");
-      expect(result).not.toContain("onclick");
-    });
-
-    it("data-code 値内に script タグの文字列があっても、属性値はパース時にエスケープ済みで実行されない", () => {
-      // marked の renderer.code は escapeHtmlAttr 済みのため、実際の本番経路では
-      // &quot; / &lt; 等にエスケープ済の状態で DOMPurify に渡される。
-      // ここでは「ユーザが直接書いた <button> + 危険な data-code」を再現。
+    it("button の属性値に script タグの文字列を仕込んでも script 要素は残らない", () => {
+      // 記事に直接書いた <button> + 危険な属性値を再現する
       const dirty =
-        '<button data-code="&quot;><script>alert(1)</script>">click</button>';
+        '<button title="&quot;><script>alert(1)</script>">click</button>';
       const result = sanitizePostHtml(dirty);
 
       // DOMPurify を通った後、独立した <script> タグは残らない
@@ -177,11 +151,11 @@ describe("sanitizePostHtml", () => {
       expect(result).not.toContain("alert(1)</script>");
     });
 
-    it("data-code 値内の生クォートブレイクアウト試行は属性値として正規化され、実行コンテキストを生まない", () => {
+    it("button の属性値からの生クォートブレイクアウト試行は属性値として正規化され、実行コンテキストを生まない", () => {
       // 生のHTML文字列で属性値にダブルクォートを含めようとしたケース。
       // ブラウザのHTMLパーサが属性値の境界を再解釈し、後続は別属性/テキストになる。
       const dirty =
-        '<button data-code="\\"><script>alert(1)</script>">click</button>';
+        '<button title="\\"><script>alert(1)</script>">click</button>';
       const result = sanitizePostHtml(dirty);
 
       // <script> はサニタイズ対象なので残らない
@@ -190,8 +164,7 @@ describe("sanitizePostHtml", () => {
     });
 
     it("button タグ内に script タグを直接埋め込もうとしても script は除去される", () => {
-      const dirty =
-        '<button data-code="x">click<script>alert(1)</script></button>';
+      const dirty = "<button>click<script>alert(1)</script></button>";
       const result = sanitizePostHtml(dirty);
 
       expect(result).toContain("<button");
@@ -201,31 +174,26 @@ describe("sanitizePostHtml", () => {
   });
 
   describe("renderer.code 経路を経た本番想定 HTML の挙動 (退行検知)", () => {
-    it("escapeHtmlAttr で &quot; に変換された data-code 値は属性値として保持される", () => {
-      // renderer.code が生成する形式: " は &quot; にエスケープ済み
-      const escaped =
-        '<button type="button" class="copy-btn" data-code="alert(&quot;xss&quot;)">コピー</button>';
-      const result = sanitizePostHtml(escaped);
+    // コピーボタンは code 要素のテキストをコピーするため、コードがそのまま残ることを固定する
+    it("`]>` や `-->` を含むコードは code 要素のテキストとして保持される", () => {
+      const html =
+        '<div class="code-block-wrapper"><button type="button" class="copy-btn">コピー</button><pre><code>const m: Map&lt;string, string[]&gt; = new Map(); &lt;!-- note --&gt;</code></pre></div>';
+      const result = sanitizePostHtml(html);
 
-      // エスケープ済みの状態が保持される
-      expect(result).toContain('data-code="alert(&quot;xss&quot;)"');
-      expect(result).not.toContain("<script");
-      expect(result).not.toContain("</button><");
+      expect(result).toContain(
+        "<code>const m: Map&lt;string, string[]&gt; = new Map(); &lt;!-- note --&gt;</code>",
+      );
     });
 
-    it("escapeHtmlAttr で &lt; / &gt; に変換された data-code 値が script 文字列を含む場合、DOMPurify が data-code 属性ごと除去する (退行検知)", () => {
-      // < > も &lt; / &gt; にエスケープ済みの想定。
-      // DOMPurify は属性値内の "script" 等を検知すると、その属性自体を除去する。
-      // これは本プロジェクトの想定 (XSS 防御) 上は望ましい挙動であり、退行検知として固定する。
-      const escaped =
-        '<button type="button" class="copy-btn" data-code="&lt;script&gt;alert(1)&lt;/script&gt;">コピー</button>';
-      const result = sanitizePostHtml(escaped);
+    it("コード中の script タグの文字列は code 要素のテキストとして保持され、script 要素にならない", () => {
+      const html =
+        '<div class="code-block-wrapper"><button type="button" class="copy-btn">コピー</button><pre><code>&lt;script&gt;alert(1)&lt;/script&gt;</code></pre></div>';
+      const result = sanitizePostHtml(html);
 
-      // button タグ自体は許可されるが、data-code 属性は DOMPurify により除去される
-      expect(result).toContain("<button");
-      expect(result).not.toContain("data-code=");
-      // 当然、生の <script> タグも残らない
-      expect(result).not.toContain("<script>alert(1)</script>");
+      expect(result).toContain(
+        "<code>&lt;script&gt;alert(1)&lt;/script&gt;</code>",
+      );
+      expect(result).not.toContain("<script>");
     });
   });
 });
