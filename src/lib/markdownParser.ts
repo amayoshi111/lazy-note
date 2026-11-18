@@ -66,6 +66,12 @@ export const extractSectionContent = (
 };
 
 /**
+ * 記事の節名。本文中の `## まとめ` などの見出しで本文を打ち切らないよう、
+ * 本文の終わりはこれらで始まる `## ` 行に限る
+ */
+const SECTION_NAMES = ["投稿日時", "筆者名", "本文", "更新日時"];
+
+/**
  * Markdownの行配列から本文セクションの内容を抽出する
  * @param lines Markdownの行配列
  * @returns 本文の内容（空行は段落区切りとして保持）
@@ -77,7 +83,9 @@ export const extractBodyContent = (lines: string[]): string => {
   }
 
   const nextSectionIndex = lines.findIndex(
-    (line, index) => index > bodyStartIndex && line.startsWith("## "),
+    (line, index) =>
+      index > bodyStartIndex &&
+      SECTION_NAMES.some((name) => line.startsWith(`## ${name}`)),
   );
 
   const endIndex = nextSectionIndex === -1 ? lines.length : nextSectionIndex;
