@@ -1,23 +1,24 @@
 import { defineConfig } from "@pandacss/dev";
 import presetBase from "@pandacss/preset-base";
 import presetPanda from "@pandacss/preset-panda";
+import { oklchPrimitives, semanticColorTokens } from "./src/lib/colorTokens";
 
 /**
  * Editorial Citrus デザインリニューアル (Issue #358) の OKLCH カラートークン。
  *
- * 値の正本: src/lib/colorTokens.ts
+ * 色の値と light / dark の組み合わせは src/lib/colorTokens.ts から読み込む。
+ * WCAG コントラストのテスト (src/lib/__tests__/colorTokens.test.ts) と
+ * scripts/calculateContrast.ts が、ここで使う値そのものを検証できるようにするため。
  * 仕様書: docs/rfc/editorial-citrus/02-color-system.md
  *
- * ここでは Panda CSS の値が文字列リテラルでなければならない制約により、
- * src/lib/colorTokens.ts と同じ値を直接記述している。値を変える場合は
- * 必ず両方を揃え、scripts/calculateContrast.ts による AAA 実測を通すこと
+ * 値を変える場合は src/lib/colorTokens.ts を編集し、AAA 実測を通すこと
  * (本文ペアが 7.20:1 を割った時点で merge ブロック)。
  *
  * R-2c (Issue #390) で旧 5 段階トークン (bg.0..bg.4 / fg.0..fg.4) と旧パレット
  * 階層を削除し、UI は OKLCH semantic token (bg.canvas / surface / elevated /
  * fg.primary / secondary / muted / accent.brand / featured / link) に統一。
  * コードブロック背景・前景は `bg.code` / `bg.codeInline` / `bg.codeBorder` /
- * `fg.code` のリテラル hex で固定する (Shiki/Prism との視覚整合のため)。
+ * `fg.code` の従来の hex 値で固定する (Shiki/Prism との視覚整合のため)。
  */
 export default defineConfig({
   // ====================================================================
@@ -115,31 +116,31 @@ export default defineConfig({
           // Editorial Citrus OKLCH primitives (Issue #358)
           //
           // - 暖色 light (H=85) と中性 dark (H=220) で温度差を圧縮
-          // - 値の正本は src/lib/colorTokens.ts。両者は必ず一致させる。
+          // - 値は src/lib/colorTokens.ts の oklchPrimitives から読み込む。
           // - AAA 7.20:1 を scripts/calculateContrast.ts で実測 (CI で gate)。
           // ====================================================================
           cream: {
-            "50": { value: "oklch(0.985 0.013 85)" },
+            "50": { value: oklchPrimitives.cream["50"] },
             // R-2c (#390) で旧 5 段階を 3 段階に圧縮した結果、bg.surface (cream-100)
             // と bg.elevated (cream-50) の中間が空白になっていた。Issue #409 で
             // 中間階調を `cream.75` として新設し、bg.muted (light) の値とする。
             // L=0.975 = (cream-50 0.985 + cream-100 0.965) / 2。
-            "75": { value: "oklch(0.975 0.015 85)" },
-            "100": { value: "oklch(0.965 0.018 85)" },
+            "75": { value: oklchPrimitives.cream["75"] },
+            "100": { value: oklchPrimitives.cream["100"] },
             // border 専用色 (Issue #409)。L=0.620 で WCAG 1.4.11 (Non-text Contrast)
             // 3:1 を bg.canvas (cream-50, 3.49:1) / bg.surface (cream-100, 3.29:1) /
             // bg.muted (cream-75) 上で満たす。本 token は border 用途専用とし、
             // 背景色 / テキスト色には流用しない。
-            "300": { value: "oklch(0.620 0.020 85)" },
+            "300": { value: oklchPrimitives.cream["300"] },
           },
           bone: {
-            "50": { value: "oklch(0.965 0.005 220)" },
-            "100": { value: "oklch(0.920 0.005 220)" },
+            "50": { value: oklchPrimitives.bone["50"] },
+            "100": { value: oklchPrimitives.bone["100"] },
           },
           ink: {
-            "primary-on-cream": { value: "oklch(0.205 0.020 85)" },
-            "secondary-on-cream": { value: "oklch(0.380 0.018 85)" },
-            "900": { value: "oklch(0.150 0.020 85)" },
+            "primary-on-cream": { value: oklchPrimitives.ink.primaryOnCream },
+            "secondary-on-cream": { value: oklchPrimitives.ink.secondaryOnCream },
+            "900": { value: oklchPrimitives.ink["900"] },
           },
           sumi: {
             // Issue #409 で追加 (旧 border.subtle dark)。L=0.700 で
@@ -147,7 +148,7 @@ export default defineConfig({
             // Issue #423 で Calm 思想との整合性が指摘され、border.subtle (dark)
             // は sumi-450 (L=0.665) に置き換えた。primitive 階層では将来の
             // 比較用に温存する。
-            "400": { value: "oklch(0.700 0.012 220)" },
+            "400": { value: oklchPrimitives.sumi["400"] },
             // border 専用色 (Issue #423 で sumi-400 から置換)。L=0.665 で
             // 1.4.11 3:1 を bg.canvas (sumi-950, 6.18:1) / bg.surface
             // (sumi-700, 3.29:1) / bg.muted (sumi-650, 4.94:1) 上で満たす。
@@ -155,34 +156,34 @@ export default defineConfig({
             // bg.elevated (sumi-600, 2.25:1) 上では 3:1 未達のため、
             // bg.elevated 上の border 用途には使用しないこと
             // (border.subtle JSDoc 参照)。
-            "450": { value: "oklch(0.665 0.012 220)" },
+            "450": { value: oklchPrimitives.sumi["450"] },
             // L=0.620 (RFC 02 の初期値 0.560 から AAA 実測で調整、sumi-950 上で 5.15:1)
-            "500": { value: "oklch(0.620 0 0)" },
-            "600": { value: "oklch(0.470 0 0)" },
+            "500": { value: oklchPrimitives.sumi["500"] },
+            "600": { value: oklchPrimitives.sumi["600"] },
             // bg.muted (dark) の値 (Issue #409)。L=0.270 = sumi-950 (0.180) と
             // sumi-700 (0.380) の中間。bone-50 上で 13.59:1、bone-100 上で
             // 11.87:1 を確保し AAA 維持。
-            "650": { value: "oklch(0.270 0.012 220)" },
-            "700": { value: "oklch(0.380 0 0)" },
+            "650": { value: oklchPrimitives.sumi["650"] },
+            "700": { value: oklchPrimitives.sumi["700"] },
             // dark 既定背景。H=220 中性で暖色光下の違和感を回避。
-            "950": { value: "oklch(0.180 0.012 220)" },
+            "950": { value: oklchPrimitives.sumi["950"] },
           },
           // Persimmon = ブランド一次色。CTA / Featured / OG 画像 / 紹介ページで
           // **単色運用** (グラデーション・装飾なし)。本文リンク・focus には使わない。
           // L=0.520 (RFC 02 の初期値 0.580 から AAA 実測で調整、CTA white-on で 5.74:1)
           persimmon: {
-            "500": { value: "oklch(0.640 0.180 38)" },
-            "600": { value: "oklch(0.520 0.180 38)" },
-            "700": { value: "oklch(0.450 0.170 38)" },
+            "500": { value: oklchPrimitives.persimmon["500"] },
+            "600": { value: oklchPrimitives.persimmon["600"] },
+            "700": { value: oklchPrimitives.persimmon["700"] },
           },
           // L=0.430 (RFC 02 の初期値 0.470 から AAA 実測で調整、cream-50 上で 7.82:1)
           indigo: {
-            "300": { value: "oklch(0.760 0.110 250)" },
-            "500": { value: "oklch(0.430 0.150 250)" },
+            "300": { value: oklchPrimitives.indigo["300"] },
+            "500": { value: oklchPrimitives.indigo["500"] },
           },
           // focus 専用色。accent ボタン上では二重リング外側 ink-900 + 内側 citrus-500。
           citrus: {
-            "500": { value: "oklch(0.860 0.150 105)" },
+            "500": { value: oklchPrimitives.citrus["500"] },
           },
 
           // ====================================================================
@@ -302,20 +303,20 @@ export default defineConfig({
         bg: {
           canvas: {
             value: {
-              _light: "{colors.cream.50}",
-              _dark: "{colors.sumi.950}",
+              _light: semanticColorTokens.bgCanvas.light,
+              _dark: semanticColorTokens.bgCanvas.dark,
             },
           },
           surface: {
             value: {
-              _light: "{colors.cream.100}",
-              _dark: "{colors.sumi.700}",
+              _light: semanticColorTokens.bgSurface.light,
+              _dark: semanticColorTokens.bgSurface.dark,
             },
           },
           elevated: {
             value: {
-              _light: "{colors.cream.50}",
-              _dark: "{colors.sumi.600}",
+              _light: semanticColorTokens.bgElevated.light,
+              _dark: semanticColorTokens.bgElevated.dark,
             },
           },
           // ----------------------------------------------------------------
@@ -354,17 +355,16 @@ export default defineConfig({
           // ----------------------------------------------------------------
           muted: {
             value: {
-              _light: "{colors.cream.75}",
-              _dark: "{colors.sumi.650}",
+              _light: semanticColorTokens.bgMuted.light,
+              _dark: semanticColorTokens.bgMuted.dark,
             },
           },
           // ----------------------------------------------------------------
-          // コードブロック専用トークン (R-2a / Issue #388 で追加、R-2c で hex 直接化)
+          // コードブロック専用トークン (R-2a / Issue #388 で追加)
           //
           // **Editorial Citrus でも従来配色を温存。Shiki/Prism との整合性のため。**
-          // R-2c (Issue #390) で旧 5 段階 token を削除した際、依存していた
-          // `colors.gruvbox.*` も削除したため、ここでは hex リテラルを直接記述する
-          // (値の同期: src/lib/colorTokens.ts の codeBlockColors)。
+          // 値は src/lib/colorTokens.ts の codeBlockColors (hex) を
+          // semanticColorTokens 経由で読み込む。
           // 詳細: docs/rfc/editorial-citrus/02-color-system.md §"既存 Gruvbox の取り扱い"
           //
           // 用途別マッピング:
@@ -374,54 +374,54 @@ export default defineConfig({
           // ----------------------------------------------------------------
           code: {
             value: {
-              _light: "#fbf1c7",
-              _dark: "#282828",
+              _light: semanticColorTokens.bgCode.light,
+              _dark: semanticColorTokens.bgCode.dark,
             },
           },
           codeInline: {
             value: {
-              _light: "#d5c4a1",
-              _dark: "#504945",
+              _light: semanticColorTokens.bgCodeInline.light,
+              _dark: semanticColorTokens.bgCodeInline.dark,
             },
           },
           codeBorder: {
             value: {
-              _light: "#bdae93",
-              _dark: "#665c54",
+              _light: semanticColorTokens.bgCodeBorder.light,
+              _dark: semanticColorTokens.bgCodeBorder.dark,
             },
           },
         },
         fg: {
           primary: {
             value: {
-              _light: "{colors.ink.primary-on-cream}",
-              _dark: "{colors.bone.50}",
+              _light: semanticColorTokens.fgPrimary.light,
+              _dark: semanticColorTokens.fgPrimary.dark,
             },
           },
           secondary: {
             value: {
-              _light: "{colors.ink.secondary-on-cream}",
-              _dark: "{colors.bone.100}",
+              _light: semanticColorTokens.fgSecondary.light,
+              _dark: semanticColorTokens.fgSecondary.dark,
             },
           },
           muted: {
             value: {
-              _light: "{colors.sumi.600}",
-              _dark: "{colors.bone.100}",
+              _light: semanticColorTokens.fgMuted.light,
+              _dark: semanticColorTokens.fgMuted.dark,
             },
           },
           // ----------------------------------------------------------------
-          // コードブロック本文の既定文字色 (R-2a / Issue #388 で追加、R-2c で hex 直接化)
+          // コードブロック本文の既定文字色 (R-2a / Issue #388 で追加)
           //
           // Shiki/Prism のシンタックスハイライトが適用されない箇所
           // (例: マークアップ未対応のコード片) のフォールバック文字色。
-          // 従来配色 (旧 Gruvbox fg1) を hex リテラルで温存し、シンタックスハイライト
-          // 全体と整合させる (値の同期: src/lib/colorTokens.ts の codeBlockColors)。
+          // 従来配色 (旧 Gruvbox fg1) の hex を温存し、シンタックスハイライト
+          // 全体と整合させる (値は src/lib/colorTokens.ts の codeBlockColors)。
           // ----------------------------------------------------------------
           code: {
             value: {
-              _light: "#3c3836",
-              _dark: "#ebdbb2",
+              _light: semanticColorTokens.fgCode.light,
+              _dark: semanticColorTokens.fgCode.dark,
             },
           },
         },
@@ -430,8 +430,8 @@ export default defineConfig({
           // CTA は brand、リンクは link、キーボード可視性は focus を使い分ける。
           brand: {
             value: {
-              _light: "{colors.persimmon.600}",
-              _dark: "{colors.persimmon.500}",
+              _light: semanticColorTokens.accentBrand.light,
+              _dark: semanticColorTokens.accentBrand.dark,
             },
           },
           // R-2a (Issue #388) で追加。Featured バッジ・主要 CTA で使用。
@@ -446,14 +446,14 @@ export default defineConfig({
           //   - hover/focus の反転は accent.brand と同期させること。
           featured: {
             value: {
-              _light: "{colors.persimmon.600}",
-              _dark: "{colors.persimmon.500}",
+              _light: semanticColorTokens.accentFeatured.light,
+              _dark: semanticColorTokens.accentFeatured.dark,
             },
           },
           link: {
             value: {
-              _light: "{colors.indigo.500}",
-              _dark: "{colors.indigo.300}",
+              _light: semanticColorTokens.accentLink.light,
+              _dark: semanticColorTokens.accentLink.dark,
             },
           },
         },
@@ -500,8 +500,8 @@ export default defineConfig({
         border: {
           subtle: {
             value: {
-              _light: "{colors.cream.300}",
-              _dark: "{colors.sumi.450}",
+              _light: semanticColorTokens.borderSubtle.light,
+              _dark: semanticColorTokens.borderSubtle.dark,
             },
           },
         },
@@ -526,8 +526,8 @@ export default defineConfig({
         focus: {
           ring: {
             value: {
-              _light: "{colors.citrus.500}",
-              _dark: "{colors.citrus.500}",
+              _light: semanticColorTokens.focusRing.light,
+              _dark: semanticColorTokens.focusRing.dark,
             },
           },
         },

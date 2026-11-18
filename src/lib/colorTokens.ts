@@ -3,12 +3,12 @@
  *
  * 仕様: docs/rfc/editorial-citrus/02-color-system.md
  *
- * このファイルは以下から参照される単一ソースである:
- *   - panda.config.ts (theme.tokens.colors の値はこのファイルとリテラル一致させる)
+ * このファイルの値は以下が import して使う:
+ *   - panda.config.ts (theme.tokens.colors と semanticTokens.colors の値)
  *   - scripts/calculateContrast.ts (AAA 実測スクリプト)
  *   - src/lib/__tests__/colorTokens.test.ts (本文 7.20:1 を CI で要求)
  *
- * 値の調整時は上記 3 箇所すべてを揃えること。`colorTokens.test.ts` が
+ * 値の調整はこのファイルだけで行う。`colorTokens.test.ts` が
  * 7.20:1 を割った場合は `02-color-system.md` の更新を伴うこと。
  */
 
@@ -156,9 +156,8 @@ export const oklchPrimitives: OklchPrimitives = {
  * する方針のため (02-color-system.md §"既存 Gruvbox の取り扱い")、bg/fg の
  * OKLCH 移行とは独立にこのリテラル値を維持する。
  *
- * R-2c (Issue #390) で旧パレット階層を panda.config.ts から削除したため、
- * panda.config.ts の `bg.code` / `bg.codeInline` / `bg.codeBorder` /
- * `fg.code` は hex リテラルを直接記述している。値を変える場合は両方を揃えること。
+ * panda.config.ts の `bg.code` / `bg.codeInline` / `bg.codeBorder` / `fg.code` は
+ * semanticColorTokens 経由でこの値を使う。
  *
  * キー名 (bg0/bg2/bg3/fg1) は元パレットの段階番号を踏襲しているが、現在は
  * UI トークンとは独立した「コードブロック表示用の固定値」として扱う。
