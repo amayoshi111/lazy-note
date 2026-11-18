@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 /**
  * 解決済みのテーマ (DOM に適用される実体)。
@@ -118,6 +118,11 @@ export const useTheme = () => {
     getPreference,
     () => "system" as ThemePreference,
   );
+
+  // OS の外観変更や別タブでの変更はトグル操作を経由しないため、解決済みテーマから DOM へ反映する
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   /**
    * storage イベントを発火して useSyncExternalStore に再評価を促す。
