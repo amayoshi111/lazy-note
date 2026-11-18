@@ -78,6 +78,15 @@ const POST_NOT_FOUND_ACTION_ARROW = "←" as const;
 const POST_NOT_FOUND_ACTION_TEXT = "記事一覧に戻る" as const;
 
 /**
+ * Post ページの記事読み込み失敗時 EmptyState の表示文言定数。
+ *
+ * 通信の失敗などで読み込めなかった場合に、記事が存在しない場合
+ * (`POST_NOT_FOUND_*`) と取り違えないよう、別の文言で再読み込みを促す。
+ */
+const POST_LOAD_ERROR_TITLE = "記事の読み込みに失敗しました" as const;
+const POST_LOAD_ERROR_DESCRIPTION = "ページを再読み込みしてください。" as const;
+
+/**
  * 記事未検出時の `<title>` 文言 (React 19 ネイティブ metadata)。
  *
  * PostDetailPage が描画する `${記事タイトル} | Lazy Note` と同じサフィックス
@@ -96,8 +105,21 @@ const POST_NOT_FOUND_DOCUMENT_TITLE =
 
 const Post = () => {
   const { timestamp } = useParams<{ timestamp: string }>();
-  const { post, loading, notFound } = usePost(timestamp);
+  const { post, loading, error, notFound } = usePost(timestamp);
   const { olderPost, newerPost } = useAdjacentPosts(timestamp);
+
+  // 失敗時の post は null か直前の記事のままなので、未検出判定や記事表示より先に分岐する
+  if (error) {
+    return (
+      <Layout>
+        <EmptyState
+          icon={FileQuestion}
+          title={POST_LOAD_ERROR_TITLE}
+          description={POST_LOAD_ERROR_DESCRIPTION}
+        />
+      </Layout>
+    );
+  }
 
   if (notFound || (!loading && !post)) {
     return (

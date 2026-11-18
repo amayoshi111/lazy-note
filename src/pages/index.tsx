@@ -1,7 +1,9 @@
 import { Transition } from "@headlessui/react";
 import { useMemo } from "react";
 import milestonesData from "../../datasources/milestones.json";
+import { FileQuestion } from "../components/atoms/icons";
 import { CardSkeleton } from "../components/common/CardSkeleton";
+import { EmptyState } from "../components/common/EmptyState";
 import { Layout } from "../components/layouts/Layout";
 import { HomePage } from "../components/pages/HomePage";
 import { usePosts } from "../hooks/usePosts";
@@ -51,11 +53,22 @@ import {
  */
 const MILESTONES: readonly Milestone[] = parseMilestones(milestonesData);
 
+/**
+ * 記事一覧の読み込み失敗時 EmptyState の表示文言定数。
+ *
+ * 記事が 0 件のとき (HomePage の EmptyState) と取り違えないよう、別の文言で
+ * 再読み込みを促す。
+ */
+const INDEX_LOAD_ERROR_TITLE = "記事一覧の読み込みに失敗しました" as const;
+const INDEX_LOAD_ERROR_DESCRIPTION =
+  "ページを再読み込みしてください。" as const;
+
 const Index = () => {
   const {
     posts,
     allPosts,
     loading,
+    error,
     currentPage,
     totalPages,
     totalPosts,
@@ -86,6 +99,19 @@ const Index = () => {
       }),
     [allPosts, posts],
   );
+
+  // 失敗を 0 件と取り違えないよう、HomePage の 0 件表示もヘッダーの件数も出さない
+  if (error) {
+    return (
+      <Layout>
+        <EmptyState
+          icon={FileQuestion}
+          title={INDEX_LOAD_ERROR_TITLE}
+          description={INDEX_LOAD_ERROR_DESCRIPTION}
+        />
+      </Layout>
+    );
+  }
 
   return (
     <Layout postCount={loading ? undefined : totalPosts}>

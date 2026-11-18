@@ -181,28 +181,25 @@ const toPostId = (filePath: string): string =>
 /**
  * 全投稿のメタデータを id の降順で取得する
  * @param loaders 記事ファイルのパスから Markdown を読み込む関数への対応
+ * @throws 読み込みに失敗した記事があるとき (0 件と区別するため空配列にはしない)
  */
 export const loadPostSummaries = async (
   loaders: PostLoaders,
 ): Promise<PostSummary[]> => {
-  try {
-    // 本番では記事ごとに別チャンクの取得になるため、直列に待たず同時に読み込む
-    const summaries = await Promise.all(
-      Object.entries(loaders).map(async ([filePath, load]) =>
-        extractSummaryFromContent(await load(), toPostId(filePath)),
-      ),
-    );
-    return summaries.sort((a, b) => b.id.localeCompare(a.id));
-  } catch (error) {
-    console.error("Error loading posts:", error);
-    return [];
-  }
+  // 本番では記事ごとに別チャンクの取得になるため、直列に待たず同時に読み込む
+  const summaries = await Promise.all(
+    Object.entries(loaders).map(async ([filePath, load]) =>
+      extractSummaryFromContent(await load(), toPostId(filePath)),
+    ),
+  );
+  return summaries.sort((a, b) => b.id.localeCompare(a.id));
 };
 
 /**
  * 指定した id の記事を取得する。対応するファイルが無ければ null を返す
  * @param loaders 記事ファイルのパスから Markdown を読み込む関数への対応
  * @param timestamp 記事 ID
+ * @throws 読み込みに失敗したとき (存在しない記事と区別するため null にはしない)
  */
 export const loadPost = async (
   loaders: PostLoaders,
@@ -212,12 +209,7 @@ export const loadPost = async (
   if (!load) {
     return null;
   }
-  try {
-    return parseMarkdown(await load(), timestamp);
-  } catch (error) {
-    console.error(`Error loading post ${timestamp}:`, error);
-    return null;
-  }
+  return parseMarkdown(await load(), timestamp);
 };
 
 /**
