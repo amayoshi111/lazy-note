@@ -646,6 +646,42 @@ const x = 1;
       ]);
     });
 
+    it("見出しの Markdown 記号を除いた文字列が目次に入る", () => {
+      const content = `# テストタイトル
+
+## 投稿日時
+- 2024-01-01 10:00
+
+## 筆者名
+- テスト太郎
+
+## 本文
+
+### **重要** な \`config\` の話`;
+
+      const result = parseMarkdown(content, "20240101100000");
+
+      expect(result.toc[0]?.text).toBe("重要 な config の話");
+    });
+
+    it("目次の文字列は < や & を HTML エスケープせずに持つ", () => {
+      const content = `# テストタイトル
+
+## 投稿日時
+- 2024-01-01 10:00
+
+## 筆者名
+- テスト太郎
+
+## 本文
+
+### \`a<b>\` & [リンク](https://x) の話`;
+
+      const result = parseMarkdown(content, "20240101100000");
+
+      expect(result.toc[0]?.text).toBe("a<b> & リンク の話");
+    });
+
     it("h4はTOCに含まれない", () => {
       const content = `# テストタイトル
 
