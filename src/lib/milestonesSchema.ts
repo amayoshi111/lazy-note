@@ -46,7 +46,11 @@
  *   変わらず page 1 ファイル内で完結する。
  */
 
-import type { Milestone, MilestoneTone } from "./anchors";
+import {
+  type Milestone,
+  type MilestoneTone,
+  toMilestoneCalendarDate,
+} from "./anchors";
 
 /**
  * 許容される `MilestoneTone` の値域。
@@ -68,12 +72,21 @@ const isMilestoneTone = (value: unknown): value is MilestoneTone => {
 };
 
 /**
- * `date` フィールドの形式 (`YYYY-MM-DD`)。値範囲 (月 / 日のロールオーバー) は
- * `anchors.ts` の `toMilestoneCalendarDate` の仕様に従って不問とする。
- * 本検証は「JSON 編集者が誤って `date: 12345` のような型違反を入れた」ことを
- * 検出するためのもので、暦計算の正確性は anchors 側に委譲する。
+ * `date` フィールドの形式 (`YYYY-MM-DD`)。形だけを見るため、実在する日付かは
+ * `isExistingDate` で別に確かめる。
  */
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * `date` が実在する日付かを判定する。
+ *
+ * `toMilestoneCalendarDate` は実在しない日付を `Date.UTC` で繰り上げて黙って
+ * 別の日付として扱う (例: `2025-09-31` → 2025-10-01) ため、変換結果が元の
+ * 文字列に戻るかで判定する。
+ */
+const isExistingDate = (date: string): boolean => {
+  return toMilestoneCalendarDate(date)?.toISOString().slice(0, 10) === date;
+};
 
 /**
  * Milestone 1 件分の検証で見つかった不整合。
@@ -152,6 +165,15 @@ const validateOne = (
       index,
       field: "date",
       message: "date が YYYY-MM-DD 形式ではありません",
+      value: record.date,
+    });
+    hasError = true;
+  } else if (!isExistingDate(record.date)) {
+    issues.push({
+      index,
+      field: "date",
+      message:
+        "date が実在しない日付です (月が 01〜12 の範囲外か、その月に無い日です)",
       value: record.date,
     });
     hasError = true;

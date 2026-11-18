@@ -199,7 +199,8 @@ export const toJstCalendarDate = (isoDateTime: string): Date => {
  *   本関数を単一ソースとして export し、resurface 側もこれを使う。両者とも null 返し
  *   契約だったため観測上の差はない。
  *
- * @todo 値範囲検証関数は #489 で別途追加予定。本関数は現状ロールオーバーを許容する
+ * 実在する日付かの検証は `milestonesSchema.ts` の `validateOne` で行い、本関数は
+ * ロールオーバーを許容したままにする
  */
 export const toMilestoneCalendarDate = (date: string): Date | null => {
   const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
