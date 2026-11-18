@@ -743,7 +743,7 @@ console.log("hello");
       expect(result.content).toContain('class="copy-btn"');
     });
 
-    it("copy-btnにdata-code属性が付与される", () => {
+    it("コピーボタンとコード本文が同じcode-block-wrapperに入る", () => {
       const content = `# テストタイトル
 
 ## 投稿日時
@@ -760,8 +760,9 @@ const x = 1;
 
       const result = parseMarkdown(content, "20240101100000");
 
-      expect(result.content).toContain("data-code=");
-      expect(result.content).toContain("const x = 1;");
+      expect(result.content).toBe(
+        '<div class="code-block-wrapper"><button type="button" class="copy-btn">コピー</button><pre><code>const x = 1;</code></pre></div>',
+      );
     });
 
     it("コードブロックに言語クラスが付与される", () => {
@@ -782,26 +783,6 @@ const x: number = 1;
       const result = parseMarkdown(content, "20240101100000");
 
       expect(result.content).toContain('class="language-typescript"');
-    });
-
-    it("data-code属性内のダブルクォートがエスケープされる", () => {
-      const content = `# テストタイトル
-
-## 投稿日時
-- 2024-01-01 10:00
-
-## 筆者名
-- テスト太郎
-
-## 本文
-
-\`\`\`javascript
-const x = "hello";
-\`\`\``;
-
-      const result = parseMarkdown(content, "20240101100000");
-
-      expect(result.content).toContain("&quot;");
     });
   });
 

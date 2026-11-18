@@ -1,5 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { parseMarkdown } from "../../lib/markdown";
+import { sanitizePostHtml } from "../../lib/sanitize";
 import { useCodeBlockCopy } from "../useCodeBlockCopy";
 
 describe("useCodeBlockCopy", () => {
@@ -33,10 +35,10 @@ describe("useCodeBlockCopy", () => {
     return renderHook(() => useCodeBlockCopy(ref));
   };
 
-  it("コピーボタンクリック時にclipboard.writeTextが呼ばれる", async () => {
+  it("コピーボタンクリック時に同じラッパー内のコードがclipboard.writeTextに渡される", async () => {
     container.innerHTML = `
       <div class="code-block-wrapper">
-        <button class="copy-btn" data-code="console.log(&quot;hello&quot;)">コピー</button>
+        <button class="copy-btn">コピー</button>
         <pre><code>console.log("hello")</code></pre>
       </div>
     `;
@@ -61,7 +63,7 @@ describe("useCodeBlockCopy", () => {
 
     container.innerHTML = `
       <div class="code-block-wrapper">
-        <button class="copy-btn" data-code="test code">コピー</button>
+        <button class="copy-btn">コピー</button>
         <pre><code>test code</code></pre>
       </div>
     `;
@@ -99,7 +101,7 @@ describe("useCodeBlockCopy", () => {
 
     container.innerHTML = `
       <div class="code-block-wrapper">
-        <button class="copy-btn" data-code="test code">コピー</button>
+        <button class="copy-btn">コピー</button>
         <pre><code>test code</code></pre>
       </div>
     `;
@@ -123,11 +125,11 @@ describe("useCodeBlockCopy", () => {
     expect(button.textContent).toBe("コピー");
   });
 
-  it("data-code属性のHTMLエンティティがデコードされる", async () => {
+  it("コード中のHTMLエンティティはデコードした文字列でコピーされる", async () => {
     container.innerHTML = `
       <div class="code-block-wrapper">
-        <button class="copy-btn" data-code="const x = &quot;hello&quot; &amp;&amp; &#39;world&#39;">コピー</button>
-        <pre><code>const x = "hello" && 'world'</code></pre>
+        <button class="copy-btn">コピー</button>
+        <pre><code>const x = &quot;hello&quot; &amp;&amp; &#39;world&#39;</code></pre>
       </div>
     `;
 
@@ -149,7 +151,7 @@ describe("useCodeBlockCopy", () => {
   it("HTMLElementでないターゲットのクリックでは何も起きない", async () => {
     container.innerHTML = `
       <div class="code-block-wrapper">
-        <button class="copy-btn" data-code="test">コピー</button>
+        <button class="copy-btn">コピー</button>
         <pre><code>test</code></pre>
       </div>
     `;
@@ -173,7 +175,7 @@ describe("useCodeBlockCopy", () => {
   it("copy-btnクラスを持たない要素のクリックでは何も起きない", async () => {
     container.innerHTML = `
       <div class="code-block-wrapper">
-        <button class="copy-btn" data-code="test">コピー</button>
+        <button class="copy-btn">コピー</button>
         <pre><code>test</code></pre>
       </div>
       <button class="other-btn">他のボタン</button>
@@ -188,6 +190,69 @@ describe("useCodeBlockCopy", () => {
     });
 
     expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+  });
+
+  it("code-block-wrapperの外にあるcopy-btnのクリックでは別の場所のコードをコピーしない", async () => {
+    container.innerHTML = `
+      <p><code>inline</code></p>
+      <button class="copy-btn">コピー</button>
+    `;
+
+    setupHook(container);
+
+    const button = container.querySelector(".copy-btn") as HTMLElement;
+
+    await act(async () => {
+      button.click();
+    });
+
+    expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+  });
+
+  describe("本番と同じ変換 (parseMarkdown → sanitizePostHtml) を通したHTML", () => {
+    /**
+     * 記事のコードブロックを本番と同じ経路で HTML にするヘルパー
+     */
+    const renderCodeBlock = (code: string): string => {
+      const markdown = ["## 本文", "```ts", code, "```"].join("\n");
+      return sanitizePostHtml(
+        parseMarkdown(markdown, "20240101000000").content,
+      );
+    };
+
+    it("`]>` を含むコードもコピーできる", async () => {
+      const code = "const m: Map<string, string[]> = new Map();";
+      container.innerHTML = renderCodeBlock(code);
+
+      setupHook(container);
+
+      const button = container.querySelector(".copy-btn") as HTMLElement;
+
+      await act(async () => {
+        button.click();
+      });
+
+      await vi.waitFor(() => {
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(code);
+      });
+    });
+
+    it("`-->` を含むコードもコピーできる", async () => {
+      const code = "<!-- note -->";
+      container.innerHTML = renderCodeBlock(code);
+
+      setupHook(container);
+
+      const button = container.querySelector(".copy-btn") as HTMLElement;
+
+      await act(async () => {
+        button.click();
+      });
+
+      await vi.waitFor(() => {
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(code);
+      });
+    });
   });
 });
 
