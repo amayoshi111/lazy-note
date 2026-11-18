@@ -161,76 +161,70 @@ export const parseMarkdown = (content: string, timestamp: string): Post => {
 };
 
 /**
- * 本番環境で静的ファイルからサマリーを取得する
+ * 記事ファイルのパス (`/datasources/<id>.md`) から、その Markdown を読み込む関数への対応。
+ * `import.meta.glob` の戻り値をそのまま渡す。
  */
-const getStaticPostSummaries = async (): Promise<PostSummary[]> => {
-  const summaries: PostSummary[] = [];
-  const modules = import.meta.glob("/datasources/*.md", {
-    query: "?raw",
-    import: "default",
-  });
+type PostLoaders = Readonly<Record<string, () => Promise<string>>>;
 
-  for (const filePath in modules) {
-    const loadModule = modules[filePath];
-    if (!loadModule) {
-      continue;
-    }
-    const content = (await loadModule()) as string;
-    const timestamp = filePath.split("/").pop()?.replace(".md", "") || "";
-    if (timestamp) {
-      summaries.push(extractSummaryFromContent(content, timestamp));
-    }
-  }
-
-  return summaries.sort((a, b) => b.id.localeCompare(a.id));
-};
+// 開発時も本番も同じ経路で読み込む (本番ビルドでは記事ごとの JS チャンクになる)
+const postLoaders = import.meta.glob<string>("/datasources/*.md", {
+  query: "?raw",
+  import: "default",
+});
 
 /**
- * 全投稿のメタデータを取得（一覧表示用、高速化のためcontentを含まない）
+ * 記事ファイルのパスから記事 ID (拡張子を除いたファイル名) を取り出す
  */
-export const getAllPostSummaries = async (): Promise<PostSummary[]> => {
+const toPostId = (filePath: string): string =>
+  filePath.replace(/^.*\//, "").replace(/\.md$/, "");
+
+/**
+ * 全投稿のメタデータを id の降順で取得する
+ * @param loaders 記事ファイルのパスから Markdown を読み込む関数への対応
+ */
+export const loadPostSummaries = async (
+  loaders: PostLoaders,
+): Promise<PostSummary[]> => {
   try {
-    if (import.meta.env.DEV) {
-      // 開発環境ではAPIを使用（メタデータが直接返される）
-      const response = await fetch("/api/posts");
-      if (!response.ok) {
-        return [];
-      }
-      // APIはソート済みのメタデータ配列を返す
-      return await response.json();
+    const summaries: PostSummary[] = [];
+    for (const [filePath, load] of Object.entries(loaders)) {
+      summaries.push(
+        extractSummaryFromContent(await load(), toPostId(filePath)),
+      );
     }
-    // 本番環境では動的インポートを使用
-    return await getStaticPostSummaries();
+    return summaries.sort((a, b) => b.id.localeCompare(a.id));
   } catch (error) {
     console.error("Error loading posts:", error);
     return [];
   }
 };
 
-export const getPost = async (timestamp: string): Promise<Post | null> => {
+/**
+ * 指定した id の記事を取得する。対応するファイルが無ければ null を返す
+ * @param loaders 記事ファイルのパスから Markdown を読み込む関数への対応
+ * @param timestamp 記事 ID
+ */
+export const loadPost = async (
+  loaders: PostLoaders,
+  timestamp: string,
+): Promise<Post | null> => {
+  const load = loaders[`/datasources/${timestamp}.md`];
+  if (!load) {
+    return null;
+  }
   try {
-    // 開発環境ではAPIを使用、本番環境では静的ファイルを使用
-    if (import.meta.env.DEV) {
-      const response = await fetch(`/api/posts/${timestamp}`);
-      if (!response.ok) {
-        return null;
-      }
-
-      const content = await response.text();
-      return parseMarkdown(content, timestamp);
-    } else {
-      // 本番環境では動的インポートを使用
-      try {
-        const module = await import(`../../datasources/${timestamp}.md?raw`);
-        const content = module.default;
-        return parseMarkdown(content, timestamp);
-      } catch (error) {
-        console.error(`Error loading post ${timestamp}:`, error);
-        return null;
-      }
-    }
+    return parseMarkdown(await load(), timestamp);
   } catch (error) {
-    console.error("Error loading post:", error);
+    console.error(`Error loading post ${timestamp}:`, error);
     return null;
   }
 };
+
+/**
+ * 全投稿のメタデータを取得（一覧表示用、高速化のためcontentを含まない）
+ */
+export const getAllPostSummaries = (): Promise<PostSummary[]> =>
+  loadPostSummaries(postLoaders);
+
+export const getPost = (timestamp: string): Promise<Post | null> =>
+  loadPost(postLoaders, timestamp);
