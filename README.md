@@ -226,7 +226,7 @@ src/
 │   ├── markdown.ts / markdownParser.ts  # Markdown 解析
 │   ├── sanitize.ts   # HTML サニタイズ
 │   ├── anchors.ts / milestonesSchema.ts # アンカー / 節目
-│   ├── colorTokens.ts / fontStack.ts    # デザイントークン
+│   ├── colorTokens.ts                   # デザイントークン
 │   ├── i18nLiterals.ts / resurface.ts / viewTransition.ts
 ├── pages/            # ページコンポーネント配置（src/main.tsx の Routes に手動登録）
 │   ├── __tests__/    # pages のテスト
