@@ -82,6 +82,11 @@ jobs:
       - name: Build project
         run: bun run build
 
+      # GitHub Pages は存在しないパスに 404.html を返すので、index.html を複製し、記事 URL などを直接開いてもアプリが起動するようにする。
+      # 状態コードは 404 のままなので、これらの URL は検索エンジンには載らない。
+      - name: Copy index.html to 404.html
+        run: cp dist/index.html dist/404.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
 
