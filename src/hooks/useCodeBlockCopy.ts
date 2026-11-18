@@ -58,14 +58,13 @@ const copyAndAnimate = async (target: HTMLElement, code: string): Promise<void> 
 /**
  * コードブロックのコピーボタンにイベントデリゲーションでクリックリスナーを設定するフック。
  *
- * クリック時、対象 button の `data-code` 属性値を `navigator.clipboard.writeText` に
- * 渡してクリップボードへコピーする。`writeText` はコード実行 sink ではなく単なる
- * 文字列書き込みのため、`data-code` 内に `javascript:` URI や `<script>` 文字列が
- * 含まれていてもコード実行リスクは生じない (XSS 観点では低リスク)。
- *
- * 加えて、`src/lib/sanitize.ts` の `sanitizePostHtml` 経由で DOMPurify が
- * `data-code` 値内の危険なパターンを検知すると属性ごと除去するため、本フックには
- * 危険な文字列が到達しにくい構造になっている。
+ * クリック時、対象 button と同じ `.code-block-wrapper` 内にある `<code>` の
+ * textContent を `navigator.clipboard.writeText` に渡してクリップボードへコピーする。
+ * コードを data 属性に複製すると、DOMPurify が `]>` や `-->` を含む属性値を
+ * 属性ごと消してコピーできなくなるため、表示中のコードを直接読む。
+ * `writeText` はコード実行 sink ではなく単なる文字列書き込みのため、
+ * コードに `javascript:` URI や `<script>` 文字列が含まれていてもコード実行リスクは
+ * 生じない (XSS 観点では低リスク)。
  *
  * @param containerRef コンテンツを包含する要素のref
  */
@@ -86,7 +85,9 @@ export const useCodeBlockCopy = (
       if (!target.classList.contains("copy-btn")) {
         return;
       }
-      const code = target.getAttribute("data-code");
+      const code = target
+        .closest(".code-block-wrapper")
+        ?.querySelector("code")?.textContent;
       if (!code) {
         return;
       }
