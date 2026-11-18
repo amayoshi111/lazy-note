@@ -30,22 +30,16 @@
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src"],
-  // 本体 (ブラウザ向け) の型チェックから以下を除外する (Issue #667):
-  //
-  // 1. src/api/**: Vite dev server middleware としてサーバサイド (Bun) で動作し、
-  //    node:fs などの Node.js 互換 API を使うため、tsconfig.api.json 側で
-  //    @types/node を有効化して型付けする。
-  //
-  // 2. src/**/__tests__/**, src/**/*.test.*, src/**/*.spec.*: テストファイルは
-  //    tsconfig.test.json 側で型チェックする。一部のテスト (src/lib/__tests__ や
-  //    src/api/__tests__) は node:fs / process / __dirname 等の Node.js 互換 API を
-  //    参照するため、これらを本体に含めると @types/node の ambient globals が
-  //    ブラウザコードへも漏出し、Issue #667 の防衛の意味が失われる。
+  // 本体 (ブラウザ向け) の型チェックからテストファイル (src/**/__tests__/**,
+  // src/**/*.test.*, src/**/*.spec.*) を除外し、tsconfig.test.json 側で型チェックする
+  // (Issue #667)。一部のテスト (src/lib/__tests__ など) は node:fs / process /
+  // __dirname 等の Node.js 互換 API を参照するため、これらを本体に含めると
+  // @types/node の ambient globals がブラウザコードへも漏出し、Issue #667 の防衛の
+  // 意味が失われる。
   //
   // この exclude により src/ の純粋ブラウザコードから process / Buffer 等の Node.js
   // 互換 API 由来の ambient 型が参照不可になる (tsc エラー化)。
   "exclude": [
-    "src/api/**",
     "src/**/__tests__/**",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",

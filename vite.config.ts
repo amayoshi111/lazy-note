@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { registerApiMiddlewares } from "./src/api";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -12,10 +11,6 @@ export default defineConfig({
     react(),
     {
       name: "datasources-plugin",
-      configureServer(server) {
-        // APIミドルウェアを登録
-        registerApiMiddlewares(server);
-      },
       generateBundle() {
         // ビルド時にdatasourcesフォルダをdistにコピー
         const datasourcesPath = path.resolve("datasources");
