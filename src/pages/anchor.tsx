@@ -1,4 +1,3 @@
-import { Transition } from "@headlessui/react";
 import milestonesData from "../../datasources/milestones.json";
 import { FileQuestion } from "../components/atoms/icons";
 import { CardSkeleton } from "../components/common/CardSkeleton";
@@ -8,11 +7,6 @@ import { AnchorPage } from "../components/pages/AnchorPage";
 import { usePosts } from "../hooks/usePosts";
 import type { Milestone } from "../lib/anchors";
 import { parseMilestones } from "../lib/milestonesSchema";
-import {
-  fadeInEnter,
-  fadeInEnterFrom,
-  fadeInEnterTo,
-} from "../styles/transitions";
 
 /**
  * /anchor ページ (Issue #493 / Anchor 顔2「個人史タイムライン」)。
@@ -105,26 +99,17 @@ const Anchor = () => {
     );
   }
 
+  // 公開 /anchor (読者面) は showHeavy を渡さない (= デフォルト false)。
+  // Footer の「サイトの読み方」入口でナビ統合された読者導線のため、
+  // tone:heavy の節目・座標を抑制する (Issue #839 / docs/ANCHOR.md #545)。
+  // 運営者の全件確認はローカルで showHeavy={true} を渡すか
+  // milestones.json を直読みして行う。URL クエリでの出し分けはしない。
   return (
     <Layout postCount={loading ? undefined : allPosts.length}>
       {loading ? (
         <CardSkeleton />
       ) : (
-        <Transition
-          as="div"
-          show={true}
-          appear={false}
-          enter={fadeInEnter}
-          enterFrom={fadeInEnterFrom}
-          enterTo={fadeInEnterTo}
-        >
-          {/* 公開 /anchor (読者面) は showHeavy を渡さない (= デフォルト false)。
-              Footer の「サイトの読み方」入口でナビ統合された読者導線のため、
-              tone:heavy の節目・座標を抑制する (Issue #839 / docs/ANCHOR.md #545)。
-              運営者の全件確認はローカルで showHeavy={true} を渡すか
-              milestones.json を直読みして行う。URL クエリでの出し分けはしない。 */}
-          <AnchorPage posts={allPosts} milestones={MILESTONES} />
-        </Transition>
+        <AnchorPage posts={allPosts} milestones={MILESTONES} />
       )}
     </Layout>
   );

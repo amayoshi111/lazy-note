@@ -112,8 +112,6 @@ a:hover {
  * 無効化。WCAG 2.3.3 / 2.2.2 対応。
  * - グローバルな transition/animation を `none` 相当に抑制する。
  * - 個別コンポーネントの :hover transform などは _motionReduce で個別対応。
- * - fade-in / progress-bar など意味を持つ transition は src/styles/transitions.ts
- *   側で同条件を適用する。
  */
 @media (prefers-reduced-motion: reduce) {
   *,

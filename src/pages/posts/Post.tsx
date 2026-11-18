@@ -1,4 +1,3 @@
-import { Transition } from "@headlessui/react";
 import { useParams } from "react-router-dom";
 import milestonesData from "../../../datasources/milestones.json";
 import { FileQuestion } from "../../components/atoms/icons";
@@ -12,11 +11,6 @@ import { usePost } from "../../hooks/usePost";
 import type { Milestone } from "../../lib/anchors";
 import { SITE_NAME } from "../../lib/i18nLiterals";
 import { parseMilestones } from "../../lib/milestonesSchema";
-import {
-  fadeInEnter,
-  fadeInEnterFrom,
-  fadeInEnterTo,
-} from "../../styles/transitions";
 
 /**
  * 節目データ (`datasources/milestones.json`)。
@@ -165,30 +159,12 @@ const Post = () => {
   return (
     <Layout>
       <ReadingProgressBar />
-      {/*
-       * appear=false に変更 (Issue #397 / DA 致命 3 対応)。
-       *
-       * View Transitions の Hero morph 中に内部要素が opacity 0 → 1 で
-       * フェードインすると、morph 中のサイズ補間と重なって不自然に
-       * 「フェードしながら位置が動く」アニメーションになる。
-       * appear=false により初回マウント時のフェードを無効化し、VT 中の動きを
-       * 純粋な morph に絞る。Calm 思想にも整合 (装飾フェードは過剰)。
-       */}
-      <Transition
-        as="div"
-        show={true}
-        appear={false}
-        enter={fadeInEnter}
-        enterFrom={fadeInEnterFrom}
-        enterTo={fadeInEnterTo}
-      >
-        <PostDetailPage
-          post={post}
-          olderPost={olderPost}
-          newerPost={newerPost}
-          milestones={MILESTONES}
-        />
-      </Transition>
+      <PostDetailPage
+        post={post}
+        olderPost={olderPost}
+        newerPost={newerPost}
+        milestones={MILESTONES}
+      />
     </Layout>
   );
 };
