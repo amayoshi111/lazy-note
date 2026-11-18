@@ -231,6 +231,7 @@ src/
 │   ├── __tests__/    # pages のテスト
 │   ├── index.tsx     # トップページ（記事一覧）
 │   ├── anchor.tsx    # アンカー（節目一覧）ページ
+│   ├── notFound.tsx  # どのルートにも当たらないパスの「ページが見つかりません」画面
 │   └── posts/
 │       └── Post.tsx  # 記事詳細ページ
 ├── styles/           # 共通スタイル定義（focusRing / transitions 等）
