@@ -28,14 +28,14 @@ export interface TocItem {
  * @returns 変換後のパス
  */
 const resolveImagePath = (src: string): string => {
-  // images/ で始まる相対パスを /datasources/images/ に変換
+  // images/ で始まる相対パスを <ベースパス>datasources/images/ に変換
   if (src.startsWith("images/")) {
     // パストラバーサルを防止
     if (src.includes("..")) {
       return "";
     }
-    const base = import.meta.env.DEV ? "" : "/lazy-note";
-    return `${base}/datasources/${src}`;
+    // ベースパスは vite.config.ts の base から決まる (開発時は "/")
+    return `${import.meta.env.BASE_URL}datasources/${src}`;
   }
   // それ以外はそのまま返す（外部URLなど）
   return src;
