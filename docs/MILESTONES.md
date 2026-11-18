@@ -30,7 +30,8 @@ Anchor 全体の運用 (Coordinate / Resurface / Cast の OFF 手順を含む) �
 
 ### フィールド
 
-- **`date`**: `YYYY-MM-DD` (JST 想定)。形式違反の要素はランタイム検証で除外される
+- **`date`**: `YYYY-MM-DD` (JST 想定)。形式違反の要素と、実在しない日付
+  (例: `2025-09-31`、平年の `2025-02-29`) の要素はランタイム検証で除外される
 - **`label`**: 表示用ラベル (例: `"社会復帰"`、`"サイト開設"`)。空文字列の要素は
   ランタイム検証で除外される
 - **`tone`**: 表示時の扱いを切り替える感情タグ。3 値 (`neutral` / `light` /
@@ -43,8 +44,8 @@ Anchor 全体の運用 (Coordinate / Resurface / Cast の OFF 手順を含む) �
 不正値の扱いは両経路で完全に同一である。
 
 - **Cast (`scripts/newPost.ts` の `loadMilestones`)**: 内部で `parseMilestones`
-  を呼び、日付形式違反 / `tone` 不正値 / `label` 空 / 型不正のエントリを
-  **全て除外する**
+  を呼び、日付形式違反 / 実在しない日付 / `tone` 不正値 / `label` 空 /
+  型不正のエントリを **全て除外する**
 - **Coordinate / Resurface / AnchorPage (`pages/index.tsx` /
   `pages/posts/Post.tsx` / `pages/anchor.tsx`)**: JSON import 直後に
   `parseMilestones(milestonesData)` で narrowing。型キャストではなく

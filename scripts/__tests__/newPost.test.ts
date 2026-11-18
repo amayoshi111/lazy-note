@@ -13,6 +13,7 @@
  *   - 最古記事フォールバック (computeSiteOpeningFallback)
  *   - HTML コメント境界エスケープ (escapeHtmlCommentLabel)
  *   - 完全な .md 出力フォーマット (buildPostMarkdown)
+ *   - 記事ファイル名のタイムスタンプ生成 (formatPostTimestamp)
  *
  * テスト方針:
  *   - t-wada 的 TDD で振る舞い単位を 1 ケースずつ書く
@@ -26,7 +27,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { marked } from "marked";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { Coordinate, Elapsed, Milestone } from "../../src/lib/anchors.ts";
+import {
+  type Coordinate,
+  type Elapsed,
+  inferPublishedAt,
+  type Milestone,
+} from "../../src/lib/anchors.ts";
 import { sanitizePostHtml } from "../../src/lib/sanitize.ts";
 import {
   buildIgnitionComment,
@@ -38,6 +44,7 @@ import {
   extractMarkdownTitle,
   findPreviousPost,
   formatMilestonesSummary,
+  formatPostTimestamp,
   type HasAnchorDiscriminator_ForTest,
   type IgnitionInput,
   type IsAnchorShape_ForTest,
@@ -714,6 +721,46 @@ describe("buildPostMarkdown: 完全な .md 出力", () => {
     expect(result).toContain("-->\n\n## 本文");
     expect(result).not.toContain("-->## 本文");
     expect(result).not.toContain("-->\n## 本文");
+  });
+});
+
+// =============================================================================
+// formatPostTimestamp
+// =============================================================================
+
+describe("formatPostTimestamp: 記事ファイル名のタイムスタンプを JST で作る", () => {
+  it("JST 0:30 (UTC では前日 15:30) に作ると JST の日付のタイムスタンプになる", () => {
+    // 2024-03-10 00:30:00 JST = 2024-03-09 15:30:00 UTC
+    expect(formatPostTimestamp(new Date("2024-03-09T15:30:00Z"))).toBe(
+      "20240310003000",
+    );
+  });
+
+  it("JST 23:59:59 に作ると当日の日付のタイムスタンプになる", () => {
+    // 2024-03-10 23:59:59 JST = 2024-03-10 14:59:59 UTC
+    expect(formatPostTimestamp(new Date("2024-03-10T14:59:59Z"))).toBe(
+      "20240310235959",
+    );
+  });
+
+  it("JST 0:00:00 ちょうどに作ると翌日の日付のタイムスタンプになる", () => {
+    // 2024-03-11 00:00:00 JST = 2024-03-10 15:00:00 UTC
+    expect(formatPostTimestamp(new Date("2024-03-10T15:00:00Z"))).toBe(
+      "20240311000000",
+    );
+  });
+
+  it("JST の元日 0:00 (UTC では前年の大晦日) に作ると新年の日付のタイムスタンプになる", () => {
+    // 2024-01-01 00:00:00 JST = 2023-12-31 15:00:00 UTC
+    expect(formatPostTimestamp(new Date("2023-12-31T15:00:00Z"))).toBe(
+      "20240101000000",
+    );
+  });
+
+  it("作ったファイル名を inferPublishedAt で解釈すると作成時刻の JST 表記に戻る", () => {
+    // 2024-03-09 15:30:00 UTC = 2024-03-10 00:30:00 JST
+    const fileName = `${formatPostTimestamp(new Date("2024-03-09T15:30:00Z"))}.md`;
+    expect(inferPublishedAt(fileName)).toBe("2024-03-10T00:30:00+09:00");
   });
 });
 
