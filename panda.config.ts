@@ -14,7 +14,7 @@ import { oklchPrimitives, semanticColorTokens } from "./src/lib/colorTokens";
  * 値を変える場合は src/lib/colorTokens.ts を編集し、AAA 実測を通すこと
  * (本文ペアが 7.20:1 を割った時点で merge ブロック)。
  *
- * R-2c (Issue #390) で旧 5 段階トークン (bg.0..bg.4 / fg.0..fg.4) と旧パレット
+ * R-2c (Issue #390) で旧 5 段階トークン (bg / fg の下の数字キー 0〜4) と旧パレット
  * 階層を削除し、UI は OKLCH semantic token (bg.canvas / surface / elevated /
  * fg.primary / secondary / muted / accent.brand / featured / link) に統一。
  * コードブロック背景・前景は `bg.code` / `bg.codeInline` / `bg.codeBorder` /
