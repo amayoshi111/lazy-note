@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { registerApiMiddlewares } from "./src/api";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -12,54 +11,29 @@ export default defineConfig({
     react(),
     {
       name: "datasources-plugin",
-      configureServer(server) {
-        // APIミドルウェアを登録
-        registerApiMiddlewares(server);
-      },
       generateBundle() {
-        // ビルド時にdatasourcesフォルダをdistにコピー
-        const datasourcesPath = path.resolve("datasources");
-        const outputPath = path.resolve("dist", "datasources");
+        // ビルド時に記事内の画像 (datasources/images) を dist にコピーする。
+        // 記事の Markdown は import.meta.glob で JS チャンクとして配られるのでコピーしない
+        const imagesPath = path.resolve("datasources", "images");
+        const imagesOutputPath = path.resolve("dist", "datasources", "images");
+        const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"];
 
-        if (fs.existsSync(datasourcesPath)) {
-          fs.mkdirSync(outputPath, { recursive: true });
-          const files = fs.readdirSync(datasourcesPath);
+        if (fs.existsSync(imagesPath)) {
+          fs.mkdirSync(imagesOutputPath, { recursive: true });
+          const imageFiles = fs.readdirSync(imagesPath);
 
-          for (const file of files) {
-            if (file.endsWith(".md")) {
-              const sourcePath = path.join(datasourcesPath, file);
-              const destPath = path.join(outputPath, file);
+          for (const file of imageFiles) {
+            const ext = path.extname(file).toLowerCase();
+            if (imageExtensions.includes(ext)) {
+              const sourcePath = path.join(imagesPath, file);
+              const destPath = path.join(imagesOutputPath, file);
               fs.copyFileSync(sourcePath, destPath);
-            }
-          }
-
-          // 画像ファイルをコピー
-          const imagesPath = path.join(datasourcesPath, "images");
-          const imagesOutputPath = path.join(outputPath, "images");
-          const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"];
-
-          if (fs.existsSync(imagesPath)) {
-            fs.mkdirSync(imagesOutputPath, { recursive: true });
-            const imageFiles = fs.readdirSync(imagesPath);
-
-            for (const file of imageFiles) {
-              const ext = path.extname(file).toLowerCase();
-              if (imageExtensions.includes(ext)) {
-                const sourcePath = path.join(imagesPath, file);
-                const destPath = path.join(imagesOutputPath, file);
-                fs.copyFileSync(sourcePath, destPath);
-              }
             }
           }
         }
       },
     },
   ],
-  server: {
-    watch: {
-      ignored: ["!**/datasources/**/*.md"],
-    },
-  },
   test: {
     globals: true,
     environment: "jsdom",

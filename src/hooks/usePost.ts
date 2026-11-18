@@ -17,6 +17,7 @@ interface UsePostReturn {
  *
  * @param timestamp 記事のタイムスタンプID
  * @returns 記事詳細、ローディング状態、エラー状態、記事が見つからない状態
+ * (読み込みの失敗は error に入れ、notFound にはしない)
  */
 export const usePost = (timestamp: string | undefined): UsePostReturn => {
   const [post, setPost] = useState<Post | null>(null);
@@ -60,7 +61,6 @@ export const usePost = (timestamp: string | undefined): UsePostReturn => {
         setError(
           err instanceof Error ? err.message : "記事の読み込みに失敗しました",
         );
-        setNotFound(true);
       })
       .finally(() => {
         if (!cancelled) {

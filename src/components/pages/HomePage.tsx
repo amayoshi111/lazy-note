@@ -41,10 +41,9 @@ const HOMEPAGE_META_DESCRIPTION =
  *
  * 設計上の caveat (タスク指示):
  * - **1 ルート 1 タイトル**: 本ページが描画する `<title>` はこの 1 つのみ。
- *   `<Routes>` は同時に 1 ルートしかマウントしないため、View Transition の
- *   `<Transition appear={false}>` で旧 / 新ページ DOM が一時共存しても、React
- *   ツリー上は常に 1 ページ分の `<title>` しか存在しない (= 複数 `<title>` が
- *   同時に hoist されない)。本コンポーネントは EmptyState 分岐でも通常分岐でも
+ *   `<Routes>` は同時に 1 ルートしかマウントしないため、React ツリー上は常に
+ *   1 ページ分の `<title>` しか存在しない (= 複数 `<title>` が同時に hoist
+ *   されない)。本コンポーネントは EmptyState 分岐でも通常分岐でも
  *   この共通フラグメントを最上位に 1 度だけ描画する。
  * - **title はテンプレートリテラル 1 文字列**: React 19 の `<title>` は単一の
  *   テキスト子のみを許容する (配列 / 複数ノードは警告)。本ページは

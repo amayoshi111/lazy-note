@@ -1,18 +1,18 @@
-import { Transition } from "@headlessui/react";
 import { useMemo } from "react";
 import milestonesData from "../../datasources/milestones.json";
+import { FileQuestion } from "../components/atoms/icons";
 import { CardSkeleton } from "../components/common/CardSkeleton";
+import { EmptyState } from "../components/common/EmptyState";
 import { Layout } from "../components/layouts/Layout";
 import { HomePage } from "../components/pages/HomePage";
 import { usePosts } from "../hooks/usePosts";
 import { type Milestone, todayInJst } from "../lib/anchors";
+import {
+  LOAD_ERROR_RELOAD_HINT,
+  POST_LIST_LOAD_ERROR_TITLE,
+} from "../lib/i18nLiterals";
 import { parseMilestones } from "../lib/milestonesSchema";
 import { selectResurfaced } from "../lib/resurface";
-import {
-  fadeInEnter,
-  fadeInEnterFrom,
-  fadeInEnterTo,
-} from "../styles/transitions";
 
 /**
  * 節目データ (`datasources/milestones.json`)。
@@ -56,6 +56,7 @@ const Index = () => {
     posts,
     allPosts,
     loading,
+    error,
     currentPage,
     totalPages,
     totalPosts,
@@ -87,32 +88,31 @@ const Index = () => {
     [allPosts, posts],
   );
 
+  // 失敗を 0 件と取り違えないよう、HomePage の 0 件表示もヘッダーの件数も出さない
+  if (error) {
+    return (
+      <Layout>
+        <EmptyState
+          icon={FileQuestion}
+          title={POST_LIST_LOAD_ERROR_TITLE}
+          description={LOAD_ERROR_RELOAD_HINT}
+        />
+      </Layout>
+    );
+  }
+
   return (
     <Layout postCount={loading ? undefined : totalPosts}>
       {loading ? (
         <CardSkeleton />
       ) : (
-        // appear=false に変更 (Issue #397 / DA 致命 3 対応)。
-        // 詳細は src/pages/posts/Post.tsx の同コメントを参照。
-        // 記事 → HomePage の戻り遷移時に Hero morph が起きるが、その間に
-        // HomePage 全体が opacity 0 → 1 でフェードすると morph と被って
-        // 不自然に動くため、初回マウント時のフェードを無効化する。
-        <Transition
-          as="div"
-          show={true}
-          appear={false}
-          enter={fadeInEnter}
-          enterFrom={fadeInEnterFrom}
-          enterTo={fadeInEnterTo}
-        >
-          <HomePage
-            posts={posts}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            resurfaceEntry={resurfaceEntry}
-          />
-        </Transition>
+        <HomePage
+          posts={posts}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          resurfaceEntry={resurfaceEntry}
+        />
       )}
     </Layout>
   );

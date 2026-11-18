@@ -1,16 +1,16 @@
-import { Transition } from "@headlessui/react";
 import milestonesData from "../../datasources/milestones.json";
+import { FileQuestion } from "../components/atoms/icons";
 import { CardSkeleton } from "../components/common/CardSkeleton";
+import { EmptyState } from "../components/common/EmptyState";
 import { Layout } from "../components/layouts/Layout";
 import { AnchorPage } from "../components/pages/AnchorPage";
 import { usePosts } from "../hooks/usePosts";
 import type { Milestone } from "../lib/anchors";
-import { parseMilestones } from "../lib/milestonesSchema";
 import {
-  fadeInEnter,
-  fadeInEnterFrom,
-  fadeInEnterTo,
-} from "../styles/transitions";
+  LOAD_ERROR_RELOAD_HINT,
+  POST_LIST_LOAD_ERROR_TITLE,
+} from "../lib/i18nLiterals";
+import { parseMilestones } from "../lib/milestonesSchema";
 
 /**
  * /anchor ページ (Issue #493 / Anchor 顔2「個人史タイムライン」)。
@@ -31,17 +31,9 @@ import {
  * 表示順の責務 (Issue #543):
  * - AnchorPage は受け取った `posts` / `milestones` の配列順をそのまま描画する
  *   契約 (= 内部で再ソートしない)。本ファイルが「どの順で見せるか」を決める。
- * - `posts`: `usePosts()` が返す `allPosts` は **本番経路 / 開発経路の双方で
- *   id (= timestamp `YYYYMMDDhhmmss`) 降順にソート済み** だが、これは下記
- *   経路ごとに別ファイルが担う **暗黙の前提** にすぎない。
- *   - 本番経路 (`import.meta.env.DEV === false`): `src/lib/markdown.ts` の
- *     `getStaticPostSummaries()` 内で `summaries.sort((a, b) => b.id.localeCompare(a.id))`
- *   - 開発経路 (`import.meta.env.DEV === true`): `src/api/posts.ts` の
- *     `createPostsMiddleware()` 内で `posts.sort((a, b) => b.id.localeCompare(a.id))`
- *   暗黙前提への drift 防御として、本ファイルでも `AnchorPage` に渡す直前に
- *   `[...allPosts].sort((a, b) => b.id.localeCompare(a.id))` を 1 行噛ませて
- *   **id 降順を本ファイル側で明示的に強制する** (Issue #543 DA Counterpoint 1)。
- *   コストは sort 1 回 (運用 16 件規模) で実質ゼロ。
+ * - `posts`: `usePosts()` が返す `allPosts` をそのまま渡す。`allPosts` は
+ *   `src/lib/markdown.ts` の `loadPostSummaries()` が id (= timestamp
+ *   `YYYYMMDDhhmmss`) 降順に並べた配列。
  * - `milestones`: `milestones.json` の配列順をそのまま渡す (= ファイル上の
  *   記載順が画面の表示順になる)。日付順などで並び替えたい場合は、JSON 自体
  *   を並び替えるか、本ファイルで sort を挟むこと。
@@ -86,34 +78,32 @@ import {
 const MILESTONES: readonly Milestone[] = parseMilestones(milestonesData);
 
 const Anchor = () => {
-  const { allPosts, loading } = usePosts();
+  const { allPosts, loading, error } = usePosts();
 
-  // id 降順 (= timestamp 降順 = 新しい記事が先頭) を本ファイル側で明示的に
-  // 強制する (Issue #543 DA Counterpoint 1)。usePosts → getAllPostSummaries →
-  // 本番 sort / 開発 API sort という 4 階層の暗黙前提に依存せず、AnchorPage の
-  // JSDoc 契約 (「呼び出し側が決めた順序をそのまま描画する」) をコードで担保する。
-  const orderedPosts = [...allPosts].sort((a, b) => b.id.localeCompare(a.id));
+  // 失敗を 0 件と取り違えないよう、AnchorPage の 0 件表示もヘッダーの件数も出さない
+  if (error) {
+    return (
+      <Layout>
+        <EmptyState
+          icon={FileQuestion}
+          title={POST_LIST_LOAD_ERROR_TITLE}
+          description={LOAD_ERROR_RELOAD_HINT}
+        />
+      </Layout>
+    );
+  }
 
+  // 公開 /anchor (読者面) は showHeavy を渡さない (= デフォルト false)。
+  // Footer の「サイトの読み方」入口でナビ統合された読者導線のため、
+  // tone:heavy の節目・座標を抑制する (Issue #839 / docs/ANCHOR.md #545)。
+  // 運営者の全件確認はローカルで showHeavy={true} を渡すか
+  // milestones.json を直読みして行う。URL クエリでの出し分けはしない。
   return (
     <Layout postCount={loading ? undefined : allPosts.length}>
       {loading ? (
         <CardSkeleton />
       ) : (
-        <Transition
-          as="div"
-          show={true}
-          appear={false}
-          enter={fadeInEnter}
-          enterFrom={fadeInEnterFrom}
-          enterTo={fadeInEnterTo}
-        >
-          {/* 公開 /anchor (読者面) は showHeavy を渡さない (= デフォルト false)。
-              Footer の「サイトの読み方」入口でナビ統合された読者導線のため、
-              tone:heavy の節目・座標を抑制する (Issue #839 / docs/ANCHOR.md #545)。
-              運営者の全件確認はローカルで showHeavy={true} を渡すか
-              milestones.json を直読みして行う。URL クエリでの出し分けはしない。 */}
-          <AnchorPage posts={orderedPosts} milestones={MILESTONES} />
-        </Transition>
+        <AnchorPage posts={allPosts} milestones={MILESTONES} />
       )}
     </Layout>
   );

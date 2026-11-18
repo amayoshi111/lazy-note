@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `bun install` - 依存関係のインストール（最初に必ず実行）
 - `bun run dev` - 開発サーバー起動（Panda CSS ウォッチモード付き）
-- `bun run build` - プロダクションビルド（lint・テスト・型チェック(src/api/scripts)を全て通した後、Panda CSS生成 → tsc(src + api) → Vite ビルド）
+- `bun run build` - プロダクションビルド（lint・テスト・型チェック(src/scripts)を全て通した後、Panda CSS生成 → Vite ビルド）
 - `bun run test` - テストをウォッチモードで実行
 - `bun run test:run` - テストを1回実行
 - `bun run test:ui` - Vitest UIでテスト実行
@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **スクリプトは必ず `bun run <名前>` で実行すること**。`bun test` と `bun build` は Bun 組み込みのテストランナーとバンドラを起動するコマンドで、`package.json` の `test`（Vitest）/ `build` は実行されない。`bun test` は取り違え防止のため、案内を出して失敗するようにしてある（`bunfig.toml` の `test.preload` → `scripts/bunTestGuard.ts`）。
 
-`node_modules/.bin` の CLI を直接使うときも `bun run <CLI 名>`（例: `bun run biome lint src/api/posts.ts`）で実行する。`bunx` には `bunfig.toml` の `run.bun` が効かないため、Node.js が入っている環境では Node.js で動いてしまう。また、ローカルに無いパッケージを自動で取得する。
+`node_modules/.bin` の CLI を直接使うときも `bun run <CLI 名>`（例: `bun run biome lint src/lib/markdown.ts`）で実行する。`bunx` には `bunfig.toml` の `run.bun` が効かないため、Node.js が入っている環境では Node.js で動いてしまう。また、ローカルに無いパッケージを自動で取得する。
 
 **`bun run` と `bun test` はリポジトリのルートで実行すること**。どちらも実行したディレクトリにある `bunfig.toml` しか読み込まないため、`src/` などのサブディレクトリから実行すると、`run.bun` が効かず（Node.js が入っている環境では Node.js で動く）、`bun test` の取り違え防止も働かない。
 
@@ -146,7 +146,7 @@ Tripwire テスト用に吐く data-* 属性の命名は以下を指針とする
 - Bun: `bunfig.toml` で次の 4 点を設定している。公開から 1 日未満のバージョンを新規解決の対象から外す（`install.minimumReleaseAge`）、`node_modules` を isolated レイアウトにして `package.json` に書いていない推移依存を import できないようにする（`install.linker`）、`bun run` で起動する CLI を Node.js ではなく Bun で実行する（`run.bun`）、`bun test` を案内付きで失敗させる（`test.preload`）。このうち `run` と `test` の設定が読み込まれるのは、リポジトリのルートで実行したときだけ。依存パッケージのライフサイクルスクリプトは `package.json` の `trustedDependencies` に載せたものだけが実行される（現在は空で、どのパッケージのスクリプトも実行しない）
 - TypeScript: 厳格モード、ES2020ターゲット、バンドラー解決
 - Biome: ダブルクォート、セミコロン必須、スペース2個インデント
-- Vite: React JSX 変換プラグイン（`@vitejs/plugin-react`）と、Markdown コピー / API ミドルウェア登録 / 画像コピーを担う独自インラインプラグイン（`vite.config.ts` 内、現状名 `datasources-plugin`）を設定。自動ルート生成方式のプラグイン（`vite-plugin-pages` 等）は導入していない
+- Vite: React JSX 変換プラグイン（`@vitejs/plugin-react`）と、ビルド時に記事内の画像（`datasources/images`）を dist にコピーする独自インラインプラグイン（`vite.config.ts` 内、現状名 `datasources-plugin`）を設定。記事の Markdown は開発時・本番とも `src/lib/markdown.ts` の `import.meta.glob` で読み込む（本番ビルドでは記事ごとの JS チャンクになる）。自動ルート生成方式のプラグイン（`vite-plugin-pages` 等）は導入していない
 
 ## Gitブランチ運用ルール
 

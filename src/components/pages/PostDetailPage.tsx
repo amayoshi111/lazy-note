@@ -72,8 +72,7 @@ const buildPostDetailTitle = (title: string): string =>
  *   `<title>` / description と揃える。og:site_name は `SITE_NAME`。
  *
  * **1 ルート 1 タイトル**: 本ページが描画する `<title>` はこの 1 つのみ。
- * `<Routes>` は同時に 1 ルートしかマウントしないため、`<Transition
- * appear={false}>` で旧 / 新ページ DOM が一時共存しても React ツリー上は
+ * `<Routes>` は同時に 1 ルートしかマウントしないため、React ツリー上は
  * 常に 1 ページ分の `<title>` しか存在しない。
  */
 const PostDetailMetadata = ({ post }: { post: Post }) => {

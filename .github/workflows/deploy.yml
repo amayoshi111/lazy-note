@@ -29,11 +29,11 @@ jobs:
         run: bun install --frozen-lockfile
 
       # Issue #655: ci.yml (lint-and-typecheck job) と同じ cache key を共有し、
-      # deploy 時の tsc (bun run build 内の `tsc` / `type-check` / `type-check:scripts` / `type-check:api`) の
+      # deploy 時の tsc (bun run build 内の `type-check` / `type-check:scripts`) の
       # cold ビルドを回避する。
       # Issue #640: PR #580 では 4 つの .tsbuildinfo を `.tsbuildinfo/` 1 entry でまとめていたため、
       # test ファイル変更で本体 buildinfo の cache key まで invalidate される過剰 invalidation が
-      # 発生していた。これを cache entry を「本体 / test / scripts / api」の 4 つに分離することで、
+      # 発生していた。これを cache entry を「本体 / test / scripts」の 3 つに分離することで、
       # それぞれ独立した cache key で部分 invalidate を効かせる構造に変更する。
       # ci.yml と key を共有する理由:
       # - ci.yml の key 構成は deploy 時の incremental cache に対しても valid
@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tsbuildinfo/tsconfig.tsbuildinfo
-          key: tsc-main-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/api/**', '!src/**/__tests__/**') }}
+          key: tsc-main-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
 
       # test 側 cache: tsconfig.test.json は tsconfig.json を継承するため、本体ソースの変更でも
       # invalidate する必要がある (本体 + テストファイル両方を hash 対象に含める)。
@@ -70,14 +70,6 @@ jobs:
         with:
           path: .tsbuildinfo/tsconfig.scripts.tsbuildinfo
           key: tsc-scripts-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.scripts.json') }}-${{ hashFiles('scripts/**/*.ts', 'scripts/**/*.tsx') }}
-
-      # api 側 cache: tsconfig.api.json は src/api/ のみを対象 (Issue #667)。
-      # ただし src/api/posts.ts は ../lib/markdownParser を import するため、src/lib も hash 対象に含める。
-      - name: Cache tsc api build info (Issue #640)
-        uses: actions/cache@v6
-        with:
-          path: .tsbuildinfo/tsconfig.api.tsbuildinfo
-          key: tsc-api-${{ runner.os }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'tsconfig.json', 'tsconfig.api.json') }}-${{ hashFiles('src/api/**/*.ts', 'src/api/**/*.tsx', 'src/lib/**/*.ts', 'src/lib/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/*.spec.ts', '!src/**/*.spec.tsx', '!src/**/__tests__/**') }}
 
       - name: Build project
         run: bun run build

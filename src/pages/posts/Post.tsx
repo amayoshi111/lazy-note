@@ -1,4 +1,3 @@
-import { Transition } from "@headlessui/react";
 import { useParams } from "react-router-dom";
 import milestonesData from "../../../datasources/milestones.json";
 import { FileQuestion } from "../../components/atoms/icons";
@@ -10,13 +9,8 @@ import { PostDetailPage } from "../../components/pages/PostDetailPage";
 import { useAdjacentPosts } from "../../hooks/useAdjacentPosts";
 import { usePost } from "../../hooks/usePost";
 import type { Milestone } from "../../lib/anchors";
-import { SITE_NAME } from "../../lib/i18nLiterals";
+import { LOAD_ERROR_RELOAD_HINT, SITE_NAME } from "../../lib/i18nLiterals";
 import { parseMilestones } from "../../lib/milestonesSchema";
-import {
-  fadeInEnter,
-  fadeInEnterFrom,
-  fadeInEnterTo,
-} from "../../styles/transitions";
 
 /**
  * 節目データ (`datasources/milestones.json`)。
@@ -78,6 +72,16 @@ const POST_NOT_FOUND_ACTION_ARROW = "←" as const;
 const POST_NOT_FOUND_ACTION_TEXT = "記事一覧に戻る" as const;
 
 /**
+ * Post ページの記事読み込み失敗時 EmptyState のタイトル文言。
+ *
+ * 通信の失敗などで読み込めなかった場合に、記事が存在しない場合
+ * (`POST_NOT_FOUND_*`) と取り違えないよう、別の文言にする。再読み込みを促す
+ * 説明文は index / anchor と共通のため `i18nLiterals.ts` の
+ * `LOAD_ERROR_RELOAD_HINT` を使う。
+ */
+const POST_LOAD_ERROR_TITLE = "記事の読み込みに失敗しました" as const;
+
+/**
  * 記事未検出時の `<title>` 文言 (React 19 ネイティブ metadata)。
  *
  * PostDetailPage が描画する `${記事タイトル} | Lazy Note` と同じサフィックス
@@ -96,8 +100,21 @@ const POST_NOT_FOUND_DOCUMENT_TITLE =
 
 const Post = () => {
   const { timestamp } = useParams<{ timestamp: string }>();
-  const { post, loading, notFound } = usePost(timestamp);
+  const { post, loading, error, notFound } = usePost(timestamp);
   const { olderPost, newerPost } = useAdjacentPosts(timestamp);
+
+  // 失敗時の post は null か直前の記事のままなので、未検出判定や記事表示より先に分岐する
+  if (error) {
+    return (
+      <Layout>
+        <EmptyState
+          icon={FileQuestion}
+          title={POST_LOAD_ERROR_TITLE}
+          description={LOAD_ERROR_RELOAD_HINT}
+        />
+      </Layout>
+    );
+  }
 
   if (notFound || (!loading && !post)) {
     return (
@@ -143,30 +160,12 @@ const Post = () => {
   return (
     <Layout>
       <ReadingProgressBar />
-      {/*
-       * appear=false に変更 (Issue #397 / DA 致命 3 対応)。
-       *
-       * View Transitions の Hero morph 中に内部要素が opacity 0 → 1 で
-       * フェードインすると、morph 中のサイズ補間と重なって不自然に
-       * 「フェードしながら位置が動く」アニメーションになる。
-       * appear=false により初回マウント時のフェードを無効化し、VT 中の動きを
-       * 純粋な morph に絞る。Calm 思想にも整合 (装飾フェードは過剰)。
-       */}
-      <Transition
-        as="div"
-        show={true}
-        appear={false}
-        enter={fadeInEnter}
-        enterFrom={fadeInEnterFrom}
-        enterTo={fadeInEnterTo}
-      >
-        <PostDetailPage
-          post={post}
-          olderPost={olderPost}
-          newerPost={newerPost}
-          milestones={MILESTONES}
-        />
-      </Transition>
+      <PostDetailPage
+        post={post}
+        olderPost={olderPost}
+        newerPost={newerPost}
+        milestones={MILESTONES}
+      />
     </Layout>
   );
 };

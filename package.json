@@ -6,7 +6,7 @@
   "packageManager": "bun@1.4.4",
   "scripts": {
     "dev": "panda --watch & vite",
-    "build": "bun run lint && bun run test:run && bun run type-check && bun run type-check:api && bun run type-check:scripts && panda && tsc && tsc --project tsconfig.api.json && vite build",
+    "build": "bun run lint && bun run test:run && bun run type-check && bun run type-check:scripts && panda && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
@@ -17,7 +17,6 @@
     "lint": "biome lint ./src ./scripts ./e2e",
     "lint:tokens": "git grep --untracked -nE '(^|[^A-Za-z0-9_])(bg|fg)\\.[0-9]|--colors-(bg|fg)-[0-9]|colors\\.gruvbox|(^|[^A-Za-z0-9_])gruvbox[[:space:]]*:' -- src panda.config.ts scripts e2e ':!**/__tests__/**'; test $? -eq 1",
     "type-check": "tsc --noEmit",
-    "type-check:api": "tsc --noEmit --project tsconfig.api.json",
     "type-check:test": "tsc --noEmit --project tsconfig.test.json",
     "type-check:scripts": "tsc --noEmit --project tsconfig.scripts.json",
     "prepare": "bun --bun panda codegen",

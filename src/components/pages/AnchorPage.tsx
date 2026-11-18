@@ -20,7 +20,7 @@ interface AnchorPageProps {
    * **入力順をそのまま保つ** (内部での再ソートや並び替えはしない)。したがって
    * 「どの順で並べるか」は呼び出し側 (= `pages/anchor.tsx`) の責務であり、
    * 現状の呼び出し側は **id 降順** (= timestamp 降順 = 最新が先頭) で渡してくる
-   * (`pages/anchor.tsx` 側で `localeCompare` による明示 sort を実施)。
+   * (`src/lib/markdown.ts` の `loadPostSummaries` が `localeCompare` で並べた順)。
    *
    * なお `id` は `YYYYMMDDhhmmss` の 14 桁 timestamp 形式を前提としており
    * (`src/lib/anchors.ts` の `inferPublishedAt` が同正規表現で 14 桁を強制)、
@@ -85,8 +85,8 @@ interface AnchorPageProps {
  *   の記載順が決める。
  * - **各記事の座標**: 入力 `posts` 配列の順序をそのまま保持して描画する
  *   (内部で id / 日付でソートしない)。並び順は呼び出し側 (`pages/anchor.tsx`)
- *   が明示的に行う `localeCompare` ベースの id 降順 sort (= timestamp 降順、
- *   id は 14 桁 `YYYYMMDDhhmmss` 前提) に完全に依存する。
+ *   が渡す配列の順 (= `loadPostSummaries` の `localeCompare` ベースの id 降順
+ *   sort。timestamp 降順、id は 14 桁 `YYYYMMDDhhmmss` 前提) に完全に依存する。
  * - したがって表示順を変えたい場合は、本コンポーネントを変更するのではなく
  *   呼び出し側でソート済み配列を渡すこと。
  *
@@ -318,8 +318,7 @@ const ANCHOR_META_DESCRIPTION = ANCHOR_PAGE_DESCRIPTION;
  * `/anchor` ルートの Document Metadata (React 19 ネイティブ metadata)。
  *
  * **1 ルート 1 タイトル**: 本ページが描画する `<title>` はこの 1 つのみ。
- * `<Routes>` は同時に 1 ルートしかマウントしないため、`<Transition
- * appear={false}>` で旧 / 新ページ DOM が一時共存しても React ツリー上は
+ * `<Routes>` は同時に 1 ルートしかマウントしないため、React ツリー上は
  * 常に 1 ページ分の `<title>` しか存在しない。
  *
  * `og:*` は最小限 (title / description / type / site_name) を添える。

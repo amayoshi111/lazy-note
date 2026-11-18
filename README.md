@@ -141,9 +141,6 @@ bun run lint:tokens
 # src の型チェック
 bun run type-check
 
-# API（src/api）の型チェック
-bun run type-check:api
-
 # テストコードの型チェック
 bun run type-check:test
 
@@ -173,11 +170,6 @@ bun run new-post
 
 ```
 src/
-├── api/              # API ミドルウェア
-│   ├── __tests__/    # API のテスト
-│   ├── index.ts      # ミドルウェア登録
-│   ├── posts.ts      # 記事取得 API
-│   └── images.ts     # 画像取得 API
 ├── components/       # コンポーネント
 │   ├── atoms/        # 基本的な UI コンポーネント
 │   │   ├── Button.tsx
@@ -235,7 +227,7 @@ src/
 │   ├── notFound.tsx  # どのルートにも当たらないパスの「ページが見つかりません」画面
 │   └── posts/
 │       └── Post.tsx  # 記事詳細ページ
-├── styles/           # 共通スタイル定義（focusRing / transitions 等）
+├── styles/           # 共通スタイル定義（focusRing）
 ├── test/             # テスト共通設定
 └── main.tsx          # アプリケーションエントリーポイント
 
@@ -284,7 +276,6 @@ styled-system/       # Panda CSS 自動生成ファイル（.gitignore 済み、
 - `src/hooks/__tests__/` - カスタムフックのテスト
 - `src/pages/__tests__/` - ページコンポーネントのテスト
 - `src/components/**/__tests__/` - 各コンポーネント（atoms / common / layouts / pages）のテスト
-- `src/api/__tests__/` - API のテスト
 - `scripts/__tests__/` - スクリプトのテスト
 
 E2E / アクセシビリティテスト（Playwright）は `e2e/` 配下に配置されています（`bun run e2e` / `bun run test:a11y` で実行）。

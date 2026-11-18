@@ -28,14 +28,14 @@ export interface TocItem {
  * @returns 変換後のパス
  */
 const resolveImagePath = (src: string): string => {
-  // images/ で始まる相対パスを /datasources/images/ に変換
+  // images/ で始まる相対パスを <ベースパス>datasources/images/ に変換
   if (src.startsWith("images/")) {
     // パストラバーサルを防止
     if (src.includes("..")) {
       return "";
     }
-    const base = import.meta.env.DEV ? "" : "/lazy-note";
-    return `${base}/datasources/${src}`;
+    // ベースパスは vite.config.ts の base から決まる (開発時は "/")
+    return `${import.meta.env.BASE_URL}datasources/${src}`;
   }
   // それ以外はそのまま返す（外部URLなど）
   return src;
@@ -162,76 +162,62 @@ export const parseMarkdown = (content: string, timestamp: string): Post => {
 };
 
 /**
- * 本番環境で静的ファイルからサマリーを取得する
+ * 記事ファイルのパス (`/datasources/<id>.md`) から、その Markdown を読み込む関数への対応。
+ * `import.meta.glob` の戻り値をそのまま渡す。
  */
-const getStaticPostSummaries = async (): Promise<PostSummary[]> => {
-  const summaries: PostSummary[] = [];
-  const modules = import.meta.glob("/datasources/*.md", {
-    query: "?raw",
-    import: "default",
-  });
+type PostLoaders = Readonly<Record<string, () => Promise<string>>>;
 
-  for (const filePath in modules) {
-    const loadModule = modules[filePath];
-    if (!loadModule) {
-      continue;
-    }
-    const content = (await loadModule()) as string;
-    const timestamp = filePath.split("/").pop()?.replace(".md", "") || "";
-    if (timestamp) {
-      summaries.push(extractSummaryFromContent(content, timestamp));
-    }
-  }
+// 開発時も本番も同じ経路で読み込む (本番ビルドでは記事ごとの JS チャンクになる)
+const postLoaders = import.meta.glob<string>("/datasources/*.md", {
+  query: "?raw",
+  import: "default",
+});
 
+/**
+ * 記事ファイルのパスから記事 ID (拡張子を除いたファイル名) を取り出す
+ */
+const toPostId = (filePath: string): string =>
+  filePath.replace(/^.*\//, "").replace(/\.md$/, "");
+
+/**
+ * 全投稿のメタデータを id の降順で取得する
+ * @param loaders 記事ファイルのパスから Markdown を読み込む関数への対応
+ * @throws 読み込みに失敗した記事があるとき (0 件と区別するため空配列にはしない)
+ */
+export const loadPostSummaries = async (
+  loaders: PostLoaders,
+): Promise<PostSummary[]> => {
+  // 本番では記事ごとに別チャンクの取得になるため、直列に待たず同時に読み込む
+  const summaries = await Promise.all(
+    Object.entries(loaders).map(async ([filePath, load]) =>
+      extractSummaryFromContent(await load(), toPostId(filePath)),
+    ),
+  );
   return summaries.sort((a, b) => b.id.localeCompare(a.id));
+};
+
+/**
+ * 指定した id の記事を取得する。対応するファイルが無ければ null を返す
+ * @param loaders 記事ファイルのパスから Markdown を読み込む関数への対応
+ * @param timestamp 記事 ID
+ * @throws 読み込みに失敗したとき (存在しない記事と区別するため null にはしない)
+ */
+export const loadPost = async (
+  loaders: PostLoaders,
+  timestamp: string,
+): Promise<Post | null> => {
+  const load = loaders[`/datasources/${timestamp}.md`];
+  if (!load) {
+    return null;
+  }
+  return parseMarkdown(await load(), timestamp);
 };
 
 /**
  * 全投稿のメタデータを取得（一覧表示用、高速化のためcontentを含まない）
  */
-export const getAllPostSummaries = async (): Promise<PostSummary[]> => {
-  try {
-    if (import.meta.env.DEV) {
-      // 開発環境ではAPIを使用（メタデータが直接返される）
-      const response = await fetch("/api/posts");
-      if (!response.ok) {
-        return [];
-      }
-      // APIはソート済みのメタデータ配列を返す
-      return await response.json();
-    }
-    // 本番環境では動的インポートを使用
-    return await getStaticPostSummaries();
-  } catch (error) {
-    console.error("Error loading posts:", error);
-    return [];
-  }
-};
+export const getAllPostSummaries = (): Promise<PostSummary[]> =>
+  loadPostSummaries(postLoaders);
 
-export const getPost = async (timestamp: string): Promise<Post | null> => {
-  try {
-    // 開発環境ではAPIを使用、本番環境では静的ファイルを使用
-    if (import.meta.env.DEV) {
-      const response = await fetch(`/api/posts/${timestamp}`);
-      if (!response.ok) {
-        return null;
-      }
-
-      const content = await response.text();
-      return parseMarkdown(content, timestamp);
-    } else {
-      // 本番環境では動的インポートを使用
-      try {
-        const module = await import(`../../datasources/${timestamp}.md?raw`);
-        const content = module.default;
-        return parseMarkdown(content, timestamp);
-      } catch (error) {
-        console.error(`Error loading post ${timestamp}:`, error);
-        return null;
-      }
-    }
-  } catch (error) {
-    console.error("Error loading post:", error);
-    return null;
-  }
-};
+export const getPost = (timestamp: string): Promise<Post | null> =>
+  loadPost(postLoaders, timestamp);

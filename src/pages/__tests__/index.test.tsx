@@ -138,25 +138,44 @@ describe("Indexコンポーネント", () => {
     expect(screen.getByText("新しい記事をお楽しみに")).toBeInTheDocument();
   });
 
-  it("記事の読み込みでエラーが発生した場合に記事なしメッセージを表示する", async () => {
-    mockUsePosts.mockReturnValue({
-      posts: [],
-      allPosts: [],
-      loading: false,
-      error: "ネットワークエラー",
-      currentPage: 1,
-      totalPages: 1,
-      totalPosts: 0,
-      setCurrentPage: vi.fn(),
+  describe("記事の読み込みに失敗した場合の表示", () => {
+    beforeEach(() => {
+      mockUsePosts.mockReturnValue({
+        posts: [],
+        allPosts: [],
+        loading: false,
+        error: "ネットワークエラー",
+        currentPage: 1,
+        totalPages: 0,
+        totalPosts: 0,
+        setCurrentPage: vi.fn(),
+      });
+
+      render(
+        <TestWrapper>
+          <Index />
+        </TestWrapper>,
+      );
     });
 
-    render(
-      <TestWrapper>
-        <Index />
-      </TestWrapper>,
-    );
+    it("再読み込みを促すメッセージを表示する", () => {
+      expect(
+        screen.getByText("記事一覧の読み込みに失敗しました"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("ページを再読み込みしてください。"),
+      ).toBeInTheDocument();
+    });
 
-    expect(screen.getByText("新しい記事をお楽しみに")).toBeInTheDocument();
+    it("記事が無いときの案内メッセージを表示しない", () => {
+      expect(
+        screen.queryByText("新しい記事をお楽しみに"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("ヘッダーに記事件数を表示しない", () => {
+      expect(screen.queryByText("記事 0 件")).not.toBeInTheDocument();
+    });
   });
 
   it("記事リンクを設定できる", async () => {
