@@ -186,12 +186,12 @@ export const loadPostSummaries = async (
   loaders: PostLoaders,
 ): Promise<PostSummary[]> => {
   try {
-    const summaries: PostSummary[] = [];
-    for (const [filePath, load] of Object.entries(loaders)) {
-      summaries.push(
+    // 本番では記事ごとに別チャンクの取得になるため、直列に待たず同時に読み込む
+    const summaries = await Promise.all(
+      Object.entries(loaders).map(async ([filePath, load]) =>
         extractSummaryFromContent(await load(), toPostId(filePath)),
-      );
-    }
+      ),
+    );
     return summaries.sort((a, b) => b.id.localeCompare(a.id));
   } catch (error) {
     console.error("Error loading posts:", error);
