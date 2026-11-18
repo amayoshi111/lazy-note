@@ -141,13 +141,11 @@ export const useTheme = () => {
       try {
         if (next === "system") {
           localStorage.removeItem(STORAGE_KEY);
-          applyTheme(readSystemTheme());
         } else {
           localStorage.setItem(STORAGE_KEY, next);
-          applyTheme(next);
         }
       } catch {
-        /* localStorage 書き込み失敗時も DOM だけは反映する */
+        /* 書き込みに失敗すると解決済みテーマが変わらず useEffect が反映しないため、DOM へ直接反映する */
         if (next !== "system") {
           applyTheme(next);
         }
