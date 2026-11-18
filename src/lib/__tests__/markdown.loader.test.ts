@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { loadPost, loadPostSummaries } from "../markdown";
 
 /**
@@ -37,6 +37,28 @@ describe("loadPostSummaries", () => {
       ["20240201000000", "中間の記事"],
       ["20240101000000", "古い記事"],
     ]);
+  });
+
+  it("先のローダーの完了を待たずに、すべてのローダーを呼び出す", async () => {
+    // 1 つ目のローダーは、テスト側で解決するまで完了しない
+    let resolveFirst: (source: string) => void = () => {};
+    const firstLoader = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+    const secondLoader = vi.fn(async () => buildPostSource("2つ目の記事"));
+
+    const summariesPromise = loadPostSummaries({
+      "/datasources/20240101000000.md": firstLoader,
+      "/datasources/20240102000000.md": secondLoader,
+    });
+
+    await vi.waitFor(() => expect(secondLoader).toHaveBeenCalledTimes(1));
+
+    resolveFirst(buildPostSource("1つ目の記事"));
+    await expect(summariesPromise).resolves.toHaveLength(2);
   });
 });
 
