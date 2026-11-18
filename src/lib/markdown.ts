@@ -100,9 +100,8 @@ const createMarkedInstance = (tocItems: TocItem[]): Marked => {
     code({ text, lang }) {
       const safeLang = lang ? lang.replace(/[^a-zA-Z0-9-]/g, "") : "";
       const langClass = safeLang ? ` class="language-${safeLang}"` : "";
-      const escapedForAttr = escapeHtmlAttr(text);
       const escapedForDisplay = escapeHtmlText(text);
-      return `<div class="code-block-wrapper"><button type="button" class="copy-btn" data-code="${escapedForAttr}">コピー</button><pre><code${langClass}>${escapedForDisplay}</code></pre></div>`;
+      return `<div class="code-block-wrapper"><button type="button" class="copy-btn">コピー</button><pre><code${langClass}>${escapedForDisplay}</code></pre></div>`;
     },
   };
 
