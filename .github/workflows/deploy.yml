@@ -29,7 +29,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       # Issue #655: ci.yml (lint-and-typecheck job) と同じ cache key を共有し、
-      # deploy 時の tsc (bun run build 内の `tsc` / `type-check` / `type-check:scripts`) の
+      # deploy 時の tsc (bun run build 内の `type-check` / `type-check:scripts`) の
       # cold ビルドを回避する。
       # Issue #640: PR #580 では 4 つの .tsbuildinfo を `.tsbuildinfo/` 1 entry でまとめていたため、
       # test ファイル変更で本体 buildinfo の cache key まで invalidate される過剰 invalidation が

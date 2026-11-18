@@ -6,7 +6,7 @@
   "packageManager": "bun@1.4.4",
   "scripts": {
     "dev": "panda --watch & vite",
-    "build": "bun run lint && bun run test:run && bun run type-check && bun run type-check:scripts && panda && tsc && vite build",
+    "build": "bun run lint && bun run test:run && bun run type-check && bun run type-check:scripts && panda && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
