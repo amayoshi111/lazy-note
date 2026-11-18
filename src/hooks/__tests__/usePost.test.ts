@@ -105,11 +105,25 @@ describe("usePost", () => {
 
     expect(result.current.post).toBe(null);
     expect(result.current.error).toBe(errorMessage);
-    expect(result.current.notFound).toBe(true);
     expect(consoleSpy).toHaveBeenCalledWith(
       "Failed to load post:",
       expect.any(Error),
     );
+
+    consoleSpy.mockRestore();
+  });
+
+  it("読み込みに失敗した場合は記事が見つからない扱い (notFound) にしない", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockGetPost.mockRejectedValue(new Error("ネットワークエラー"));
+
+    const { result } = renderHook(() => usePost("20240101100000"));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.notFound).toBe(false);
 
     consoleSpy.mockRestore();
   });

@@ -60,6 +60,18 @@ describe("loadPostSummaries", () => {
     resolveFirst(buildPostSource("1つ目の記事"));
     await expect(summariesPromise).resolves.toHaveLength(2);
   });
+
+  it("ローダーが失敗した場合は空の一覧ではなく例外を投げる", async () => {
+    const summariesPromise = loadPostSummaries({
+      "/datasources/20240101000000.md": async () =>
+        buildPostSource("1つ目の記事"),
+      "/datasources/20240102000000.md": async () => {
+        throw new Error("チャンクの取得に失敗");
+      },
+    });
+
+    await expect(summariesPromise).rejects.toThrow("チャンクの取得に失敗");
+  });
 });
 
 describe("loadPost", () => {
@@ -88,5 +100,18 @@ describe("loadPost", () => {
     );
 
     expect(post).toBeNull();
+  });
+
+  it("ローダーが失敗した場合は null ではなく例外を投げる", async () => {
+    const postPromise = loadPost(
+      {
+        "/datasources/20240101000000.md": async () => {
+          throw new Error("チャンクの取得に失敗");
+        },
+      },
+      "20240101000000",
+    );
+
+    await expect(postPromise).rejects.toThrow("チャンクの取得に失敗");
   });
 });

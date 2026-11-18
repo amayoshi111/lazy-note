@@ -158,6 +158,49 @@ describe("Post", () => {
     expect(screen.getByText("2024-01-20")).toBeInTheDocument();
   });
 
+  it("読み込みに失敗した場合は再読み込みを促すメッセージを表示する", () => {
+    vi.mocked(usePost).mockReturnValue({
+      post: null,
+      loading: false,
+      notFound: false,
+      error: "ネットワークエラー",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/posts/123"]}>
+        <Routes>
+          <Route path="/posts/:timestamp" element={<Post />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByText("記事の読み込みに失敗しました"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("ページを再読み込みしてください。"),
+    ).toBeInTheDocument();
+  });
+
+  it("読み込みに失敗した場合は記事が見つからない旨を表示しない", () => {
+    vi.mocked(usePost).mockReturnValue({
+      post: null,
+      loading: false,
+      notFound: false,
+      error: "ネットワークエラー",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/posts/123"]}>
+        <Routes>
+          <Route path="/posts/:timestamp" element={<Post />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByText("記事が見つかりません")).not.toBeInTheDocument();
+  });
+
   it("postがnullでnotFoundがfalseの場合もEmptyStateが表示される", () => {
     vi.mocked(usePost).mockReturnValue({
       post: null,
