@@ -24,15 +24,20 @@
       // - localStorage の "theme" が "light" / "dark" の場合は手動設定として優先
       // - それ以外は prefers-color-scheme に従い、localStorage には書き込まない
       //   (system 追従を維持するため未設定状態を保持する)
+      // - localStorage にアクセスできなくても prefers-color-scheme で決める
+      //   (useTheme の判定と食い違うと、描画後にテーマが切り替わってちらつくため)
+      var t = null;
       try {
-        var t = localStorage.getItem("theme");
-        if (t !== "light" && t !== "dark") {
+        t = localStorage.getItem("theme");
+      } catch (e) {}
+      if (t !== "light" && t !== "dark") {
+        try {
           t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        } catch (e) {
+          t = "dark";
         }
-        document.documentElement.dataset.theme = t;
-      } catch (e) {
-        document.documentElement.dataset.theme = "dark";
       }
+      document.documentElement.dataset.theme = t;
     </script>
   </head>
   <body>
