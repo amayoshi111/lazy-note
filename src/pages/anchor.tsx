@@ -6,6 +6,10 @@ import { Layout } from "../components/layouts/Layout";
 import { AnchorPage } from "../components/pages/AnchorPage";
 import { usePosts } from "../hooks/usePosts";
 import type { Milestone } from "../lib/anchors";
+import {
+  LOAD_ERROR_RELOAD_HINT,
+  POST_LIST_LOAD_ERROR_TITLE,
+} from "../lib/i18nLiterals";
 import { parseMilestones } from "../lib/milestonesSchema";
 
 /**
@@ -73,16 +77,6 @@ import { parseMilestones } from "../lib/milestonesSchema";
  */
 const MILESTONES: readonly Milestone[] = parseMilestones(milestonesData);
 
-/**
- * 記事一覧の読み込み失敗時 EmptyState の表示文言定数。
- *
- * 記事が 0 件のとき (AnchorPage の「まだ記事がありません。」) と取り違えないよう、
- * 別の文言で再読み込みを促す。
- */
-const ANCHOR_LOAD_ERROR_TITLE = "記事一覧の読み込みに失敗しました" as const;
-const ANCHOR_LOAD_ERROR_DESCRIPTION =
-  "ページを再読み込みしてください。" as const;
-
 const Anchor = () => {
   const { allPosts, loading, error } = usePosts();
 
@@ -92,8 +86,8 @@ const Anchor = () => {
       <Layout>
         <EmptyState
           icon={FileQuestion}
-          title={ANCHOR_LOAD_ERROR_TITLE}
-          description={ANCHOR_LOAD_ERROR_DESCRIPTION}
+          title={POST_LIST_LOAD_ERROR_TITLE}
+          description={LOAD_ERROR_RELOAD_HINT}
         />
       </Layout>
     );

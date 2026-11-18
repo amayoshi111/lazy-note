@@ -7,6 +7,10 @@ import { Layout } from "../components/layouts/Layout";
 import { HomePage } from "../components/pages/HomePage";
 import { usePosts } from "../hooks/usePosts";
 import { type Milestone, todayInJst } from "../lib/anchors";
+import {
+  LOAD_ERROR_RELOAD_HINT,
+  POST_LIST_LOAD_ERROR_TITLE,
+} from "../lib/i18nLiterals";
 import { parseMilestones } from "../lib/milestonesSchema";
 import { selectResurfaced } from "../lib/resurface";
 
@@ -46,16 +50,6 @@ import { selectResurfaced } from "../lib/resurface";
  * `docs/MILESTONES.md` を参照する。
  */
 const MILESTONES: readonly Milestone[] = parseMilestones(milestonesData);
-
-/**
- * 記事一覧の読み込み失敗時 EmptyState の表示文言定数。
- *
- * 記事が 0 件のとき (HomePage の EmptyState) と取り違えないよう、別の文言で
- * 再読み込みを促す。
- */
-const INDEX_LOAD_ERROR_TITLE = "記事一覧の読み込みに失敗しました" as const;
-const INDEX_LOAD_ERROR_DESCRIPTION =
-  "ページを再読み込みしてください。" as const;
 
 const Index = () => {
   const {
@@ -100,8 +94,8 @@ const Index = () => {
       <Layout>
         <EmptyState
           icon={FileQuestion}
-          title={INDEX_LOAD_ERROR_TITLE}
-          description={INDEX_LOAD_ERROR_DESCRIPTION}
+          title={POST_LIST_LOAD_ERROR_TITLE}
+          description={LOAD_ERROR_RELOAD_HINT}
         />
       </Layout>
     );

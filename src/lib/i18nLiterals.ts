@@ -81,3 +81,33 @@ export const AUTHOR_FALLBACK = "匿名" as const;
  * できなくなるため)。
  */
 export const DATE_FALLBACK = "日付未設定" as const;
+
+/**
+ * 記事一覧の読み込みに失敗したときの EmptyState のタイトル文言。
+ * 記事が 0 件のときの案内と取り違えないよう、失敗したことをそのまま伝える。
+ *
+ * 参照元 (2 箇所):
+ * - `src/pages/index.tsx`
+ * - `src/pages/anchor.tsx`
+ *
+ * テストファイルからは **import しない** (`UNTITLED_POST` と同方針: 期待値
+ * リテラルを共有すると同義反復になり、文言変更時の regression を検知
+ * できなくなるため)。
+ */
+export const POST_LIST_LOAD_ERROR_TITLE =
+  "記事一覧の読み込みに失敗しました" as const;
+
+/**
+ * 記事の読み込みに失敗したときの EmptyState の説明文 (再読み込みを促す)。
+ *
+ * 参照元 (3 箇所):
+ * - `src/pages/posts/Post.tsx`
+ * - `src/pages/index.tsx`
+ * - `src/pages/anchor.tsx`
+ *
+ * テストファイルからは **import しない** (`UNTITLED_POST` と同方針: 期待値
+ * リテラルを共有すると同義反復になり、文言変更時の regression を検知
+ * できなくなるため)。
+ */
+export const LOAD_ERROR_RELOAD_HINT =
+  "ページを再読み込みしてください。" as const;

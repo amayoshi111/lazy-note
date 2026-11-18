@@ -9,7 +9,7 @@ import { PostDetailPage } from "../../components/pages/PostDetailPage";
 import { useAdjacentPosts } from "../../hooks/useAdjacentPosts";
 import { usePost } from "../../hooks/usePost";
 import type { Milestone } from "../../lib/anchors";
-import { SITE_NAME } from "../../lib/i18nLiterals";
+import { LOAD_ERROR_RELOAD_HINT, SITE_NAME } from "../../lib/i18nLiterals";
 import { parseMilestones } from "../../lib/milestonesSchema";
 
 /**
@@ -72,13 +72,14 @@ const POST_NOT_FOUND_ACTION_ARROW = "←" as const;
 const POST_NOT_FOUND_ACTION_TEXT = "記事一覧に戻る" as const;
 
 /**
- * Post ページの記事読み込み失敗時 EmptyState の表示文言定数。
+ * Post ページの記事読み込み失敗時 EmptyState のタイトル文言。
  *
  * 通信の失敗などで読み込めなかった場合に、記事が存在しない場合
- * (`POST_NOT_FOUND_*`) と取り違えないよう、別の文言で再読み込みを促す。
+ * (`POST_NOT_FOUND_*`) と取り違えないよう、別の文言にする。再読み込みを促す
+ * 説明文は index / anchor と共通のため `i18nLiterals.ts` の
+ * `LOAD_ERROR_RELOAD_HINT` を使う。
  */
 const POST_LOAD_ERROR_TITLE = "記事の読み込みに失敗しました" as const;
-const POST_LOAD_ERROR_DESCRIPTION = "ページを再読み込みしてください。" as const;
 
 /**
  * 記事未検出時の `<title>` 文言 (React 19 ネイティブ metadata)。
@@ -109,7 +110,7 @@ const Post = () => {
         <EmptyState
           icon={FileQuestion}
           title={POST_LOAD_ERROR_TITLE}
-          description={POST_LOAD_ERROR_DESCRIPTION}
+          description={LOAD_ERROR_RELOAD_HINT}
         />
       </Layout>
     );
