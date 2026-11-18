@@ -60,6 +60,14 @@ describe("extractExcerpt", () => {
     expect(result).toContain("引用テキスト");
   });
 
+  it("画像記法は代替テキストごと除去される", () => {
+    const markdown = "![海の写真](images/sea.png)\n今日は海に行った。";
+
+    const result = extractExcerpt(markdown);
+
+    expect(result).toBe("今日は海に行った。");
+  });
+
   it("150文字以上で省略される", () => {
     const longText = "あ".repeat(200);
 
