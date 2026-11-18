@@ -568,7 +568,7 @@ describe("AnchorPage", () => {
    * 失敗が示唆する変更:
    * - AnchorPage 内部で posts を reverse / re-sort するコードが混入した
    * - AnchorPage の表示順契約自体を意図的に変更した
-   *   (= JSDoc 契約 + pages/anchor.tsx の sort + 本テストを同時に更新する必要)
+   *   (= JSDoc 契約 + loadPostSummaries の sort + 本テストを同時に更新する必要)
    */
   describe("posts 入力順保持 (Tripwire / Issue #566)", () => {
     it("逆順 (B, A) で渡したとき DOM 出現順も逆順 (B → A) になる", () => {
