@@ -35,6 +35,7 @@ import {
   computeElapsed,
   type Elapsed,
   inferPublishedAt,
+  JST_OFFSET_MS,
   type Milestone,
 } from "../src/lib/anchors.ts";
 import { parseMilestones } from "../src/lib/milestonesSchema.ts";
@@ -517,6 +518,24 @@ export const formatMilestonesSummary = (
   return [header, ...items, footer].join("\n");
 };
 
+/**
+ * 記事ファイル名に使う 14 桁のタイムスタンプ (`YYYYMMDDhhmmss`) を JST で作る
+ *
+ * - ファイル名は `inferPublishedAt` が JST (+09:00) として解釈するため、
+ *   UTC で作ると JST 0:00〜8:59 に作った記事が前日扱いになる
+ *
+ * @param now - 記事を作成する時刻
+ * @returns 14 桁のタイムスタンプ (例: `20240310003000`)
+ */
+export const formatPostTimestamp = (now: Date): string => {
+  // JST へずらした時刻を UTC 表記で読むと、JST の壁時計時刻になる
+  return new Date(now.getTime() + JST_OFFSET_MS)
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\..+/, "")
+    .replace("T", "");
+};
+
 // =============================================================================
 // CLI エントリポイント (副作用あり)
 // =============================================================================
@@ -527,11 +546,7 @@ export const formatMilestonesSummary = (
 const createNewPost = (): void => {
   try {
     const now = new Date();
-    const timestamp = now
-      .toISOString()
-      .replace(/[-:]/g, "")
-      .replace(/\..+/, "")
-      .replace("T", "");
+    const timestamp = formatPostTimestamp(now);
 
     const displayDate = new Intl.DateTimeFormat("ja-JP", {
       year: "numeric",

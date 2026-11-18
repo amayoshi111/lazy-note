@@ -150,7 +150,7 @@ export const inferPublishedAt = (fileName: string): string | undefined => {
  * UTC 時刻に加算してから `getUTC*` で年月日を取り出すことで、JST 暦上の
  * カレンダー日付を算出する用途に使う。暦計算の単一ソースとして本モジュールに集約する。
  */
-const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+export const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 /**
  * ISO 8601 文字列 (publishedAt) から JST のカレンダー上の年月日を抽出する
