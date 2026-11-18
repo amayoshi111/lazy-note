@@ -2,11 +2,6 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import {
-  bodyFontStack,
-  fontAssetPaths,
-  formatFontStack,
-} from "../fontStack.ts";
 
 /**
  * Editorial Citrus 本文タイポグラフィ (Issue #387) のフォント実適用テスト。
@@ -18,8 +13,8 @@ import {
  *        → Yu Mincho → YuMincho → serif の順
  *   (v)  CLS < 0.1 を担保するため size-adjust または fallback metric override を適用
  *
- * 機械的に取得失敗 (woff2 不在) でも静的検証で受け入れ基準が壊れないよう、
- * 文字列スタック・@font-face 宣言・preload 属性を一次正本として固定する。
+ * 実際の値は src/index.css と index.html にある。woff2 が無い環境でも受け入れ基準を
+ * 検証できるよう、両ファイルを文字列として読み、下の期待値と照合する。
  */
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,69 +24,34 @@ const readProjectFile = (relativePath: string): string => {
   return readFileSync(resolve(projectRoot, relativePath), "utf8");
 };
 
-describe("bodyFontStack", () => {
-  it("Newsreader を一次指定にしている", () => {
-    expect(bodyFontStack[0]).toBe("Newsreader");
-  });
+/**
+ * src/index.css の :root font-family に期待する本文フォントスタック (順序通り)。
+ *
+ * - "Noto Serif JP" は self-host しない (合計 KB 削減のため)。Android / Linux など
+ *   OS にある環境でだけ効く。Hiragino より上に置くのは、macOS では和文が
+ *   unicode-range と OS のフォールバックで Hiragino に流れて実害が無く、
+ *   Android / Linux の可読性だけを上げられるため
+ * - "Hiragino Mincho ProN" は macOS / iOS、"Yu Mincho" / "YuMincho" は
+ *   Windows / 旧 macOS の既定明朝
+ * - 末尾の generic family の serif だけはクォートしない
+ */
+const expectedBodyFontStack = [
+  '"Newsreader"',
+  '"Noto Serif JP"',
+  '"Hiragino Mincho ProN"',
+  '"Yu Mincho"',
+  '"YuMincho"',
+  "serif",
+];
 
-  it("和文フォールバックに Hiragino Mincho ProN と Yu Mincho を含む", () => {
-    expect(bodyFontStack).toContain("Hiragino Mincho ProN");
-    expect(bodyFontStack).toContain("Yu Mincho");
-    expect(bodyFontStack).toContain("YuMincho");
-  });
-
-  it("Newsreader → Noto Serif JP → Hiragino Mincho ProN → Yu Mincho → YuMincho → serif の順で並ぶ", () => {
-    expect([...bodyFontStack]).toEqual([
-      "Newsreader",
-      "Noto Serif JP",
-      "Hiragino Mincho ProN",
-      "Yu Mincho",
-      "YuMincho",
-      "serif",
-    ]);
-  });
-
-  it("最後のフォールバックが generic family の serif になる", () => {
-    expect(bodyFontStack[bodyFontStack.length - 1]).toBe("serif");
-  });
-});
-
-describe("formatFontStack", () => {
-  it("非 generic family をダブルクォートで括る", () => {
-    const formatted = formatFontStack(bodyFontStack);
-    expect(formatted).toContain('"Newsreader"');
-    expect(formatted).toContain('"Hiragino Mincho ProN"');
-  });
-
-  it("generic family の serif はクォートせずにそのまま出力する", () => {
-    const formatted = formatFontStack(bodyFontStack);
-    expect(formatted.endsWith(", serif")).toBe(true);
-    expect(formatted).not.toContain('"serif"');
-  });
-
-  it("カンマ区切りで family を結合する", () => {
-    const formatted = formatFontStack(["A B", "C", "serif"]);
-    expect(formatted).toBe('"A B", "C", serif');
-  });
-
-  it("空配列を渡すと空文字列を返す", () => {
-    expect(formatFontStack([])).toBe("");
-  });
-
-  it("単一の generic family serif をクォートせず serif として返す", () => {
-    expect(formatFontStack(["serif"])).toBe("serif");
-  });
-
-  it("単一の generic family ui-monospace をクォートせず ui-monospace として返す", () => {
-    expect(formatFontStack(["ui-monospace"])).toBe("ui-monospace");
-  });
-});
+/** index.html が preload し、src/index.css の @font-face が読む Newsreader VF (Latin) */
+const newsreaderLatinPath = "/fonts/Newsreader-VF-Latin.woff2";
 
 describe("index.html (preload リンク)", () => {
   const indexHtml = readProjectFile("index.html");
 
   it("Newsreader VF Latin を preload する link を含む", () => {
-    expect(indexHtml).toContain(`href="${fontAssetPaths.newsreaderLatin}"`);
+    expect(indexHtml).toContain(`href="${newsreaderLatinPath}"`);
     expect(indexHtml).toContain('rel="preload"');
   });
 
@@ -123,7 +83,7 @@ describe("src/index.css (@font-face と :root font-family)", () => {
 
   it("Newsreader VF を @font-face で self-host 宣言する", () => {
     expect(indexCss).toMatch(/@font-face\s*{[^}]*font-family:\s*"Newsreader"/);
-    expect(indexCss).toContain(fontAssetPaths.newsreaderLatin);
+    expect(indexCss).toContain(newsreaderLatinPath);
   });
 
   it("@font-face に font-display: swap を指定する (FOUT 許容)", () => {
@@ -141,6 +101,13 @@ describe("src/index.css (@font-face と :root font-family)", () => {
 
   it("@font-face で可変フォントの weight 範囲 (200..800) を宣言する", () => {
     expect(indexCss).toMatch(/font-weight:\s*200\s+800/);
+  });
+
+  it(":root の font-family が Newsreader → Noto Serif JP → Hiragino Mincho ProN → Yu Mincho → YuMincho → serif の順で並ぶ", () => {
+    const fontFamily =
+      indexCss.match(/:root\s*{[^}]*?font-family:\s*([^;]*);/)?.[1] ?? "";
+    const families = fontFamily.split(",").map((family) => family.trim());
+    expect(families).toEqual(expectedBodyFontStack);
   });
 
   it(":root の font-family が Newsreader を一次指定にしている", () => {

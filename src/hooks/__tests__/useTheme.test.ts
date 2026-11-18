@@ -213,6 +213,17 @@ describe("useTheme", () => {
       expect(result.current.theme).toBe("light");
     });
 
+    it("system設定時にprefers-color-scheme変更でdocument.documentElement.dataset.themeが切り替わる", () => {
+      const { dispatchChange } = setupMatchMedia(false);
+      renderHook(() => useTheme());
+
+      act(() => {
+        dispatchChange(true);
+      });
+
+      expect(document.documentElement.dataset.theme).toBe("light");
+    });
+
     it("手動設定時はprefers-color-scheme変更を無視する", () => {
       const { dispatchChange } = setupMatchMedia(false);
       localStorage.setItem("theme", "dark");
@@ -227,6 +238,22 @@ describe("useTheme", () => {
 
       // localStorage の手動設定が優先されるため dark のまま
       expect(result.current.theme).toBe("dark");
+    });
+  });
+
+  describe("別タブとの同期", () => {
+    it("別タブでテーマが変更されるとdocument.documentElement.dataset.themeが切り替わる", () => {
+      renderHook(() => useTheme());
+
+      // 別タブの変更は共有の localStorage の書き換えと storage イベントとして届く
+      act(() => {
+        localStorage.setItem("theme", "light");
+        window.dispatchEvent(
+          new StorageEvent("storage", { key: "theme", newValue: "light" }),
+        );
+      });
+
+      expect(document.documentElement.dataset.theme).toBe("light");
     });
   });
 

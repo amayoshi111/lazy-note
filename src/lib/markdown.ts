@@ -88,10 +88,12 @@ const createMarkedInstance = (tocItems: TocItem[]): Marked => {
       const titleAttr = title ? ` title="${escapeHtmlAttr(title)}"` : "";
       return `<img src="${escapedHref}" alt="${escapedText}"${titleAttr} loading="lazy" decoding="async">`;
     },
-    heading({ text, depth, tokens }) {
+    heading({ depth, tokens }) {
       const rendered = this.parser.parseInline(tokens);
       if (depth === 2 || depth === 3) {
         const id = `heading-${tocItems.length}`;
+        // 目次は React がテキストとして描画するため、記号を除き HTML エスケープもしない文字列にする
+        const text = this.parser.parseInline(tokens, this.parser.textRenderer);
         tocItems.push({ id, text, level: depth });
         return `<h${depth} id="${id}">${rendered}</h${depth}>`;
       }
@@ -100,9 +102,8 @@ const createMarkedInstance = (tocItems: TocItem[]): Marked => {
     code({ text, lang }) {
       const safeLang = lang ? lang.replace(/[^a-zA-Z0-9-]/g, "") : "";
       const langClass = safeLang ? ` class="language-${safeLang}"` : "";
-      const escapedForAttr = escapeHtmlAttr(text);
       const escapedForDisplay = escapeHtmlText(text);
-      return `<div class="code-block-wrapper"><button type="button" class="copy-btn" data-code="${escapedForAttr}">コピー</button><pre><code${langClass}>${escapedForDisplay}</code></pre></div>`;
+      return `<div class="code-block-wrapper"><button type="button" class="copy-btn">コピー</button><pre><code${langClass}>${escapedForDisplay}</code></pre></div>`;
     },
   };
 

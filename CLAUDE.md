@@ -69,6 +69,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 
 - **`## 投稿日時` / `## 筆者名` / `## 本文`** は必須セクション。`## 更新日時` は**任意**セクションで、加筆したときだけ書く。
+- **本文中で `##` 見出しを使える**（h2 として目次にも入る）。ただし節名（`投稿日時` / `筆者名` / `本文` / `更新日時`）で始まる `##` 見出しは、本文の終わりとみなされるため使えない。
 - **日時の推奨書式は `YYYY/MM/DD HH:MM`**（`## 投稿日時` と**同形式**）。区切りは `/` を推奨する（パーサは互換目的で `-` も受理するが運用は `/` に統一する）。
 - **`## 更新日時` は `createdAt`（投稿日時）より新しいときのみ**、記事詳細ページの header に `更新: <日時>` 行として表示される。無い / 空 / パース不能 / `createdAt` 以下のいずれかのときは表示されない（新旧判定は `src/lib/postDate.ts` の `isUpdatedAfterCreated` に委譲、表示は `MetaInfo`（#809）→ `PostDetailPage`（#810）の配線による）。
 - **一覧（IndexPage）には更新表示を出さない**: 一覧用の `PostSummary` 型に `updatedAt` フィールドが無く、`Post` 型のみが持つ構造（型レベル保証）。二重経路 drift を防ぐため一覧経路には露出しない。
@@ -82,9 +83,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 判断根拠:
 
-- **ルート数が少なく自動化のメリットが薄い**: 現状のルートは 3 つ（`/` = IndexPage / `/posts/:timestamp` = PostPage / `/anchor` = AnchorPage）のみ。新規ページ追加コストは `src/main.tsx` への `<Route>` 1 行追加で済み、自動生成によるコスト削減幅は小さい
+- **ルート数が少なく自動化のメリットが薄い**: 現状のルートは 4 つ（`/` = IndexPage / `/posts/:timestamp` = PostPage / `/anchor` = AnchorPage / どのルートにも当たらないパス `*` = NotFoundPage）のみ。新規ページ追加コストは `src/main.tsx` への `<Route>` 1 行追加で済み、自動生成によるコスト削減幅は小さい
 - **dynamic route は既存方式で十分**: `/posts/:timestamp` は React Router の `useParams` で対応済み（`src/pages/posts/Post.tsx`）。自動ルート生成方式が前提とするファイル名規約（`[slug].tsx` 等）に切り替える必要性はない
-- **main.tsx 側に密結合した個別制御がある**: `src/main.tsx` のコメント (L10-24) にあるとおり、View Transitions Hero morph (Issue #397) の前提として IndexPage / PostPage を **eager import** に切り替えている。`vite-plugin-pages` の `importMode` オプション（filepath → `'sync' | 'async'` を返す関数）等で個別 eager 制御は可能だが、現状 3 ルートしかないため、自動生成 + `importMode` 関数で個別オーバーライドする構造より、手動 `<Routes>` で eager / lazy を直接書く方が**宣言の局所性**が高く読みやすい
+- **main.tsx 側に密結合した個別制御がある**: `src/main.tsx` のコメント (L11-25) にあるとおり、View Transitions Hero morph (Issue #397) の前提として IndexPage / PostPage を **eager import** に切り替えている。`vite-plugin-pages` の `importMode` オプション（filepath → `'sync' | 'async'` を返す関数）等で個別 eager 制御は可能だが、現状 4 ルートしかないため、自動生成 + `importMode` 関数で個別オーバーライドする構造より、手動 `<Routes>` で eager / lazy を直接書く方が**宣言の局所性**が高く読みやすい
 - **外部依存追加の閾値が高い**: メモリ「外部ライブラリの追加は原則しない」の方針と整合させると、`vite-plugin-pages` 等の新規 devDependency 追加は inline 実装で代替できない場合に限られる。手動 Routes 登録で困っていない以上、追加根拠が立たない
 - **SSR / SSG とは独立に判断可能**: 将来 SSG 化（Vite SSR / Astro 等への移行）を検討する際は、その移行 Issue でルート定義方式を含めて再設計するのが筋。SSG 化を見越して先回りで自動ルート生成方式を導入する必要はない
 

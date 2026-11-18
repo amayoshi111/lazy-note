@@ -86,6 +86,22 @@ describe("parseMilestones (lenient)", () => {
     expect(result[0]?.label).toBe("valid");
   });
 
+  it("実在しない日付 (その月に無い日 / 平年の 2/29 / 13 月) の要素を除外できる", () => {
+    const input = [
+      { date: "2025-09-31", label: "no-sep-31", tone: "neutral" },
+      { date: "2025-02-29", label: "non-leap-feb-29", tone: "neutral" },
+      { date: "2025-13-01", label: "month-13", tone: "neutral" },
+      { date: "2025-01-01", label: "valid", tone: "neutral" },
+    ];
+    const result = parseMilestones(input);
+    expect(result.map((m) => m.label)).toEqual(["valid"]);
+  });
+
+  it("閏年の 2/29 (2024-02-29) は実在する日付として残せる", () => {
+    const input = [{ date: "2024-02-29", label: "閏日", tone: "neutral" }];
+    expect(parseMilestones(input)).toEqual(input);
+  });
+
   it("label が文字列でない要素を除外できる", () => {
     const input = [
       { date: "2025-01-01", label: 12345, tone: "neutral" },
@@ -186,6 +202,51 @@ describe("validateMilestonesStrict (strict)", () => {
     expect(() => validateMilestonesStrict(input)).toThrow(
       MilestoneValidationError,
     );
+  });
+
+  it("その月に無い日 (2025-09-31) を含むと MilestoneValidationError を throw できる", () => {
+    const input = [
+      { date: "2025-09-31", label: "9 月 31 日", tone: "neutral" },
+    ];
+    expect(() => validateMilestonesStrict(input)).toThrow(
+      MilestoneValidationError,
+    );
+  });
+
+  it("平年の 2/29 (2025-02-29) を含むと MilestoneValidationError を throw できる", () => {
+    const input = [
+      { date: "2025-02-29", label: "平年の 2/29", tone: "neutral" },
+    ];
+    expect(() => validateMilestonesStrict(input)).toThrow(
+      MilestoneValidationError,
+    );
+  });
+
+  it("閏年の 2/29 (2024-02-29) は throw せずにそのまま返せる", () => {
+    const input = [{ date: "2024-02-29", label: "閏日", tone: "neutral" }];
+    expect(validateMilestonesStrict(input)).toEqual(input);
+  });
+
+  it("実在しない日付は field=date の issue 1 件として値とともに報告できる", () => {
+    const input = [
+      { date: "2025-09-31", label: "9 月 31 日", tone: "neutral" },
+    ];
+    let caught: MilestoneValidationError | null = null;
+    try {
+      validateMilestonesStrict(input);
+    } catch (e) {
+      if (e instanceof MilestoneValidationError) {
+        caught = e;
+      }
+    }
+    expect(caught?.issues).toEqual([
+      {
+        index: 0,
+        field: "date",
+        message: expect.stringContaining("実在しない日付"),
+        value: "2025-09-31",
+      },
+    ]);
   });
 
   it("複数の不正要素を 1 回の throw でまとめて報告できる (fail-fast しない)", () => {

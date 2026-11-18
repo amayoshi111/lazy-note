@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 /**
  * 解決済みのテーマ (DOM に適用される実体)。
@@ -119,6 +119,11 @@ export const useTheme = () => {
     () => "system" as ThemePreference,
   );
 
+  // OS の外観変更や別タブでの変更はトグル操作を経由しないため、解決済みテーマから DOM へ反映する
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
   /**
    * storage イベントを発火して useSyncExternalStore に再評価を促す。
    * 同タブ内の変更は本来 storage イベントが発火しないため、明示的に dispatch する。
@@ -136,13 +141,11 @@ export const useTheme = () => {
       try {
         if (next === "system") {
           localStorage.removeItem(STORAGE_KEY);
-          applyTheme(readSystemTheme());
         } else {
           localStorage.setItem(STORAGE_KEY, next);
-          applyTheme(next);
         }
       } catch {
-        /* localStorage 書き込み失敗時も DOM だけは反映する */
+        /* 書き込みに失敗すると解決済みテーマが変わらず useEffect が反映しないため、DOM へ直接反映する */
         if (next !== "system") {
           applyTheme(next);
         }

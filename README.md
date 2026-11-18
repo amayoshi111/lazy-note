@@ -133,7 +133,8 @@ bun run lint
 # フォーマット実行
 bun run fmt
 
-# デザイントークン lint（生 CSS 値の混入検知）
+# 削除済みの旧カラートークン（数字段階の bg / fg、旧 Gruvbox パレット）の再混入検知
+# （git grep。src・panda.config.ts・scripts・e2e のコメントも対象、__tests__ は対象外）
 bun run lint:tokens
 
 # --- 型チェック ---
@@ -217,12 +218,13 @@ src/
 │   ├── markdown.ts / markdownParser.ts  # Markdown 解析
 │   ├── sanitize.ts   # HTML サニタイズ
 │   ├── anchors.ts / milestonesSchema.ts # アンカー / 節目
-│   ├── colorTokens.ts / fontStack.ts    # デザイントークン
+│   ├── colorTokens.ts                   # デザイントークン
 │   ├── i18nLiterals.ts / resurface.ts / viewTransition.ts
 ├── pages/            # ページコンポーネント配置（src/main.tsx の Routes に手動登録）
 │   ├── __tests__/    # pages のテスト
 │   ├── index.tsx     # トップページ（記事一覧）
 │   ├── anchor.tsx    # アンカー（節目一覧）ページ
+│   ├── notFound.tsx  # どのルートにも当たらないパスの「ページが見つかりません」画面
 │   └── posts/
 │       └── Post.tsx  # 記事詳細ページ
 ├── styles/           # 共通スタイル定義（focusRing）
@@ -236,7 +238,6 @@ datasources/         # データソース
 scripts/             # ユーティリティスクリプト
 ├── newPost.ts          # 新規記事作成スクリプト
 ├── calculateContrast.ts # コントラスト比計算
-├── lintTokens.ts        # デザイントークン lint
 ├── bunTestGuard.ts      # bun test の取り違え防止（bunfig.toml の test.preload が読み込む。直接実行・import しない）
 └── download-fonts.sh    # self-host フォント取得
 public/fonts/        # self-host する欧文フォント（詳細は public/fonts/README.md）

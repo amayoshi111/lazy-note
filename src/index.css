@@ -2,8 +2,8 @@
 @import "../styled-system/styles.css";
 
 /* Editorial Citrus 移行 (R-2b / Issue #389):
-   旧 Gruvbox 直接参照の CSS 変数 (--colors-fg-1 / --colors-bg-0 /
-   --colors-blue-light / --colors-aqua-light / --colors-fg-2) を
+   旧 Gruvbox 直接参照の CSS 変数 (旧 5 段階の fg / bg の変数 3 つと
+   --colors-blue-light / --colors-aqua-light) を
    新 semantic token (--colors-fg-primary / --colors-bg-canvas /
    --colors-accent-link / --colors-fg-secondary) に置換する。
    R-2c で旧 token を削除する際、本ファイルの旧参照が残ると undefined となり

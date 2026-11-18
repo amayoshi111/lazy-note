@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import AnchorPage from "./pages/anchor";
 import IndexPage from "./pages/index";
+import NotFoundPage from "./pages/notFound";
 import PostPage from "./pages/posts/Post";
 import "./index.css";
 
@@ -30,6 +31,7 @@ const App = () => {
         <Route path="/" element={<IndexPage />} />
         <Route path="/posts/:timestamp" element={<PostPage />} />
         <Route path="/anchor" element={<AnchorPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
   );
