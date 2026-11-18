@@ -133,7 +133,8 @@ bun run lint
 # フォーマット実行
 bun run fmt
 
-# デザイントークン lint（生 CSS 値の混入検知）
+# 削除済みの旧カラートークン（数字段階の bg / fg、旧 Gruvbox パレット）の再混入検知
+# （git grep。src・panda.config.ts・scripts・e2e のコメントも対象、__tests__ は対象外）
 bun run lint:tokens
 
 # --- 型チェック ---
@@ -244,7 +245,6 @@ datasources/         # データソース
 scripts/             # ユーティリティスクリプト
 ├── newPost.ts          # 新規記事作成スクリプト
 ├── calculateContrast.ts # コントラスト比計算
-├── lintTokens.ts        # デザイントークン lint
 ├── bunTestGuard.ts      # bun test の取り違え防止（bunfig.toml の test.preload が読み込む。直接実行・import しない）
 └── download-fonts.sh    # self-host フォント取得
 public/fonts/        # self-host する欧文フォント（詳細は public/fonts/README.md）

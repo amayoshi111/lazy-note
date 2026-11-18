@@ -15,7 +15,7 @@
       // scripts/ 配下も lint 対象に含める。
       // (Issue #490 のレビューで scripts/__tests__ が biome のスコープ外で
       // あることが判明したため拡張。テストファイルだけでなく、
-      // 走査対象スクリプト本体 (lintTokens / newPost / calculateContrast) も
+      // 走査対象スクリプト本体 (newPost / calculateContrast) も
       // 型のない any や未使用変数を検知できるよう同一ルールに揃える)
       "**/scripts/**/*.ts",
       "**/scripts/**/*.tsx",
