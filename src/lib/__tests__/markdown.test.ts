@@ -176,13 +176,35 @@ describe("markdown.ts", () => {
 ## 本文
 最初の本文です。
 
-## 追加情報
+## 本文
 これは本文に含まれません。`;
 
       const result = parseMarkdown(content, "20240101100000");
 
       expect(result.content).toContain("最初の本文です。");
       expect(result.content).not.toContain("これは本文に含まれません。");
+    });
+
+    it("本文中の `## まとめ` 見出しより後ろも content に含める", () => {
+      const content = `# テストタイトル
+
+## 投稿日時
+- 2024-01-01 10:00
+
+## 筆者名
+- テスト太郎
+
+## 本文
+前半
+
+## まとめ
+
+後半`;
+
+      const result = parseMarkdown(content, "20240101100000");
+
+      expect(result.content).toContain('<h2 id="heading-0">まとめ</h2>');
+      expect(result.content).toContain("<p>後半</p>");
     });
 
     it("空行が段落区切りとして保持される", () => {
@@ -544,12 +566,10 @@ const x = 1;
         "テスト本文",
       ].join("\n");
 
-      // 本文内の見出しはmarkedが処理するMarkdown記法で記述
-      // extractBodyContentは次の`## `までを本文とするため、
-      // 本文内にMarkdownのh2/h3を書いてテストする
+      // 本文中の `## ` 見出しも本文に含まれるため、本文に h2 と h3 を書いてテストする
       const contentWithHeadings = `${content}
 
-### サブセクション1
+## サブセクション1
 
 テスト
 
@@ -601,6 +621,29 @@ const x = 1;
         text: "まとめ",
         level: 3,
       });
+    });
+
+    it("本文中の `## まとめ` 見出しが level 2 の項目として目次に入る", () => {
+      const content = `# テストタイトル
+
+## 投稿日時
+- 2024-01-01 10:00
+
+## 筆者名
+- テスト太郎
+
+## 本文
+前半
+
+## まとめ
+
+後半`;
+
+      const result = parseMarkdown(content, "20240101100000");
+
+      expect(result.toc).toEqual([
+        { id: "heading-0", text: "まとめ", level: 2 },
+      ]);
     });
 
     it("h4はTOCに含まれない", () => {

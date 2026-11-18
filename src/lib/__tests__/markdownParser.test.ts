@@ -1,10 +1,32 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateReadingTime,
+  extractBodyContent,
   extractExcerpt,
   extractSummaryFromContent,
   splitLines,
 } from "../markdownParser";
+
+describe("extractBodyContent", () => {
+  it("本文中の `## まとめ` 見出しより後ろも本文に含める", () => {
+    const lines = ["## 本文", "前半", "", "## まとめ", "", "後半"];
+
+    const result = extractBodyContent(lines);
+
+    expect(result).toBe("前半\n\n## まとめ\n\n後半");
+  });
+
+  it.each(["投稿日時", "筆者名", "本文", "更新日時"])(
+    "本文の後ろに `## %s` 節があるとその手前で本文が終わる",
+    (sectionName) => {
+      const lines = ["## 本文", "本文です。", "", `## ${sectionName}`, "- 値"];
+
+      const result = extractBodyContent(lines);
+
+      expect(result).toBe("本文です。");
+    },
+  );
+});
 
 describe("extractExcerpt", () => {
   it("Markdown記法が除去される", () => {
@@ -137,6 +159,27 @@ describe("extractSummaryFromContent", () => {
 
     expect(result.excerpt).toBe("");
     expect(result.readingTimeMinutes).toBe(1);
+  });
+
+  it("本文中の `## まとめ` 見出しより後ろも抜粋に含める", () => {
+    const content = `# テストタイトル
+
+## 投稿日時
+- 2024-01-01 10:00
+
+## 筆者名
+- テスト太郎
+
+## 本文
+前半
+
+## まとめ
+
+後半`;
+
+    const result = extractSummaryFromContent(content, "20240101100000");
+
+    expect(result.excerpt).toBe("前半 まとめ 後半");
   });
 
   it("先頭にBOM (U+FEFF) が混入してもタイトルを抽出できる", () => {
