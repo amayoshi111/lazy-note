@@ -24,7 +24,7 @@ const rowStyles = css({
   paddingY: "3x",
   rowGap: "1x",
   borderTop: "1px solid",
-  borderColor: "border.subtle",
+  borderTopColor: "border.subtle",
 });
 
 // 帯。bg.muted は bg.canvas との差が小さい面の色 (読み込み中であることは

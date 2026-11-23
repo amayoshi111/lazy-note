@@ -25,7 +25,7 @@ const footerStyles = css({
   background: "bg.canvas",
   color: "fg.secondary",
   borderTop: "1px solid",
-  borderColor: "border.subtle",
+  borderTopColor: "border.subtle",
 });
 
 const footerInnerStyles = css({

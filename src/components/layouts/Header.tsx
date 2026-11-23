@@ -13,7 +13,7 @@ const headerStyles = css({
   background: "bg.canvas",
   color: "fg.primary",
   borderBottom: "1px solid",
-  borderColor: "border.subtle",
+  borderBottomColor: "border.subtle",
 });
 
 const headerInnerStyles = css({
