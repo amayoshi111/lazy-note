@@ -111,3 +111,18 @@ export const POST_LIST_LOAD_ERROR_TITLE =
  */
 export const LOAD_ERROR_RELOAD_HINT =
   "ページを再読み込みしてください。" as const;
+
+/**
+ * 読了時間の表示文言を組み立てる。
+ *
+ * 参照元 (2 箇所):
+ * - `src/components/atoms/PostRow.tsx` (記事の一覧)
+ * - `src/components/common/MetaInfo.tsx` (記事詳細)
+ *
+ * テストファイルからは **import しない** (`UNTITLED_POST` と同方針)。
+ *
+ * @param minutes 読了時間 (分)
+ * @returns 例: `3分で読了`
+ */
+export const buildReadingTimeLabel = (minutes: number): string =>
+  `${minutes}分で読了`;

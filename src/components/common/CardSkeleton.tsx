@@ -1,96 +1,56 @@
 import { memo } from "react";
 import { css } from "../../../styled-system/css";
+import {
+  bodyColumnStyles,
+  gridStyles,
+  leftColumnStyles,
+  pageContainerStyles,
+  pageMainStyles,
+} from "../../styles/layout";
 
 interface CardSkeletonProps {
   count?: number;
 }
 
-const containerStyles = css({
-  maxWidth: "content",
-  margin: "0 auto",
-  padding: "content",
-  paddingX: "md",
-  md: {
-    paddingX: "xl",
-  },
-});
+/**
+ * 記事一覧の読み込み中に出す骨組み。
+ *
+ * 一覧の行 (PostRow) と同じ 3 列の位置に帯を置き、読み込み後に配置がずれないように
+ * する。帯の高さは実際の行送り (本文 27.2px / タイトル 30px) に合わせる。
+ */
 
-const listStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  gap: "xl",
-  paddingTop: "sm-md",
-});
-
-const cardStyles = css({
-  background: "bg.surface",
-  borderRadius: "lg",
-  overflow: "hidden",
-  boxShadow: "card",
-});
-
-// 親 cardStyles の bg.surface (light: cream-100 / dark: sumi-700) 上に置く
-// 1px divider。Issue #409 で導入した border 専用 token (border.subtle) に
-// 置換 (Issue #419)。
-// - 旧実装は bg.elevated を使用していたが、light の bg.elevated (cream-100) は
-//   bg.surface (cream-50) との差が 1.06:1 で視覚消失していた。
-// - border.subtle は WCAG 1.4.11 (Non-text Contrast) の 3:1 を満たす:
-//   light: cream-300 × cream-100 (bg.surface) = 3.29:1
-//   dark : sumi-450  × sumi-700  (bg.surface) = 3.29:1 (Issue #423 で sumi-400 から変更)
-const cardHeaderStyles = css({
-  padding: "sm-md",
-  paddingBottom: "md",
-  borderBottom: "1px solid",
+// 行。上端の区切り線と上下の余白は PostRow の default と同じ。
+const rowStyles = css({
+  paddingY: "3x",
+  rowGap: "1x",
+  borderTop: "1px solid",
   borderColor: "border.subtle",
-  display: "flex",
-  alignItems: "center",
-  gap: "sm",
-  md: {
-    padding: "card",
-    paddingBottom: "md",
-    paddingX: "sm-md",
-  },
 });
 
-const cardContentStyles = css({
-  padding: "sm-md",
-  md: {
-    padding: "card",
-  },
-});
-
+// 帯。bg.muted は bg.canvas との差が小さい面の色 (読み込み中であることは
+// aria-busy と点滅で伝える)。
 const skeletonBase = css({
-  background: "bg.elevated",
+  background: "bg.muted",
   borderRadius: "sm",
   animation: "skeleton-pulse 1.5s ease-in-out infinite",
 });
 
-const metaLineStyles = css({
-  height: "14px",
-  width: "180px",
+const dateLineStyles = css({
+  height: "27px",
+  width: "96px",
 });
 
 const titleLineStyles = css({
-  height: "22px",
+  height: "30px",
   width: "75%",
-  marginBottom: "sm",
 });
 
-const excerptLine1Styles = css({
-  height: "14px",
+const excerptLineStyles = css({
+  height: "27px",
   width: "100%",
-  marginTop: "sm",
+  marginTop: "1x",
 });
 
-const excerptLine2Styles = css({
-  height: "14px",
-  width: "60%",
-  marginTop: "sm",
-});
-
-/**
- * ホームページ用カード型スケルトンローディング
- */
 export const CardSkeleton = memo(({ count = 4 }: CardSkeletonProps) => {
   const skeletonItems = Array.from(
     { length: count },
@@ -99,21 +59,24 @@ export const CardSkeleton = memo(({ count = 4 }: CardSkeletonProps) => {
 
   return (
     <div
-      className={containerStyles}
+      className={`${pageContainerStyles} ${pageMainStyles}`}
       role="status"
       aria-busy="true"
       aria-label="記事を読み込み中"
     >
-      <div className={listStyles}>
+      <div>
         {skeletonItems.map((key) => (
-          <div key={key} className={cardStyles}>
-            <div className={cardHeaderStyles} data-token-border="border.subtle">
-              <div className={`${skeletonBase} ${metaLineStyles}`} />
+          <div
+            key={key}
+            className={`${gridStyles} ${rowStyles}`}
+            data-token-border="border.subtle"
+          >
+            <div className={leftColumnStyles}>
+              <div className={`${skeletonBase} ${dateLineStyles}`} />
             </div>
-            <div className={cardContentStyles}>
+            <div className={bodyColumnStyles}>
               <div className={`${skeletonBase} ${titleLineStyles}`} />
-              <div className={`${skeletonBase} ${excerptLine1Styles}`} />
-              <div className={`${skeletonBase} ${excerptLine2Styles}`} />
+              <div className={`${skeletonBase} ${excerptLineStyles}`} />
             </div>
           </div>
         ))}

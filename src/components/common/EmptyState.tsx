@@ -42,19 +42,19 @@ export const EmptyState = ({
   action,
 }: EmptyStateProps) => {
   return (
-    <div className={center({ py: "20" })}>
+    <div className={center({ py: "8x" })}>
       <div
         className={css({
           textAlign: "center",
-          maxWidth: "md",
+          maxWidth: "measure",
           mx: "auto",
-          p: "8",
+          px: "2x",
         })}
       >
         <div
           className={css({
             mx: "auto",
-            mb: "6",
+            mb: "3x",
             color: "fg.muted",
             display: "flex",
             alignItems: "center",
@@ -65,10 +65,9 @@ export const EmptyState = ({
         </div>
         <h3
           className={css({
-            fontSize: "2xl",
-            fontWeight: "bold",
+            textStyle: "std-24b-150",
             color: "fg.primary",
-            mb: "4",
+            mb: "2x",
           })}
         >
           {title}
@@ -83,9 +82,8 @@ export const EmptyState = ({
         <p
           className={css({
             color: "fg.secondary",
-            fontSize: "lg",
-            lineHeight: "body",
-            mb: action ? "8" : "0",
+            textStyle: "std-16n-170",
+            mb: action ? "5x" : "0",
           })}
         >
           {description}
@@ -113,7 +111,9 @@ export const EmptyState = ({
             className={`${css({
               display: "inline-flex",
               alignItems: "center",
-              gap: "2",
+              gap: "1x",
+              // 押せる要素として 44px の高さを確保する。
+              minHeight: "target",
               bg: "accent.brand",
               // CTA 文字色は light=cream.50 / dark=ink.900 (calculateContrast.ts の
               // cta/light: 5.74:1, cta/dark: 5.42:1 と同期)。
@@ -121,17 +121,13 @@ export const EmptyState = ({
               // (CTA 文字色を直書きせず semantic token に集約する。Button.tsx /
               //  Link.tsx と表記を揃えており、将来一括で置換する想定。)
               color: { _light: "cream.50", _dark: "ink.900" },
-              px: "6",
-              py: "3",
-              borderRadius: "full",
-              fontSize: "sm",
-              fontWeight: "600",
+              px: "3x",
+              borderRadius: "md",
+              textStyle: "oln-16b-100",
               textDecoration: "none",
-              shadow: "lg",
               transition: "all 0.2s ease",
               _hover: {
-                transform: "translateY(-2px)",
-                shadow: "xl",
+                filter: "brightness(0.92)",
               },
             })} ${focusRingOnAccentStyles}`}
           >

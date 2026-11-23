@@ -115,3 +115,18 @@ export const isUpdatedAfterCreated = (
 
   return updatedEpoch > createdEpoch;
 };
+
+/**
+ * 投稿日時の表示文字列から日付の部分だけを取り出す純粋関数 (時刻を落とす)。
+ *
+ * 記事の一覧では日付だけを表示するために使う (時刻は記事詳細で表示する)。
+ *
+ * - `YYYY/MM/DD HH:MM` / `YYYY-MM-DD HH:MM` (日付と時刻の区切りは半角スペースか `T`)
+ *   のときだけ時刻を取り除く
+ * - 時刻が無い値や、上の形式でない値は、そのまま返す (表示文字列を壊さない)
+ *
+ * @param value 投稿日時の表示文字列
+ * @returns 日付の部分。形式が合わなければ元の文字列
+ */
+export const extractPostDate = (value: string): string =>
+  value.replace(/^(\d{4}[/-]\d{1,2}[/-]\d{1,2})[ T]\d{1,2}:\d{2}$/, "$1");
