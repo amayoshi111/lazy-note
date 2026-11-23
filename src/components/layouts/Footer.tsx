@@ -52,9 +52,11 @@ export const Footer = () => {
       <div className={`${pageContainerStyles} ${footerInnerStyles}`}>
         <div>
           <BrandName variant="footer" />
-          <p className={copyrightStyles}>
+          {/* 段落 (p) にすると読み上げ構造が「text」から「paragraph」に変わり、
+              e2e/a11y/aria-structure.spec.ts の骨格検査と食い違うため div にする。 */}
+          <div className={copyrightStyles}>
             © 2025 Lazy Note. All rights reserved.
-          </p>
+          </div>
         </div>
         {/* /anchor への入口リンク (Issue #839)。主導線ではない補助ナビとして置く。 */}
         <Link to={ANCHOR_PATH} variant="navigation">
