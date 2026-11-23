@@ -11,7 +11,7 @@ interface TableOfContentsProps {
   toc: TocItem[];
 }
 
-// 目次。枠で囲まず、上端の区切り線と見出しだけで示す (768px 未満では本文との
+// 目次。枠で囲まず、上端の区切り線と見出しだけで示す (1024px 未満では本文との
 // 境目として下端にも線を引く)。
 //
 // 区切り線は border 専用 token (border.subtle)。bg.canvas 上で WCAG 1.4.11
@@ -19,7 +19,7 @@ interface TableOfContentsProps {
 const containerStyle = css({
   borderTop: "1px solid",
   borderTopColor: "border.subtle",
-  borderBottom: { base: "1px solid", md: "none" },
+  borderBottom: { base: "1px solid", lg: "none" },
   borderBottomColor: "border.subtle",
 });
 

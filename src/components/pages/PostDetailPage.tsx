@@ -93,14 +93,15 @@ const PostDetailMetadata = ({ post }: { post: Post }) => {
 /*
  * レイアウト (デジタル庁デザインシステムのレイアウト規定に沿う 12 カラム):
  *
- *   768px 以上
+ *   1024px 以上
  *   | 戻るリンク (2) | タイトル・メタ情報 (10)          |
  *   |               | 本文 (7 = 640px)     | 目次 (3) |
  *
- *   768px 未満は 1 カラムで、戻るリンク → タイトル・メタ情報 → 目次 → 本文 の順。
+ *   1024px 未満は 1 カラムで、戻るリンク → タイトル・メタ情報 → 目次 → 本文 の順。
+ *   (768〜1023px では 3 列に分けるとカラムが細すぎるため。src/styles/layout.ts 参照)
  *
  * - 本文は 7 カラム (640px)。16px の文字で全角約 39 字になり、同システムの目安
- *   (全角 40 字程度) に収まる
+ *   (全角 40 字程度) に収まる。1 カラムに積んだときも 640px までに抑える
  * - 戻るリンクとタイトルは 1 行目のベースラインで揃える
  * - article は外側の 12 カラムのうち 3〜12 カラム目を使い、内側は subgrid で同じ
  *   カラム線に乗せる (subgrid 非対応の環境では 1 カラムに積まれるだけで崩れない)
@@ -116,14 +117,14 @@ const pageGridStyles = css({
 const articleStyles = css({
   minWidth: 0,
   display: "grid",
-  gridTemplateColumns: { base: "minmax(0, 1fr)", md: "subgrid" },
-  rowGap: { base: "3x", md: "5x" },
-  md: { gridColumn: "3 / span 10" },
+  gridTemplateColumns: { base: "minmax(0, 1fr)", lg: "subgrid" },
+  rowGap: { base: "3x", lg: "5x" },
+  lg: { gridColumn: "3 / span 10" },
 });
 
 const headerStyles = css({
   minWidth: 0,
-  md: { gridColumn: "1 / -1" },
+  lg: { gridColumn: "1 / -1" },
 });
 
 const titleStyles = css({
@@ -132,10 +133,12 @@ const titleStyles = css({
   marginBottom: "2x",
 });
 
-// 目次。768px 以上では本文の右 (3 カラム) に置き、スクロールに追従させる。
+// 目次。1024px 以上では本文の右 (3 カラム) に置き、スクロールに追従させる。
+// 1 カラムに積んだときは本文と同じ幅 (640px まで) に揃える。
 const tocColumnStyles = css({
   minWidth: 0,
-  md: {
+  maxWidth: "measure",
+  lg: {
     gridColumn: "8 / span 3",
     gridRow: "2",
     alignSelf: "start",
@@ -147,7 +150,8 @@ const tocColumnStyles = css({
 // 本文の列 (7 カラム)。前後の記事へのリンクもこの列に置く。
 const bodyColumnStyles = css({
   minWidth: 0,
-  md: { gridColumn: "1 / span 7", gridRow: "2" },
+  maxWidth: "measure",
+  lg: { gridColumn: "1 / span 7", gridRow: "2" },
 });
 
 /*

@@ -162,7 +162,7 @@ const listStyles = css({
 });
 
 // 1 行。12 カラムのうち、左 2 カラムに日付、3〜7 カラム目に名称 (節目名 / 記事
-// タイトル)、8〜12 カラム目に補助情報 (tone / 座標) を置く。768px 未満は縦に積む。
+// タイトル)、8〜12 カラム目に補助情報 (tone / 座標) を置く。1024px 未満は縦に積む。
 // 上端の区切り線は border 専用 token (bg.canvas 上で WCAG 1.4.11 の 3:1 を満たす)。
 const rowStyles = css({
   rowGap: "1x",
@@ -176,14 +176,14 @@ const rowDateStyles = css({
   textStyle: "std-16n-170",
   color: "fg.secondary",
   fontVariantNumeric: "tabular-nums",
-  md: { gridColumn: "1 / span 2" },
+  lg: { gridColumn: "1 / span 2" },
 });
 
 const rowNameStyles = css({
   minWidth: 0,
   textStyle: "std-16b-170",
   color: "fg.primary",
-  md: { gridColumn: "3 / span 5" },
+  lg: { gridColumn: "3 / span 5" },
 });
 
 // 補助情報の列。tone 別の色分けはしない (= 過剰可視化を避ける)。tone は data-tone で
@@ -193,15 +193,15 @@ const rowAsideStyles = css({
   textStyle: "std-16n-170",
   color: "fg.muted",
   fontVariantNumeric: "tabular-nums",
-  md: { gridColumn: "8 / span 5" },
+  lg: { gridColumn: "8 / span 5" },
 });
 
-// 座標は節目ごとに列を揃えて並べる (768px 未満は縦に積む)。
+// 座標は節目ごとに列を揃えて並べる (1024px 未満は縦に積む)。
 const postCoordinatesStyles = css({
   display: "grid",
   gridTemplateColumns: {
     base: "minmax(0, 1fr)",
-    md: "repeat(2, minmax(0, 1fr))",
+    lg: "repeat(2, minmax(0, 1fr))",
   },
   columnGap: "gutter",
 });

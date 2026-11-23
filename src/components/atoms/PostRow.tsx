@@ -37,9 +37,10 @@ interface PostRowProps {
  * 行の高さは中身で決まる (グリッドの枠に中身を合わせない)。そのため記事の件数や
  * 文章量が変わっても、行の中に空白は生まれない。
  *
- * - 768px 以上: 12 カラムのうち、左 2 カラムに日付、中央 7 カラムにタイトルと抜粋、
+ * - 1024px 以上: 12 カラムのうち、左 2 カラムに日付、中央 7 カラムにタイトルと抜粋、
  *   右 3 カラムに著者と読了時間を置く。3 つの先頭行はベースラインで揃える
- * - 768px 未満: 1 行目に日付と著者・読了時間、2 行目にタイトルと抜粋
+ * - 1024px 未満: 1 行目に日付と著者・読了時間、2 行目にタイトルと抜粋
+ *   (768〜1023px ではカラムが細く、左 2 カラムに日付が収まらないため)
  * - リンクはタイトルだけを包み、`::after` で行全体へ広げる (アクセシブル名は
  *   タイトルのみ。行のどこを押しても記事へ移動できる)
  * - 上端の区切り線は border 専用 token。"lead" だけは最新の記事の目印として
@@ -52,9 +53,9 @@ const rowBaseStyles = css({
   display: "grid",
   gridTemplateColumns: {
     base: "auto minmax(0, 1fr)",
-    md: "repeat(12, minmax(0, 1fr))",
+    lg: "repeat(12, minmax(0, 1fr))",
   },
-  columnGap: { base: "2x", md: "gutter" },
+  columnGap: { base: "2x", lg: "gutter" },
   rowGap: "1x",
   alignItems: "baseline",
   borderTopStyle: "solid",
@@ -88,7 +89,7 @@ const rowBorderTokens: Record<PostRowVariant, string> = {
 
 // 左の列 (日付)。fg.secondary は bg.canvas 上で AAA (light 9.59:1 / dark 14.84:1)。
 const dateStyles = css({
-  gridColumn: { base: "1", md: "1 / span 2" },
+  gridColumn: { base: "1", lg: "1 / span 2" },
   gridRow: "1",
   textStyle: "std-16n-170",
   color: "fg.secondary",
@@ -97,22 +98,23 @@ const dateStyles = css({
 
 // 左の列に文脈ラベルを置くとき。
 const labelStyles = css({
-  gridColumn: { base: "1 / -1", md: "1 / span 2" },
+  gridColumn: { base: "1 / -1", lg: "1 / span 2" },
   gridRow: "1",
   textStyle: "std-16b-170",
   color: "fg.primary",
 });
 
-// 中央の列 (タイトルと抜粋)。
+// 中央の列 (タイトルと抜粋)。2 段に積んだときも 1 行を 640px までに抑える。
 const bodyStyles = css({
-  gridColumn: { base: "1 / -1", md: "3 / span 7" },
-  gridRow: { base: "2", md: "1" },
+  gridColumn: { base: "1 / -1", lg: "3 / span 7" },
+  gridRow: { base: "2", lg: "1" },
   minWidth: 0,
+  maxWidth: "measure",
 });
 
 // 右の列 (著者と読了時間)。
 const metaStyles = css({
-  gridColumn: { base: "2", md: "10 / span 3" },
+  gridColumn: { base: "2", lg: "10 / span 3" },
   gridRow: "1",
   textStyle: "std-16n-170",
   color: "fg.secondary",
