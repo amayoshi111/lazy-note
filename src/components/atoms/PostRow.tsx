@@ -158,27 +158,18 @@ const stretchedLinkStyles = css({
   },
 });
 
-// 抜粋。行数の上限は下の inline style で指定する。
+// 抜粋。行数の上限は種類ごとに excerptClampStyles で付ける。
 const excerptStyles = css({
   textStyle: "std-16n-170",
   color: "fg.secondary",
   marginTop: "1x",
-  overflow: "hidden",
 });
 
-// 抜粋を出す種類と、その行数の上限。Panda の style prop は -webkit-box-orient を
-// 受け付けないため、行数の上限に必要な 3 プロパティだけ inline style で渡す。
-const excerptClampStyles: Partial<Record<PostRowVariant, CSSProperties>> = {
-  lead: {
-    display: "-webkit-box",
-    WebkitBoxOrient: "vertical",
-    WebkitLineClamp: 3,
-  },
-  default: {
-    display: "-webkit-box",
-    WebkitBoxOrient: "vertical",
-    WebkitLineClamp: 2,
-  },
+// 抜粋を出す種類と、その行数の上限。lineClamp は overflow: hidden と
+// display: -webkit-box もまとめて出力する。
+const excerptClampStyles: Partial<Record<PostRowVariant, string>> = {
+  lead: css({ lineClamp: 3 }),
+  default: css({ lineClamp: 2 }),
 };
 
 export const PostRow = memo(
@@ -215,7 +206,7 @@ export const PostRow = memo(
             </Link>
           </h3>
           {excerptClampStyle && post.excerpt && (
-            <p className={excerptStyles} style={excerptClampStyle}>
+            <p className={`${excerptStyles} ${excerptClampStyle}`}>
               {post.excerpt}
             </p>
           )}
