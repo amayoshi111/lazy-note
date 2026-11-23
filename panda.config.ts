@@ -80,37 +80,17 @@ export default defineConfig({
   // Useful for theme customization
   theme: {
     tokens: {
-      fontSizes: {
-        xs: { value: "1.2em" },
-        sm: { value: "1.4em" },
-        base: { value: "1.6em" },
-        lg: { value: "1.8em" },
-        xl: { value: "2em" },
-        "2xl": { value: "2.4em" },
-        "3xl": { value: "3em" },
-        "4xl": { value: "3.6em" },
-        "5xl": { value: "4.8em" },
-        "6xl": { value: "6em" },
-      },
-      lineHeights: {
-        tight: { value: "1.1" },
-        snug: { value: "1.2" },
-        normal: { value: "1.3" },
-        relaxed: { value: "1.4" },
-        loose: { value: "1.6" },
-        body: { value: "1.7" },
-        // Editorial Citrus 本文タイポグラフィ (Issue #391)。
-        // Newsreader VF + 日本語明朝混植時に最適な行送り (RFC 03-typography.md)。
-        prose: { value: "1.85" },
-      },
+      // 文字の大きさと行間は textStyles (下の extend.textStyles) だけで指定する。
+      // 単体のトークンは置かず、preset が持つ既定のトークンも空で上書きして無効にする
+      // (fontSize: "sm" のような規定外の指定が通らないようにするため)。
+      fontSizes: {},
+      lineHeights: {},
     },
     extend: {
       tokens: {
         // ====================================================================
-        // 本文フォントスタックは Panda token としては未登録 (Issue #387)。
-        // R-1 では :root { font-family } を src/index.css に直接書く方針で、
-        // R-2 / R-3 (見出し階層 + textStyles 整備) のタイミングで
-        // theme.tokens.fonts.serif を追加する予定。
+        // 本文の書体は Panda token としては登録せず、src/index.css の
+        // :root { font-family } に直接書く (検証は fontStack.test.ts)。
         // ====================================================================
         colors: {
           // ====================================================================
@@ -241,41 +221,16 @@ export default defineConfig({
           "5x": { value: "40px" },
           "8x": { value: "64px" },
           gutter: { value: "32px" },
-          "2xs": { value: "2px" },
-          xs: { value: "4px" },
-          "xs-sm": { value: "6px" },
-          sm: { value: "8px" },
-          "sm-md": { value: "12px" },
-          "sm-lg": { value: "14px" },
-          md: { value: "16px" },
-          lg: { value: "24px" },
-          xl: { value: "32px" },
-          "2xl": { value: "48px" },
-          content: { value: "32px" },
-          section: { value: "48px" },
-          card: { value: "24px" },
         },
         radii: {
           sm: { value: "4px" },
           md: { value: "8px" },
-          lg: { value: "12px" },
-          xl: { value: "20px" },
           full: { value: "9999px" },
         },
         sizes: {
+          // ページ幅の上限。12 カラム (64px × 12 + 段間 32px × 11 = 1120px) に
+          // 左右マージン 40px × 2 を足した値。
           container: { value: "1200px" },
-          content: { value: "900px" },
-          article: { value: "800px" },
-          // Editorial Citrus 本文 measure (Issue #391)。
-          // 紙面組版の標準値 36rem (= 576px) を採用し、1 行の文字数を
-          // 読みやすい範囲 (全角 36-40 字程度) に制限する。
-          //
-          // 注意: src/index.css の :root { font-size: 62.5% } により
-          // 本プロジェクトの 1rem = 10px となるため、CSS 標準 (1rem = 16px) 前提の
-          // RFC 04-layout.md §"本文 36rem" を 576px として実装する場合は
-          // 57.6rem を指定する必要がある。値の正本は 576px (= 57.6rem)。
-          prose: { value: "57.6rem" },
-          header: { value: "70px" },
           // 本文の 1 行の長さ。12 カラムのうち 7 カラム分 (64px × 7 + 32px × 6)。
           // 16px の本文で全角約 39 字になり、同システムの目安 (全角 40 字程度) に収まる。
           // 出典: https://design.digital.go.jp/dads/foundations/typography/accessibility/
@@ -584,30 +539,6 @@ export default defineConfig({
         },
         overlay: {
           value: "rgba(0, 0, 0, 0.8)",
-        },
-      },
-      shadows: {
-        card: {
-          value: {
-            _dark:
-              "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)",
-            _light:
-              "0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.05)",
-          },
-        },
-        "card-hover": {
-          value: {
-            _dark:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)",
-            _light:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.06)",
-          },
-        },
-        glow: {
-          value: {
-            _dark: "0 0 20px rgba(131, 165, 152, 0.4)",
-            _light: "0 0 20px rgba(69, 133, 136, 0.3)",
-          },
         },
       },
       // ----------------------------------------------------------------
