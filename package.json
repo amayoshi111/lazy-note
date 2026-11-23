@@ -22,9 +22,7 @@
     "prepare": "bun --bun panda codegen",
     "new-post": "bun scripts/newPost.ts",
     "contrast:check": "bun scripts/calculateContrast.ts",
-    "contrast:matrix": "bun scripts/calculateContrast.ts --csv > docs/contrast-matrix.csv",
-    "fonts:download": "bash scripts/download-fonts.sh",
-    "fonts:verify": "bash scripts/download-fonts.sh --verify"
+    "contrast:matrix": "bun scripts/calculateContrast.ts --csv > docs/contrast-matrix.csv"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.10",
