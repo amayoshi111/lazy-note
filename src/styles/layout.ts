@@ -52,11 +52,6 @@ export const bodyColumnStyles = css({
   lg: { gridColumn: "3 / span 7" },
 });
 
-/** 右の列 (10〜12 カラム目) */
-export const asideColumnStyles = css({
-  lg: { gridColumn: "10 / span 3" },
-});
-
 /** セクションの見出し (「最新の記事」「記事一覧」など)。直後の区切り線まで 16px */
 export const sectionLabelStyles = css({
   textStyle: "std-18b-160",
