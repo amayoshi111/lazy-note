@@ -31,4 +31,44 @@ test.describe("ナビゲーション: Footer の入口リンク (Issue #839)", (
       page.getByRole("heading", { level: 1, name: "Anchor" }),
     ).toBeVisible();
   });
+
+  // 画面の右下に固定した「ページトップへ戻る」ボタンは、ページの最下部では
+  // フッターの上に重なる。リンクを右端に置く画面幅 (768px 以上) でも、リンクの
+  // 押せる範囲がボタンに奪われないことを、実ブラウザの位置で確かめる。
+  test("ページの最下部でも『サイトの読み方』リンクが『ページトップへ戻る』ボタンに覆われない", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    // 記事の一覧が出てからでないと、ページの高さが確定しない。
+    await expect(
+      page.getByRole("heading", { level: 2, name: "記事一覧" }),
+    ).toBeVisible();
+
+    await page.evaluate(() =>
+      window.scrollTo(0, document.documentElement.scrollHeight),
+    );
+
+    const entryLink = page
+      .getByRole("contentinfo")
+      .getByRole("link", { name: "サイトの読み方" });
+    const backToTop = page.getByRole("button", { name: "ページトップへ戻る" });
+    await expect(entryLink).toBeInViewport();
+    // ボタンが現れるときのアニメーション (透明度と上下の移動) が終わってから測る。
+    await expect(backToTop).toHaveCSS("opacity", "1");
+
+    const linkBox = await entryLink.boundingBox();
+    const buttonBox = await backToTop.boundingBox();
+    if (!linkBox || !buttonBox) {
+      throw new Error("リンクかボタンの位置を取得できませんでした");
+    }
+    const isOverlapping =
+      linkBox.x < buttonBox.x + buttonBox.width &&
+      buttonBox.x < linkBox.x + linkBox.width &&
+      linkBox.y < buttonBox.y + buttonBox.height &&
+      buttonBox.y < linkBox.y + linkBox.height;
+    expect(
+      isOverlapping,
+      `リンク ${JSON.stringify(linkBox)} とボタン ${JSON.stringify(buttonBox)} が重なっている`,
+    ).toBe(false);
+  });
 });
