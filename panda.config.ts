@@ -2,6 +2,7 @@ import { defineConfig } from "@pandacss/dev";
 import presetBase from "@pandacss/preset-base";
 import presetPanda from "@pandacss/preset-panda";
 import { oklchPrimitives, semanticColorTokens } from "./src/lib/colorTokens";
+import { dadsTextStyles } from "./src/lib/textStyles";
 
 /**
  * Editorial Citrus デザインリニューアル (Issue #358) の OKLCH カラートークン。
@@ -226,7 +227,20 @@ export default defineConfig({
             dark: { value: "#928374" },
           },
         },
+        // ====================================================================
+        // 余白: デジタル庁デザインシステムの基準単位 8px を 1・2・3・5・8 倍した
+        // 5 段階だけを使う (名前は倍率)。gutter は 12 カラムの段間で、同システムの
+        // レイアウト規定「本文の文字サイズの 2 倍」(16px × 2)。
+        // 出典: https://design.digital.go.jp/dads/foundations/spacing/
+        //       https://design.digital.go.jp/dads/foundations/layout/
+        // ====================================================================
         spacing: {
+          "1x": { value: "8px" },
+          "2x": { value: "16px" },
+          "3x": { value: "24px" },
+          "5x": { value: "40px" },
+          "8x": { value: "64px" },
+          gutter: { value: "32px" },
           "2xs": { value: "2px" },
           xs: { value: "4px" },
           "xs-sm": { value: "6px" },
@@ -262,8 +276,23 @@ export default defineConfig({
           // 57.6rem を指定する必要がある。値の正本は 576px (= 57.6rem)。
           prose: { value: "57.6rem" },
           header: { value: "70px" },
+          // 本文の 1 行の長さ。12 カラムのうち 7 カラム分 (64px × 7 + 32px × 6)。
+          // 16px の本文で全角約 39 字になり、同システムの目安 (全角 40 字程度) に収まる。
+          // 出典: https://design.digital.go.jp/dads/foundations/typography/accessibility/
+          measure: { value: "640px" },
+          // ボタンなど押せる要素の最小の大きさ (同システムのボタン規定: 44 CSS px 以上)
+          // 出典: https://design.digital.go.jp/dads/components/button/usage/
+          target: { value: "44px" },
         },
       },
+      // 文字の大きさ・太さ・行間・文字間は textStyle だけで指定する。
+      // 値の正本は src/lib/textStyles.ts (textStyles.test.ts が規定値と照合する)。
+      textStyles: Object.fromEntries(
+        Object.entries(dadsTextStyles).map(([name, value]) => [
+          name,
+          { value },
+        ]),
+      ),
     },
     semanticTokens: {
       colors: {
