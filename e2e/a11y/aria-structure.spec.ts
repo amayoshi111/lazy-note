@@ -9,7 +9,7 @@ import { expect, test } from "@playwright/test";
  * tree** 上で landmark / heading の階層が保たれていることを保証する層を担う。
  *
  * 対象 3 ルート (既存 e2e と同じ代表 URL):
- * - `/`              ホーム (HomePage / Editorial Bento)
+ * - `/`              ホーム (HomePage)
  * - `/posts/:ts`     記事詳細 (実在する代表記事 1 件を固定)
  * - `/anchor`        個人史タイムライン (AnchorPage)
  *
@@ -27,7 +27,7 @@ import { expect, test } from "@playwright/test";
  * このテストが捕捉する regression (= 部分一致でも teeth がある):
  * - landmark role の欠落・誤り (banner / main / contentinfo / navigation / region)
  * - 見出しレベルの逆転・変更 (h1 → h2 等)
- * - 固定見出し文言 ("Index" / "Anchor" / "節目一覧" / "各記事の座標") の消失
+ * - 固定見出し文言 ("最新の記事" / "記事一覧" / "Anchor" / "節目一覧" / "各記事の座標") の消失
  * - ナビゲーションリンク ("TOPに戻る") の消失
  */
 
@@ -73,31 +73,36 @@ test.describe("ARIA 構造: ホーム (/)", () => {
     `);
   });
 
-  test("Featured (h2) と Index (h3) の見出し階層を保持できる", async ({
+  test("セクション見出し (h2) と記事タイトル (h3) の見出し階層を保持できる", async ({
     page,
   }) => {
     await page.goto(HOME_PATH);
     // biome-ignore lint/suspicious/noPlaywrightNetworkidle: ARIA 構造スナップショットはフォント/画像の遅延ロードと React のハイドレーション完了後の最終 DOM を対象にする必要がある。特定要素待ちでは構造が安定する前に評価され得るため、ページ全体が静定する networkidle を意図的に使う (web-first assertion では代替不可)
     await page.waitForLoadState("networkidle");
 
-    // Featured カードは最新記事タイトルを h2 として持つ。タイトル文言・遷移先 URL
-    // は動的なので pin せず、article 配下にリンク化された h2 が存在することのみを
-    // 検査する (level のみ pin)。`heading` の親が link である構造も含めて照合する。
-    await expect(page.getByRole("main").getByRole("article").first())
-      .toMatchAriaSnapshot(`
-      - article:
-        - link:
-          - heading [level=2]
+    // 最新の記事: 固定見出し "最新の記事" を h2 として持つ region。その中の article が
+    // 最新記事のタイトルを、リンクを内側に持つ h3 として持つ。タイトル文言・遷移先 URL
+    // は動的なので pin せず、level と「見出しの中にリンクがある」構造のみ検査する。
+    await expect(
+      page.getByRole("region", { name: "最新の記事" }),
+    ).toMatchAriaSnapshot(`
+      - region "最新の記事":
+        - heading "最新の記事" [level=2]
+        - article:
+          - heading [level=3]:
+            - link
     `);
 
-    // Index TOC は固定見出し "Index" を h3 として持つ region。8 記事目以降を列挙する
-    // listitem 群は動的なので省略し、region + 固定見出しの存在のみ検査する。
-    // Featured の h2 と Index の h3 がともに存在することで、h2 → h3 の階層逆転が
-    // 起きていない (= h3 セクションが h2 セクションより上位に来ていない) ことを担保する。
-    await expect(page.getByRole("region", { name: "Index" }))
-      .toMatchAriaSnapshot(`
-      - region "Index":
-        - heading "Index" [level=3]
+    // 記事一覧: 固定見出し "記事一覧" を h2 として持つ region。行 (listitem) は動的なので
+    // 省略し、region + 固定見出し + list の存在のみ検査する。
+    // セクション見出しが h2、記事タイトルが h3 であることで、見出し階層の逆転が
+    // 起きていないことを担保する。
+    await expect(
+      page.getByRole("region", { name: "記事一覧" }),
+    ).toMatchAriaSnapshot(`
+      - region "記事一覧":
+        - heading "記事一覧" [level=2]
+        - list
     `);
   });
 });
@@ -126,7 +131,9 @@ test.describe("ARIA 構造: 記事詳細 (/posts/:timestamp)", () => {
     `);
   });
 
-  test("banner / contentinfo の landmark 骨格を保持できる", async ({ page }) => {
+  test("banner / contentinfo の landmark 骨格を保持できる", async ({
+    page,
+  }) => {
     await page.goto(POST_PATH);
     // biome-ignore lint/suspicious/noPlaywrightNetworkidle: ARIA 構造スナップショットはフォント/画像の遅延ロードと React のハイドレーション完了後の最終 DOM を対象にする必要がある。特定要素待ちでは構造が安定する前に評価され得るため、ページ全体が静定する networkidle を意図的に使う (web-first assertion では代替不可)
     await page.waitForLoadState("networkidle");
@@ -148,7 +155,9 @@ test.describe("ARIA 構造: 記事詳細 (/posts/:timestamp)", () => {
 });
 
 test.describe("ARIA 構造: 個人史タイムライン (/anchor)", () => {
-  test("h1 と 2 つの region (h2) の見出し階層を保持できる", async ({ page }) => {
+  test("h1 と 2 つの region (h2) の見出し階層を保持できる", async ({
+    page,
+  }) => {
     await page.goto(ANCHOR_PATH);
     // biome-ignore lint/suspicious/noPlaywrightNetworkidle: ARIA 構造スナップショットはフォント/画像の遅延ロードと React のハイドレーション完了後の最終 DOM を対象にする必要がある。特定要素待ちでは構造が安定する前に評価され得るため、ページ全体が静定する networkidle を意図的に使う (web-first assertion では代替不可)
     await page.waitForLoadState("networkidle");
@@ -168,7 +177,9 @@ test.describe("ARIA 構造: 個人史タイムライン (/anchor)", () => {
     `);
   });
 
-  test("banner / contentinfo の landmark 骨格を保持できる", async ({ page }) => {
+  test("banner / contentinfo の landmark 骨格を保持できる", async ({
+    page,
+  }) => {
     await page.goto(ANCHOR_PATH);
     // biome-ignore lint/suspicious/noPlaywrightNetworkidle: ARIA 構造スナップショットはフォント/画像の遅延ロードと React のハイドレーション完了後の最終 DOM を対象にする必要がある。特定要素待ちでは構造が安定する前に評価され得るため、ページ全体が静定する networkidle を意図的に使う (web-first assertion では代替不可)
     await page.waitForLoadState("networkidle");
