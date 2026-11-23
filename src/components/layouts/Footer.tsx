@@ -34,7 +34,10 @@ const footerInnerStyles = css({
   justifyContent: "space-between",
   flexWrap: "wrap",
   gap: "2x",
-  paddingY: "5x",
+  paddingTop: "5x",
+  // 画面右下に固定した「ページトップへ戻る」ボタン (下端から 24〜68px) より、
+  // 右端のリンクを上に出すため、下だけ 64px 取る (768px 以上でリンクが右端に来る)。
+  paddingBottom: "8x",
 });
 
 // 著作権表記は付随情報のため 14px (Dns-14N-130) と fg.muted を使う。
