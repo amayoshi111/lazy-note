@@ -53,9 +53,9 @@ interface CoordinateProps {
  * - `<ul>` に `role="list"` を明示する。`list-style: none` を当てた ul は
  *   Safari/VoiceOver で list セマンティクスが剥奪される既知の WebKit バグへの防御
  * - `<ul>/<li>` のリスト構造で項目ナビゲーションを許容
- * - 色は `fg.muted` (補助情報) を採用。`bg.surface` 上に置かれる前提で
- *   WCAG 1.4.3 AA (4.5:1) を満たす Editorial Citrus トークン
- *   (実測値: light 6.17:1 / dark 7.91:1。light は AAA 7:1 未達のため
+ * - 色は `fg.muted` (補助情報) を採用。`bg.canvas` 上に置かれる前提で
+ *   WCAG 1.4.3 AA (4.5:1) を満たす
+ *   (実測値: light 6.54:1 / dark 14.84:1。light は AAA 7:1 未達のため
  *    補助情報専用で本文転用は不可。検証は colorTokens.test.ts §"Issue #537"
  *    で Tripwire 化済み)
  *
@@ -65,8 +65,8 @@ interface CoordinateProps {
  * - milestones.json を空にすれば全記事から座標が消える
  *
  * デザイン語彙:
- * - MetaInfo の card variant と同じ `fg.muted` (補助情報トーン)
- * - 区切り文字「・」で複数の座標を一行に並べる (中点は Editorial 日本語慣行)
+ * - 補助情報のトーン (`fg.muted`) で、メタ情報の直下に置く
+ * - 区切り文字「・」で複数の座標を一行に並べる (中点は日本語の慣行)
  * - `fontVariantNumeric: tabular-nums` で日数 (N) の桁ぞろえ
  */
 
@@ -74,22 +74,19 @@ const containerStyles = css({
   display: "flex",
   flexWrap: "wrap",
   alignItems: "center",
-  gap: "xs",
-  marginTop: "sm",
-  // 補助情報のため fg.muted を採用 (MetaInfo card variant と同じ語彙)。
-  // bg.surface 上の補助情報として WCAG 1.4.3 AA (4.5:1) を満たす
-  // (実測 light 6.17:1 / dark 7.91:1、検証は colorTokens.test.ts §"Issue #537")。
+  marginTop: "1x",
+  // 補助情報のため fg.muted を採用する。
+  // bg.canvas 上の補助情報として WCAG 1.4.3 AA (4.5:1) を満たす
+  // (実測 light 6.54:1 / dark 14.84:1、検証は colorTokens.test.ts §"Issue #537")。
   color: "fg.muted",
-  fontSize: "xs",
-  lineHeight: "snug",
-  // 日数 (N) の桁ぞろえに使う (Resurface / IndexRow 等と同じ語彙)。
+  textStyle: "std-16n-170",
+  // 日数 (N) の桁ぞろえに使う (一覧の行の日付と同じ語彙)。
   fontVariantNumeric: "tabular-nums",
   // 内部の ul / li のデフォルト marker / padding を除去し、一行に並べる
   "& ul": {
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
-    gap: "xs",
     listStyle: "none",
     margin: 0,
     padding: 0,
@@ -100,17 +97,13 @@ const containerStyles = css({
   },
 });
 
-// 区切り文字「・」のスタイル。aria-hidden で SR からは隠す
-// (項目区切りは ul/li 構造で SR に伝わるため、視覚装飾のみ)。
+// 区切り文字「・」は aria-hidden で SR から隠す (項目区切りは ul/li 構造で SR に
+// 伝わるため、視覚装飾のみ)。全角の中点は字面の左右に空きを持つので、余白は足さない。
 //
 // Issue #536: 色は wrapper (containerStyles) の `color: "fg.muted"` を CSS の
-// 継承で受け取り、ここでは独自宣言しない。separator に同じ token を重複宣言
-// すると Tripwire 網漏れ (wrapper だけ検証されるため separator の color を
-// 別 token に差し替えても気付けない) を構造的に生むため、宣言自体を撤去して
-// 「色は wrapper 1 箇所」に統一する (案 B: 構造的解決)。
-const separatorStyles = css({
-  marginInline: "xs",
-});
+// 継承で受け取り、区切り文字では独自宣言しない。同じ token を重複宣言すると
+// Tripwire 網漏れ (wrapper だけ検証されるため、区切り文字の color を別 token に
+// 差し替えても気付けない) を構造的に生むため、「色は wrapper 1 箇所」に統一する。
 
 // Issue #534: 表示文言テンプレートを定数として外出し。将来の i18n 化や
 // 文言調整の影響範囲をファイル内 1 箇所に局所化する。
@@ -174,7 +167,7 @@ export const Coordinate = memo(
             // 組み合わせた複合キーを採用する (DA Round 1 推奨修正)。
             <li key={`${coordinate.label}-${coordinate.daysSince}`}>
               {index > 0 && (
-                <span aria-hidden="true" className={separatorStyles}>
+                <span aria-hidden="true">
                   ・
                 </span>
               )}
