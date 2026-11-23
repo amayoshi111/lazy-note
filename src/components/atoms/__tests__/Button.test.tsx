@@ -146,12 +146,11 @@ describe("Button", () => {
       expect(button).toHaveAttribute("data-token-bg", "accent.brand");
     });
 
-    it("secondary variant は bg.surface を background token として宣言する", () => {
+    it("secondary variant は背景を塗らない (transparent) ことを宣言する", () => {
       render(<Button variant="secondary">Secondary</Button>);
       const button = screen.getByRole("button", { name: "Secondary" });
-      // R-2b 修正: bg.elevated × border bg.surface の同色問題を回避するため、
-      // bg を bg.surface に反転している。
-      expect(button).toHaveAttribute("data-token-bg", "bg.surface");
+      // 面で塗らず、枠線 (border.subtle) だけで形を示す。
+      expect(button).toHaveAttribute("data-token-bg", "transparent");
     });
 
     // Issue #421: bg.elevated 反転 border は light で 1.06:1 となり視覚消失
