@@ -581,9 +581,9 @@ describe("Issue #537: fg.muted 補助情報の WCAG 1.4.3 AA (4.5:1) 検証", ()
   //     - fg.muted × bg.surface  (bone-100 × sumi-700)  =  7.91:1  (AAA pass)
   //     - fg.muted × bg.muted    (bone-100 × sumi-650)  = 11.87:1  (AAA 大幅超過)
   //     - fg.muted × bg.elevated (bone-100 × sumi-600)  =  5.39:1  (AA pass / AAA 未達、6 ペア中最低)
-  //       ※ dark の bg.elevated (sumi-600) は FeaturedCard.tsx / CardSkeleton.tsx /
-  //          ArticleSkeleton.tsx で使用中。現状 fg.muted を直接これらカード上に置く
-  //          コンポーネントは無いが、将来配置される場合の baseline 観測点として記録。
+  //       ※ dark の bg.elevated (sumi-600) は ReadingProgressBar.tsx の軌道で使用中。
+  //          現状 fg.muted を直接この面の上に置くコンポーネントは無いが、将来配置
+  //          される場合の baseline 観測点として記録。
   //
   // 色設計変更時のレビュー観点 (= この describe を触る PR の reviewer 向け):
   //   1. 上記 baseline 値から **経験的目安として ±30% 以上の変化** があれば、token
@@ -677,8 +677,8 @@ describe("Issue #537: fg.muted 補助情報の WCAG 1.4.3 AA (4.5:1) 検証", ()
 
   it("fg.muted × bg.elevated (light) が WCAG 1.4.3 AA 4.5:1 を満たす", () => {
     // light の bg.elevated は cream-50 = bg.canvas と同値のため数値も同じ。
-    // 実測 6.54:1: AA pass / AAA 未達。FeaturedCard 等が将来 light でも
-    // bg.elevated を使い、その上に fg.muted の補助情報を載せた場合の保険。
+    // 実測 6.54:1: AA pass / AAA 未達。将来 light で bg.elevated の面を使い、
+    // その上に fg.muted の補助情報を載せた場合の保険。
     const r = ratio(
       semanticColorTokens.fgMuted.light,
       semanticColorTokens.bgElevated.light,
@@ -687,8 +687,8 @@ describe("Issue #537: fg.muted 補助情報の WCAG 1.4.3 AA (4.5:1) 検証", ()
   });
 
   it("fg.muted × bg.elevated (dark) が WCAG 1.4.3 AA 4.5:1 を満たす", () => {
-    // FeaturedCard.tsx / CardSkeleton.tsx / ArticleSkeleton.tsx で bg.elevated
-    // (sumi-600) を使用。将来 fg.muted がこれらカード上に置かれた場合の baseline。
+    // ReadingProgressBar.tsx の軌道で bg.elevated (sumi-600) を使用。将来 fg.muted が
+    // この面の上に置かれた場合の baseline。
     // 実測 5.39:1: AA pass / AAA 未達 (6 ペア中最低)。
     // この値が AA 下限 (4.5:1) を下回ったら sumi-600 / bone-100 の再設計が必要。
     const r = ratio(

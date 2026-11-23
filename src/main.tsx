@@ -19,7 +19,7 @@ import "./index.css";
  * - eager import により Suspense fallback が出ず、navigate + flushSync 完了
  *   時点で新 H1 が確実に DOM に存在し、Hero morph が成立する。
  * - 反面、初期 main bundle に PostPage 分のコード (markdown parser / DOMPurify
- *   等) が常時含まれる。Editorial Bento で main bundle はすでに大きいため、
+ *   等) が常時含まれる。main bundle はすでに大きいため、
  *   増分は許容範囲と判断。code splitting を再導入する場合は、prefetch 戦略
  *   または skeleton 内 hero target 仕込みなど別 PR で対応する。
  */

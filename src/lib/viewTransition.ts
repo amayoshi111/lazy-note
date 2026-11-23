@@ -2,7 +2,7 @@
  * View Transitions API ラッパー (Issue #397 / Hero morph)
  *
  * 「ページ遷移」を「記事に入っていく感覚」に変えるための SPA 内 View Transition。
- * 主に Editorial Bento の Featured / Bento カードのタイトルを記事詳細の H1 に
+ * 主にホームの記事一覧の行 (PostRow) のタイトルを記事詳細の H1 に
  * morph させる用途で使用する。
  *
  * 設計方針:

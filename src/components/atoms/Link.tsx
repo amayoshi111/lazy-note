@@ -18,7 +18,7 @@ interface LinkProps {
   /**
    * SPA 遷移時に View Transitions API でラップするかどうか (Issue #397)。
    *
-   * Editorial Bento の Featured / Bento / Index から記事詳細に遷移する際に
+   * ホームの記事一覧の行 (PostRow) から記事詳細に遷移する際に
    * `view-transition-name: post-{id}` 同士を morph させるために使用する。
    * 未対応ブラウザ / prefers-reduced-motion の場合は通常遷移にフォールバック
    * する (`useViewTransitionNavigate` 内で graceful degrade)。
