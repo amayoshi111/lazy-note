@@ -26,12 +26,9 @@
 /**
  * タイトル未設定の記事を一覧 / 詳細表示する際のフォールバック文言。
  *
- * 参照元 (6 箇所):
- * - `src/components/atoms/IndexRow.tsx`
- * - `src/components/atoms/BentoCard.tsx`
- * - `src/components/atoms/FeaturedCard.tsx`
+ * 参照元 (3 箇所):
+ * - `src/components/atoms/PostRow.tsx`
  * - `src/components/pages/PostDetailPage.tsx`
- * - `src/components/common/Resurface.tsx`
  * - `src/components/pages/AnchorPage.tsx`
  *
  * テストファイルからは **import しない** (期待値リテラルを共有すると
@@ -60,7 +57,7 @@ export const SITE_NAME = "Lazy Note" as const;
  * 著者名未設定の記事を表示する際のフォールバック文言 (Issue #706 / PR #711 follow-up)。
  *
  * 参照元 (2 箇所):
- * - `src/components/atoms/IndexRow.tsx`
+ * - `src/components/atoms/PostRow.tsx`
  * - `src/components/common/MetaInfo.tsx`
  *
  * テストファイルからは **import しない** (`UNTITLED_POST` と同方針: 期待値
@@ -73,7 +70,7 @@ export const AUTHOR_FALLBACK = "匿名" as const;
  * 投稿日付未設定の記事を表示する際のフォールバック文言 (Issue #706 / PR #711 follow-up)。
  *
  * 参照元 (2 箇所):
- * - `src/components/atoms/IndexRow.tsx`
+ * - `src/components/atoms/PostRow.tsx`
  * - `src/components/common/MetaInfo.tsx`
  *
  * テストファイルからは **import しない** (`UNTITLED_POST` と同方針: 期待値
