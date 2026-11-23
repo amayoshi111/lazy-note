@@ -69,9 +69,10 @@ export const AUTHOR_FALLBACK = "匿名" as const;
 /**
  * 投稿日付未設定の記事を表示する際のフォールバック文言 (Issue #706 / PR #711 follow-up)。
  *
- * 参照元 (2 箇所):
+ * 参照元 (3 箇所):
  * - `src/components/atoms/PostRow.tsx`
  * - `src/components/common/MetaInfo.tsx`
+ * - `src/components/pages/AnchorPage.tsx`
  *
  * テストファイルからは **import しない** (`UNTITLED_POST` と同方針: 期待値
  * リテラルを共有すると同義反復になり、文言変更時の regression を検知
