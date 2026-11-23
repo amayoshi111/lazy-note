@@ -1,4 +1,5 @@
 import { css } from "../../../styled-system/css";
+import { pageContainerStyles } from "../../styles/layout";
 import { Link } from "../atoms/Link";
 import { BrandName } from "../common/BrandName";
 
@@ -13,67 +14,52 @@ import { BrandName } from "../common/BrandName";
  *   (`src/test/forbiddenVocab.ts`) に該当してはならず、`Footer.test.tsx` で
  *   非該当を担保する。
  * - `Link` atom の `variant="navigation"` (下線なし・`accent.link`) を使う。
- *   `accent.link` は Footer の `bg.surface` 上で WCAG 1.4.3 AA を満たす
- *   (light 7.38:1 AAA / dark 4.69:1 AA。検証は scripts/calculateContrast.ts)。
+ *   `accent.link` は Footer の `bg.canvas` 上で WCAG 1.4.3 AAA を満たす
+ *   (light 7.82:1 / dark 8.79:1。検証は scripts/calculateContrast.ts)。
  */
 const ANCHOR_NAV_LABEL = "サイトの読み方";
 const ANCHOR_PATH = "/anchor";
 
+// 上端の区切り線は border 専用 token (bg.canvas 上で WCAG 1.4.11 の 3:1 を満たす)。
+const footerStyles = css({
+  background: "bg.canvas",
+  color: "fg.secondary",
+  borderTop: "1px solid",
+  borderColor: "border.subtle",
+});
+
+const footerInnerStyles = css({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  flexWrap: "wrap",
+  gap: "2x",
+  paddingY: "5x",
+});
+
+// 著作権表記は付随情報のため 14px (Dns-14N-130) と fg.muted を使う。
+// bg.canvas 上で WCAG 1.4.3 AA (4.5:1) を満たす (実測 light 6.54:1 / dark 14.84:1。
+// light は AAA 7:1 未達のため補助情報専用で本文転用は不可)。
+const copyrightStyles = css({
+  textStyle: "dns-14n-130",
+  color: "fg.muted",
+  marginTop: "1x",
+});
+
 export const Footer = () => {
   return (
-    <footer
-      className={css({
-        background: "bg.surface",
-        color: "fg.secondary",
-        padding: "md",
-        minHeight: "header",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        md: {
-          padding: "content",
-        },
-      })}
-    >
-      <div
-        className={css({
-          fontSize: "sm",
-          fontWeight: "600",
-          marginBottom: "xs",
-          color: "fg.secondary",
-        })}
-      >
-        <BrandName variant="footer" />
-      </div>
-      {/*
-       * /anchor への入口リンク (Issue #839)。BrandName 近傍に補助情報トーンで
-       * 自然に置き、読者を個人史タイムラインへ誘導する。navigation variant の
-       * 下線なし・accent.link で「主導線ではない補助ナビ」の控えめさを保つ。
-       */}
-      <div
-        className={css({
-          marginBottom: "xs",
-        })}
-      >
+    <footer className={footerStyles} data-token-border="border.subtle">
+      <div className={`${pageContainerStyles} ${footerInnerStyles}`}>
+        <div>
+          <BrandName variant="footer" />
+          <p className={copyrightStyles}>
+            © 2025 Lazy Note. All rights reserved.
+          </p>
+        </div>
+        {/* /anchor への入口リンク (Issue #839)。主導線ではない補助ナビとして置く。 */}
         <Link to={ANCHOR_PATH} variant="navigation">
           {ANCHOR_NAV_LABEL}
         </Link>
-      </div>
-      {/*
-       * 著作権表記は補助情報のため fg.muted を採用。Footer の bg.surface 上に
-       * 置かれる前提で WCAG 1.4.3 AA (4.5:1) を満たす (実測 light 6.17:1 /
-       * dark 7.91:1。light は AAA 7:1 未達のため補助情報専用で本文転用は不可。
-       * 検証は colorTokens.test.ts §"Issue #537")。
-       */}
-      <div
-        className={css({
-          color: "fg.muted",
-          fontSize: "xs",
-        })}
-      >
-        © 2025 Lazy Note. All rights reserved.
       </div>
     </footer>
   );

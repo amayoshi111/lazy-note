@@ -6,28 +6,27 @@ interface BrandNameProps {
   variant?: "header" | "footer";
 }
 
+// 押せる要素として 44px の高さを確保する。
+const brandBaseStyles = css({
+  display: "inline-flex",
+  alignItems: "center",
+  minHeight: "target",
+  textDecoration: "none",
+});
+
+// header はサイト名の見出し相当 (fg.primary)、footer は補助情報相当 (fg.secondary)。
+const brandVariantStyles = {
+  header: css({ textStyle: "std-20b-150", color: "fg.primary" }),
+  footer: css({ textStyle: "std-16b-170", color: "fg.secondary" }),
+};
+
 export const BrandName = ({ variant = "header" }: BrandNameProps) => {
-  const isHeader = variant === "header";
-
-  // Editorial Citrus: header はブランド見出し相当 (fg.primary)、
-  // footer は補助情報相当 (fg.secondary)。Header/Footer どちらも
-  // bg.canvas (light: cream.50 / dark: sumi.950) 上に配置されるため、
-  // R-5 (Issue #393) の visible focus ring は通常背景向け
-  // `focusRingStyles` (内側 citrus / 外側 ink-900 or cream-50) を適用する。
-  const brandLinkStyles = css({
-    fontSize: isHeader ? "lg" : "sm",
-    fontWeight: "bold",
-    color: isHeader ? "fg.primary" : "fg.secondary",
-    textDecoration: "none",
-    ...(variant === "footer" && {
-      marginBottom: "xs",
-    }),
-  });
-
+  // Header / Footer どちらも bg.canvas 上に置かれるため、visible focus ring は
+  // 通常背景向けの `focusRingStyles` (内側 citrus / 外側 ink-900 or cream-50) を使う。
   return (
     <Link
       to="/"
-      className={`${brandLinkStyles} ${focusRingStyles}`}
+      className={`${brandBaseStyles} ${brandVariantStyles[variant]} ${focusRingStyles}`}
       data-variant={variant}
       data-focus-ring="default"
     >

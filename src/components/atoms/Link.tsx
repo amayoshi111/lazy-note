@@ -72,10 +72,11 @@ const linkRecipe = cva({
       navigation: {
         display: "inline-flex",
         alignItems: "center",
-        gap: "sm",
+        gap: "1x",
+        // 押せる要素として 44px の高さを確保する。
+        minHeight: "target",
         color: "accent.link",
-        fontSize: "sm",
-        fontWeight: "600",
+        textStyle: "std-16b-170",
         // R-5 (Issue #393) AC (ii): Header/Footer ナビは下線なし、配色 + 太字で誘導。
         textDecoration: "none",
       },
@@ -83,11 +84,12 @@ const linkRecipe = cva({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "sm-md md",
+        minHeight: "target",
+        paddingX: "3x",
         background: "accent.brand",
         // TODO(R-2c+): fg.onBrand semantic token に置換予定。
         color: { _light: "cream.50", _dark: "ink.900" },
-        fontWeight: "600",
+        textStyle: "oln-16b-100",
         borderRadius: "md",
         // R-5 (Issue #393) AC (ii): CTA は背景色で誘導するため下線なし。
         textDecoration: "none",
