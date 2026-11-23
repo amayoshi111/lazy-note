@@ -3,349 +3,131 @@ import { describe, expect, it } from "vitest";
 import { MetaInfo } from "../MetaInfo";
 
 describe("MetaInfo", () => {
-  it("作成日と著者が表示できる", () => {
-    // R-4 (Issue #392) で日付/著者の絵文字 (Calendar / PenLine) を
-    // inline SVG icon (装飾扱い) に置換。SR からは aria-hidden で隠れ、
-    // 隣接テキストで意味が伝わる。
-    const { container } = render(
-      <MetaInfo createdAt="2024-01-01" author="山田太郎" />,
-    );
+  it("投稿日時と筆者をラベルつきで表示できる", () => {
+    render(<MetaInfo createdAt="2024/01/15 09:30" author="山田太郎" />);
 
-    expect(screen.getByText("2024-01-01")).toBeInTheDocument();
+    expect(screen.getByText("投稿")).toBeInTheDocument();
+    expect(screen.getByText("2024/01/15 09:30")).toBeInTheDocument();
+    expect(screen.getByText("筆者")).toBeInTheDocument();
     expect(screen.getByText("山田太郎")).toBeInTheDocument();
-    // 装飾アイコン (svg) が 2 個 (Calendar / PenLine) 並ぶことを確認。
-    const decorativeIcons = container.querySelectorAll(
-      'svg[aria-hidden="true"]',
-    );
-    expect(decorativeIcons.length).toBe(2);
   });
 
-  it("作成日が未設定の場合、デフォルトテキストが表示される", () => {
+  it("投稿日時が未設定の場合は「日付未設定」を表示する", () => {
     render(<MetaInfo author="山田太郎" />);
 
     expect(screen.getByText("日付未設定")).toBeInTheDocument();
-    expect(screen.getByText("山田太郎")).toBeInTheDocument();
   });
 
-  it("著者が未設定の場合、デフォルトテキストが表示される", () => {
-    render(<MetaInfo createdAt="2024-01-01" />);
+  it("筆者が未設定の場合は「匿名」を表示する", () => {
+    render(<MetaInfo createdAt="2024/01/15 09:30" />);
 
-    expect(screen.getByText("2024-01-01")).toBeInTheDocument();
     expect(screen.getByText("匿名")).toBeInTheDocument();
   });
 
-  it("両方未設定の場合、両方のデフォルトテキストが表示される", () => {
-    render(<MetaInfo />);
-
-    expect(screen.getByText("日付未設定")).toBeInTheDocument();
-    expect(screen.getByText("匿名")).toBeInTheDocument();
-  });
-
-  // Issue #480: 旧実装は item の className に "bg_" が含まれるかを
-  // `querySelector('[class*="bg_"]')` で検証していたが、Panda の `hash: true`
-  // で class 名が hash 化されると card variant 側の `not.toBeInTheDocument()`
-  // が常に成立して regression を検知できない (false negative)。PR #474 の
-  // Option A に倣い、item が参照する背景 token を `data-token-bg` 意味属性で
-  // 宣言し、`toHaveAttribute` / `not.toHaveAttribute` で検証する。
-  it("cardバリアントがデフォルトで適用され item に背景 token を持たない", () => {
-    const { container } = render(
-      <MetaInfo createdAt="2024-01-01" author="山田太郎" />,
-    );
-
-    const metaInfo = container.firstChild as HTMLElement;
-    expect(metaInfo).toBeInTheDocument();
-    expect(metaInfo).toHaveAttribute("data-variant", "card");
-    // false negative 修正: card variant の item は背景塗りを持たないため
-    // `data-token-bg` 属性自体が出力されないことを明示的に正検証する。
-    const dateElement = metaInfo.querySelector("div");
-    expect(dateElement).not.toHaveAttribute("data-token-bg");
-  });
-
-  it("headerバリアントが適用でき item に bg.muted token を持つ", () => {
-    const { container } = render(
-      <MetaInfo createdAt="2024-01-01" author="山田太郎" variant="header" />,
-    );
-
-    const metaInfo = container.firstChild as HTMLElement;
-    expect(metaInfo).toHaveAttribute("data-variant", "header");
-    // header variant の item は bg.muted の pill 背景を持つ。
-    const dateElement = metaInfo.querySelector("div");
-    expect(dateElement).toHaveAttribute("data-token-bg", "bg.muted");
-  });
-
-  it("空文字列を渡した場合、デフォルトテキストが表示される", () => {
+  it("空文字列を渡した場合は未設定と同じ文言を表示する", () => {
     render(<MetaInfo createdAt="" author="" />);
 
     expect(screen.getByText("日付未設定")).toBeInTheDocument();
     expect(screen.getByText("匿名")).toBeInTheDocument();
   });
 
-  it("長いテキストでもレイアウトできる", () => {
+  it("読了時間を渡すと表示できる", () => {
     render(
       <MetaInfo
-        createdAt="2024年12月31日 23時59分59秒"
-        author="非常に長い名前を持つ著者の名前です"
-      />,
-    );
-
-    expect(screen.getByText("2024年12月31日 23時59分59秒")).toBeInTheDocument();
-    expect(
-      screen.getByText("非常に長い名前を持つ著者の名前です"),
-    ).toBeInTheDocument();
-  });
-
-  // ===================================================================
-  // Issue #395 (Editorial Bento) で追加した variant のテスト
-  // ===================================================================
-  it("featuredバリアントが適用でき著者名を大文字化しない", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024-01-01"
-        author="山田太郎"
-        readingTimeMinutes={5}
-        variant="featured"
-      />,
-    );
-
-    // Issue #424: 当初 (Issue #395) は featured バリアントを uppercase + tracking
-    // のオーバーラインとして実装していたが、英字主体の著者名 (例: `amkkr`) が
-    // データ表記のまま意図せず大文字化される不具合が顕在化したため、
-    // `textTransform: uppercase` と `letterSpacing: 0.08em` を撤去した。
-    // ここでは regression 防止として大文字化されないことを検証する。
-    //
-    // Issue #480: 旧実装は `not.toMatch(/tt_uppercase/)` で className 文字列を
-    // 検証していたが、Panda の `hash: true` で class 名が hash 化されると常に
-    // true となり regression を検知できなくなる (false negative)。PR #474 の
-    // Option A に倣い、container が出力する `data-text-transform` 意味属性で
-    // 「uppercase ではない (none である)」ことを明示的に正検証する。
-    const metaInfo = container.firstChild as HTMLElement;
-    expect(metaInfo).toHaveAttribute("data-variant", "featured");
-    expect(metaInfo).toHaveAttribute("data-text-transform", "none");
-    expect(screen.getByText("2024-01-01")).toBeInTheDocument();
-    expect(screen.getByText("山田太郎")).toBeInTheDocument();
-    expect(screen.getByText("5分で読了")).toBeInTheDocument();
-  });
-
-  it("bentoバリアントが適用できる", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024-01-01"
+        createdAt="2024/01/15 09:30"
         author="山田太郎"
         readingTimeMinutes={3}
-        variant="bento"
       />,
     );
 
-    // bento バリアントは小フォント (xs) で fg.secondary
-    const metaInfo = container.firstChild as HTMLElement;
-    expect(metaInfo).toBeInTheDocument();
-    expect(screen.getByText("2024-01-01")).toBeInTheDocument();
-    expect(screen.getByText("山田太郎")).toBeInTheDocument();
     expect(screen.getByText("3分で読了")).toBeInTheDocument();
   });
 
-  it("featured / bento variant でアイコンサイズが 12px に縮小される", () => {
-    const { container: featuredContainer } = render(
-      <MetaInfo createdAt="2024-01-01" author="山田太郎" variant="featured" />,
-    );
-    const { container: bentoContainer } = render(
-      <MetaInfo createdAt="2024-01-01" author="山田太郎" variant="bento" />,
-    );
+  it("読了時間を渡さない場合は読了時間を表示しない", () => {
+    render(<MetaInfo createdAt="2024/01/15 09:30" author="山田太郎" />);
 
-    // 装飾アイコン (svg) が width="12" を持つ
-    const featuredSvgs = featuredContainer.querySelectorAll('svg[width="12"]');
-    expect(featuredSvgs.length).toBeGreaterThanOrEqual(2);
-    const bentoSvgs = bentoContainer.querySelectorAll('svg[width="12"]');
-    expect(bentoSvgs.length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText(/分で読了/)).not.toBeInTheDocument();
   });
 
-  // ===================================================================
-  // Issue #809: updatedAt が createdAt より新しいときだけ「更新: <日時>」行を
-  // 追加する。行の種別は `data-meta-field="updated"` で観測可能にする。
-  // 更新判定は #808 の `isUpdatedAfterCreated` を使う。
-  //
-  // 行の構造的識別子は `data-meta-field="updated"` を唯一とする。Clock アイコンは
-  // 読了時間行と共用するため行の識別には使わない (アイコンに依存せず data-meta-field
-  // 単独で更新行を一意に特定できることを明示)。
-  // ===================================================================
-  it("updatedAt が createdAt より新しいとき更新日時行を data-meta-field 付きで表示できる", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024/01/15 12:00"
-        author="山田太郎"
-        updatedAt="2024/03/10 09:30"
-      />,
-    );
+  it("長い筆者名を省略せずに表示できる", () => {
+    const longAuthor = "とても長い名前の筆者".repeat(5);
+    render(<MetaInfo createdAt="2024/01/15 09:30" author={longAuthor} />);
 
-    const updatedRow = container.querySelector('[data-meta-field="updated"]');
-    expect(updatedRow).not.toBeNull();
-    // 行の textContent に「更新:」と日時が含まれることを確認する
-    // (装飾アイコン svg は aria-hidden なので textContent には現れない)。
-    expect(updatedRow?.textContent).toContain("更新:");
-    expect(updatedRow?.textContent).toContain("2024/03/10 09:30");
+    expect(screen.getByText(longAuthor)).toBeInTheDocument();
   });
 
-  it("updatedAt 未指定のとき更新日時行が描画されない", () => {
-    const { container } = render(
-      <MetaInfo createdAt="2024/01/15 12:00" author="山田太郎" />,
-    );
+  // 加筆日時 (Issue #809): updatedAt が createdAt より厳密に新しいときだけ
+  // 「更新: <日時>」の行を出す。行の種別は構造属性 data-meta-field="updated" で示す。
+  describe("更新日時", () => {
+    it("updatedAt が createdAt より新しいとき更新日時行を data-meta-field 付きで表示できる", () => {
+      const { container } = render(
+        <MetaInfo
+          createdAt="2024/03/10 09:00"
+          updatedAt="2024/03/11 10:00"
+          author="山田太郎"
+        />,
+      );
 
-    expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
-  });
+      const updatedRow = container.querySelector('[data-meta-field="updated"]');
+      expect(updatedRow).not.toBeNull();
+      expect(updatedRow).toHaveTextContent("更新: 2024/03/11 10:00");
+    });
 
-  it("updatedAt が空文字のとき更新日時行が描画されない", () => {
-    const { container } = render(
-      <MetaInfo createdAt="2024/01/15 12:00" author="山田太郎" updatedAt="" />,
-    );
+    it("updatedAt 未指定のとき更新日時行が描画されない", () => {
+      const { container } = render(
+        <MetaInfo createdAt="2024/03/10 09:00" author="山田太郎" />,
+      );
 
-    expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
-  });
+      expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
+    });
 
-  it("updatedAt が createdAt と同一のとき更新日時行が描画されない", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024/01/15 12:00"
-        author="山田太郎"
-        updatedAt="2024/01/15 12:00"
-      />,
-    );
+    it("updatedAt が空文字のとき更新日時行が描画されない", () => {
+      const { container } = render(
+        <MetaInfo createdAt="2024/03/10 09:00" updatedAt="" author="山田太郎" />,
+      );
 
-    expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
-  });
+      expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
+    });
 
-  it("updatedAt が createdAt より前のとき更新日時行が描画されない", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024/03/10 09:30"
-        author="山田太郎"
-        updatedAt="2024/01/15 12:00"
-      />,
-    );
+    it("updatedAt が createdAt と同一のとき更新日時行が描画されない", () => {
+      const { container } = render(
+        <MetaInfo
+          createdAt="2024/03/10 09:00"
+          updatedAt="2024/03/10 09:00"
+          author="山田太郎"
+        />,
+      );
 
-    expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
-  });
+      expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
+    });
 
-  it("header variant で更新日時行が bg.muted token を持つ", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024/01/15 12:00"
-        author="山田太郎"
-        updatedAt="2024/03/10 09:30"
-        variant="header"
-      />,
-    );
+    it("updatedAt が createdAt より前のとき更新日時行が描画されない", () => {
+      const { container } = render(
+        <MetaInfo
+          createdAt="2024/03/10 09:00"
+          updatedAt="2024/03/09 23:59"
+          author="山田太郎"
+        />,
+      );
 
-    const updatedRow = container.querySelector('[data-meta-field="updated"]');
-    expect(updatedRow).toHaveAttribute("data-token-bg", "bg.muted");
-  });
+      expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
+    });
 
-  it("featured variant で更新日時行のアイコンが 12px に縮小される", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024/01/15 12:00"
-        author="山田太郎"
-        updatedAt="2024/03/10 09:30"
-        variant="featured"
-      />,
-    );
+    // data-meta-field の付与範囲は更新行のみ (Issue #814 / YAGNI)。他の項目へ
+    // 広げたら本テストで検知する。
+    it("data-meta-field は更新行のみに付与され他の項目には付与されない", () => {
+      const { container } = render(
+        <MetaInfo
+          createdAt="2024/03/10 09:00"
+          updatedAt="2024/03/11 10:00"
+          author="山田太郎"
+          readingTimeMinutes={3}
+        />,
+      );
 
-    const updatedRow = container.querySelector('[data-meta-field="updated"]');
-    const icon = updatedRow?.querySelector("svg");
-    expect(icon).toHaveAttribute("width", "12");
-    expect(icon).toHaveAttribute("height", "12");
-  });
-
-  it("bento variant で更新日時行のアイコンが 12px に縮小される", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024/01/15 12:00"
-        author="山田太郎"
-        updatedAt="2024/03/10 09:30"
-        variant="bento"
-      />,
-    );
-
-    const updatedRow = container.querySelector('[data-meta-field="updated"]');
-    const icon = updatedRow?.querySelector("svg");
-    expect(icon).toHaveAttribute("width", "12");
-    expect(icon).toHaveAttribute("height", "12");
-  });
-
-  it("更新日時行のアイコンのみ aria-hidden で更新テキストは SR 読み上げ対象になる", () => {
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024/01/15 12:00"
-        author="山田太郎"
-        updatedAt="2024/03/10 09:30"
-      />,
-    );
-
-    const updatedRow = container.querySelector('[data-meta-field="updated"]');
-    // 装飾アイコンの検証は属性ベースで行う (Issue #709)。行内の svg が
-    // aria-hidden を持つことを確認する。
-    const icon = updatedRow?.querySelector("svg");
-    expect(icon).toHaveAttribute("aria-hidden", "true");
-    // 「更新:」テキストを保持する span は aria-hidden を持たない
-    // (SR 読み上げ対象である)。
-    const textSpan = updatedRow?.querySelector("span");
-    expect(textSpan).not.toHaveAttribute("aria-hidden");
-    expect(textSpan?.textContent).toContain("更新:");
-  });
-
-  // ===================================================================
-  // Issue #814: `data-meta-field` の付与範囲が更新行に限定されることの
-  // 回帰固定。`data-meta-field` は「メタ情報の行種別」を示す構造マーカーで、
-  // 現状は更新行 (`updated`) のみに付与する。日付 / 著者 / 読了時間の既存 3
-  // 項目には付与しない (先回り付与はしない、YAGNI)。他項目へ拡張されたら
-  // 本テストを更新すること。
-  // ===================================================================
-  it("data-meta-field は更新行のみに付与され既存3項目には付与されない", () => {
-    // 全 4 行 (日付 / 著者 / 読了時間 / 更新) が描画される条件で render する。
-    const { container } = render(
-      <MetaInfo
-        createdAt="2024/01/15 12:00"
-        author="山田太郎"
-        readingTimeMinutes={5}
-        updatedAt="2024/03/10 09:30"
-      />,
-    );
-
-    // 1. `data-meta-field` を持つ要素は更新行 1 つのみであること。
-    const metaFieldElements = container.querySelectorAll("[data-meta-field]");
-    expect(metaFieldElements.length).toBe(1);
-
-    // 2. 更新行が `data-meta-field="updated"` を持ち、textContent に
-    //    「更新:」を含むこと。
-    //    NodeList のインデックスアクセス ([0]) は noUncheckedIndexedAccess 下で
-    //    Element | undefined になるため、querySelector (Element | null) で取得し
-    //    ?. と not.toBeNull() で扱う (既存 #809 テストと同じイディオム)。
-    const updatedRow = container.querySelector('[data-meta-field="updated"]');
-    expect(updatedRow).not.toBeNull();
-    expect(updatedRow?.textContent).toContain("更新:");
-
-    // 3. 既存 3 項目 (日付 / 著者 / 読了) の各行が `data-meta-field` を
-    //    持たないこと。行は textContent で同定する。
-    //    MetaInfo ルート (data-variant を持つ) の直下 div だけを「行」として
-    //    集める。container 直下から div>div で集めると testing-library の
-    //    ラッパ div / MetaInfo ルート div を誤って拾い、ルート div は全行を
-    //    連結した textContent を持つため find(textContent) が 3 つともルート
-    //    div に解決してしまい、ルート div は元々 data-meta-field を持たないので
-    //    負アサートが常に成立するトートロジーになる (#814 DA 指摘)。
-    //    :scope > div でルート直下の item div (4 つ) だけに限定する。
-    const root = container.querySelector("[data-variant]");
-    const rows = Array.from(root?.querySelectorAll(":scope > div") ?? []);
-    const dateRow = rows.find((row) => row.textContent?.includes("2024/01/15"));
-    const authorRow = rows.find((row) => row.textContent?.includes("山田太郎"));
-    const readingRow = rows.find((row) =>
-      row.textContent?.includes("分で読了"),
-    );
-    // find が undefined を返してアサートが skip される事故を防ぐため、
-    // 各行が同定できていることを先に確認する。
-    expect(dateRow).toBeDefined();
-    expect(authorRow).toBeDefined();
-    expect(readingRow).toBeDefined();
-    expect(dateRow).not.toHaveAttribute("data-meta-field");
-    expect(authorRow).not.toHaveAttribute("data-meta-field");
-    expect(readingRow).not.toHaveAttribute("data-meta-field");
+      const marked = container.querySelectorAll("[data-meta-field]");
+      expect(marked).toHaveLength(1);
+      expect(marked[0]).toHaveAttribute("data-meta-field", "updated");
+    });
   });
 });

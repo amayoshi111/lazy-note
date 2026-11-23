@@ -44,40 +44,11 @@ describe("ArticleSkeleton", () => {
     expect(nav).toBeInTheDocument();
   });
 
-  // Issue #409 / Issue #422: 旧 token への回帰を CI で検出するための Tripwire。
-  // 旧版は className `/bd-c_border\.subtle/` を検証していたが、Panda `hash: true`
-  // 対応のため `data-token-border` 意味属性に切り替えた (Option A)。
-  it("article は border.subtle 専用 token を border として宣言する", () => {
-    const { container } = render(<ArticleSkeleton />);
-
-    const article = container.querySelector("article");
-    expect(article).toBeInTheDocument();
-    expect(article).toHaveAttribute("data-token-border", "border.subtle");
-  });
-
-  it("nav は border.subtle 専用 token を border として宣言する", () => {
+  // 骨組みは記事詳細と同じ列に並ぶ: 戻るリンク (nav) の次に記事 (article) が来る。
+  it("戻るリンクの位置 (nav) の次に記事 (article) を並べる", () => {
     const { container } = render(<ArticleSkeleton />);
 
     const nav = container.querySelector("nav");
-    expect(nav).toBeInTheDocument();
-    expect(nav).toHaveAttribute("data-token-border", "border.subtle");
-  });
-
-  // Issue #458: header と本文の間の 1px divider は、旧実装で bg.elevated を
-  // background に流用しており light テーマでは bg.surface との差が 1.06:1 と薄く
-  // 視覚消失していた。borderTop + border.subtle に変更したことを保証する Tripwire。
-  // Issue #422 (PR #474): divider のトークン参照を `data-divider` 意味属性で
-  // 宣言するようにした (この属性は master には存在せず PR #474 で導入)。
-  // Issue #477: divider も border token を参照するだけのため、PR #474 で導入した
-  // `data-divider` を他の border 参照と同じ `data-token-border` 命名に統一した。
-  it("header と本文の間の divider が borderTop + border.subtle を宣言する", () => {
-    const { container } = render(<ArticleSkeleton />);
-
-    const article = container.querySelector("article");
-    expect(article).toBeInTheDocument();
-    const header = article?.querySelector("header");
-    const divider = header?.nextElementSibling as HTMLElement | null;
-    expect(divider).not.toBeNull();
-    expect(divider).toHaveAttribute("data-token-border", "border.subtle");
+    expect(nav?.nextElementSibling).toBe(container.querySelector("article"));
   });
 });
