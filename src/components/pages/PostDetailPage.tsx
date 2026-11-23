@@ -341,7 +341,10 @@ export const PostDetailPage = ({
       <PostDetailMetadata post={post} />
 
       <div className={`${gridStyles} ${pageGridStyles}`}>
-        <nav aria-label={POST_DETAIL_NAV_ARIA_LABEL} className={leftColumnStyles}>
+        <nav
+          aria-label={POST_DETAIL_NAV_ARIA_LABEL}
+          className={leftColumnStyles}
+        >
           <Link to="/" variant="navigation">
             {/* Issue #708: 矢印は aria-hidden な装飾要素として分離し、
                 アクセシブル名はテキスト「TOPに戻る」のみにする。 */}

@@ -421,9 +421,7 @@ export const AnchorPage = memo(
           <div className={gridStyles}>
             <div className={bodyColumnStyles}>
               <h1 className={pageHeadingStyles}>{ANCHOR_PAGE_HEADING}</h1>
-              <p className={pageDescriptionStyles}>
-                {ANCHOR_PAGE_DESCRIPTION}
-              </p>
+              <p className={pageDescriptionStyles}>{ANCHOR_PAGE_DESCRIPTION}</p>
               {/* 「サイトの読み方」を伝える補助説明文 (Issue #839)。Footer の入口
                 リンクからの導線に呼応する。過剰可視化なし・件数/頻度語彙なし。 */}
               <p className={pageDescriptionStyles}>

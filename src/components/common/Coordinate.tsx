@@ -166,11 +166,7 @@ export const Coordinate = memo(
             // duplicate key warning を起こさないよう、label と daysSince を
             // 組み合わせた複合キーを採用する (DA Round 1 推奨修正)。
             <li key={`${coordinate.label}-${coordinate.daysSince}`}>
-              {index > 0 && (
-                <span aria-hidden="true">
-                  ・
-                </span>
-              )}
+              {index > 0 && <span aria-hidden="true">・</span>}
               <span>{buildCoordinateLabel(coordinate)}</span>
             </li>
           ))}

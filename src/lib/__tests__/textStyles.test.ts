@@ -54,9 +54,12 @@ describe("dadsTextStyles", () => {
     expect(ALLOWED_FONT_SIZES_PX).toContain(parseStyleName(name).sizePx);
   });
 
-  it.each(styleEntries)("%s の font-size が名前の大きさと一致する", (name, style) => {
-    expect(style.fontSize).toBe(`${parseStyleName(name).sizePx / 16}rem`);
-  });
+  it.each(styleEntries)(
+    "%s の font-size が名前の大きさと一致する",
+    (name, style) => {
+      expect(style.fontSize).toBe(`${parseStyleName(name).sizePx / 16}rem`);
+    },
+  );
 
   it.each(styleEntries)("%s の太さが名前の B / N と一致する", (name, style) => {
     expect(style.fontWeight).toBe(parseStyleName(name).weight);
@@ -66,10 +69,13 @@ describe("dadsTextStyles", () => {
     expect(style.lineHeight).toBe(parseStyleName(name).lineHeight);
   });
 
-  it.each(styleEntries)("%s の文字間が種別と大きさの規定どおりになる", (name, style) => {
-    const { kind, sizePx } = parseStyleName(name);
-    expect(style.letterSpacing).toBe(expectedLetterSpacing(kind, sizePx));
-  });
+  it.each(styleEntries)(
+    "%s の文字間が種別と大きさの規定どおりになる",
+    (name, style) => {
+      const { kind, sizePx } = parseStyleName(name);
+      expect(style.letterSpacing).toBe(expectedLetterSpacing(kind, sizePx));
+    },
+  );
 
   it("14px のスタイルは Dense 1 種類だけに留める (付随情報専用)", () => {
     const names14 = styleEntries

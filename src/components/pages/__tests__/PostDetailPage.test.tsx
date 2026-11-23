@@ -104,9 +104,7 @@ describe("PostDetailPage", () => {
       </MemoryRouter>,
     );
 
-    expect(
-      screen.getByRole("link", { name: "TOPに戻る" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "TOPに戻る" })).toBeInTheDocument();
     // 矢印付きの名前ではアクセシブル名として一致しないことも保証する。
     expect(
       screen.queryByRole("link", { name: "← TOPに戻る" }),

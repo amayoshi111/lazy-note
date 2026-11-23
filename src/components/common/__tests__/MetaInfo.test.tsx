@@ -83,7 +83,11 @@ describe("MetaInfo", () => {
 
     it("updatedAt が空文字のとき更新日時行が描画されない", () => {
       const { container } = render(
-        <MetaInfo createdAt="2024/03/10 09:00" updatedAt="" author="山田太郎" />,
+        <MetaInfo
+          createdAt="2024/03/10 09:00"
+          updatedAt=""
+          author="山田太郎"
+        />,
       );
 
       expect(container.querySelector('[data-meta-field="updated"]')).toBeNull();
