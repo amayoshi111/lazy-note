@@ -24,11 +24,12 @@ const parseStyleName = (name: string) => {
   if (!matched) {
     throw new Error(`テキストスタイル名の形式が規定と異なります: ${name}`);
   }
+  const [, kind = "", size = "", weight = "", lineHeight = ""] = matched;
   return {
-    kind: matched[1],
-    sizePx: Number(matched[2]),
-    weight: matched[3] === "b" ? "700" : "400",
-    lineHeight: String(Number(matched[4]) / 100),
+    kind,
+    sizePx: Number(size),
+    weight: weight === "b" ? "700" : "400",
+    lineHeight: String(Number(lineHeight) / 100),
   };
 };
 
