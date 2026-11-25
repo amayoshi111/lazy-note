@@ -5,11 +5,8 @@
  * 各アイコンは Lucide v1.14.0 (ISC License) の SVG path を流用した独立コンポーネント。
  */
 
-export { Calendar } from "./Calendar";
-export { Clock } from "./Clock";
 export { FileQuestion } from "./FileQuestion";
 export { FileText } from "./FileText";
 export { Moon } from "./Moon";
-export { PenLine } from "./PenLine";
 export { Sun } from "./Sun";
 export type { IconComponent, IconProps } from "./types";

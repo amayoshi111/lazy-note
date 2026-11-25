@@ -18,7 +18,7 @@ interface LinkProps {
   /**
    * SPA 遷移時に View Transitions API でラップするかどうか (Issue #397)。
    *
-   * Editorial Bento の Featured / Bento / Index から記事詳細に遷移する際に
+   * ホームの記事一覧の行 (PostRow) から記事詳細に遷移する際に
    * `view-transition-name: post-{id}` 同士を morph させるために使用する。
    * 未対応ブラウザ / prefers-reduced-motion の場合は通常遷移にフォールバック
    * する (`useViewTransitionNavigate` 内で graceful degrade)。
@@ -72,10 +72,11 @@ const linkRecipe = cva({
       navigation: {
         display: "inline-flex",
         alignItems: "center",
-        gap: "sm",
+        gap: "1x",
+        // 押せる要素として 44px の高さを確保する。
+        minHeight: "target",
         color: "accent.link",
-        fontSize: "sm",
-        fontWeight: "600",
+        textStyle: "std-16b-170",
         // R-5 (Issue #393) AC (ii): Header/Footer ナビは下線なし、配色 + 太字で誘導。
         textDecoration: "none",
       },
@@ -83,11 +84,12 @@ const linkRecipe = cva({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "sm-md md",
+        minHeight: "target",
+        paddingX: "3x",
         background: "accent.brand",
         // TODO(R-2c+): fg.onBrand semantic token に置換予定。
         color: { _light: "cream.50", _dark: "ink.900" },
-        fontWeight: "600",
+        textStyle: "oln-16b-100",
         borderRadius: "md",
         // R-5 (Issue #393) AC (ii): CTA は背景色で誘導するため下線なし。
         textDecoration: "none",

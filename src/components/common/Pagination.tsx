@@ -9,35 +9,25 @@ interface PaginationProps {
 }
 
 // スタイルをコンポーネント外に定数として定義
+// 直前のセクションとの間隔はセクションどうしと同じ 64px。
 const navStyles = css({
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  gap: "sm",
-  marginTop: "xl",
-  paddingY: "lg",
-  md: {
-    gap: "md",
-  },
+  gap: "3x",
+  marginTop: "8x",
 });
 
+// 「前へ」「次へ」の幅を揃える (文字数が同じでも書体によって幅が変わるため)。
 const buttonMinWidthStyles = css({
-  minWidth: "80px",
-  md: {
-    minWidth: "100px",
-  },
+  minWidth: "96px",
 });
 
 const pageInfoStyles = css({
-  fontSize: "sm",
-  fontWeight: "500",
-  color: "fg.primary",
-  minWidth: "100px",
+  textStyle: "std-16n-170",
+  color: "fg.secondary",
+  fontVariantNumeric: "tabular-nums",
   textAlign: "center",
-  md: {
-    fontSize: "base",
-    minWidth: "120px",
-  },
 });
 
 /**

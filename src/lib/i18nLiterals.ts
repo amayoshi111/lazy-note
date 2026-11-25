@@ -26,12 +26,9 @@
 /**
  * タイトル未設定の記事を一覧 / 詳細表示する際のフォールバック文言。
  *
- * 参照元 (6 箇所):
- * - `src/components/atoms/IndexRow.tsx`
- * - `src/components/atoms/BentoCard.tsx`
- * - `src/components/atoms/FeaturedCard.tsx`
+ * 参照元 (3 箇所):
+ * - `src/components/atoms/PostRow.tsx`
  * - `src/components/pages/PostDetailPage.tsx`
- * - `src/components/common/Resurface.tsx`
  * - `src/components/pages/AnchorPage.tsx`
  *
  * テストファイルからは **import しない** (期待値リテラルを共有すると
@@ -60,7 +57,7 @@ export const SITE_NAME = "Lazy Note" as const;
  * 著者名未設定の記事を表示する際のフォールバック文言 (Issue #706 / PR #711 follow-up)。
  *
  * 参照元 (2 箇所):
- * - `src/components/atoms/IndexRow.tsx`
+ * - `src/components/atoms/PostRow.tsx`
  * - `src/components/common/MetaInfo.tsx`
  *
  * テストファイルからは **import しない** (`UNTITLED_POST` と同方針: 期待値
@@ -72,9 +69,10 @@ export const AUTHOR_FALLBACK = "匿名" as const;
 /**
  * 投稿日付未設定の記事を表示する際のフォールバック文言 (Issue #706 / PR #711 follow-up)。
  *
- * 参照元 (2 箇所):
- * - `src/components/atoms/IndexRow.tsx`
+ * 参照元 (3 箇所):
+ * - `src/components/atoms/PostRow.tsx`
  * - `src/components/common/MetaInfo.tsx`
+ * - `src/components/pages/AnchorPage.tsx`
  *
  * テストファイルからは **import しない** (`UNTITLED_POST` と同方針: 期待値
  * リテラルを共有すると同義反復になり、文言変更時の regression を検知
@@ -111,3 +109,18 @@ export const POST_LIST_LOAD_ERROR_TITLE =
  */
 export const LOAD_ERROR_RELOAD_HINT =
   "ページを再読み込みしてください。" as const;
+
+/**
+ * 読了時間の表示文言を組み立てる。
+ *
+ * 参照元 (2 箇所):
+ * - `src/components/atoms/PostRow.tsx` (記事の一覧)
+ * - `src/components/common/MetaInfo.tsx` (記事詳細)
+ *
+ * テストファイルからは **import しない** (`UNTITLED_POST` と同方針)。
+ *
+ * @param minutes 読了時間 (分)
+ * @returns 例: `3分で読了`
+ */
+export const buildReadingTimeLabel = (minutes: number): string =>
+  `${minutes}分で読了`;

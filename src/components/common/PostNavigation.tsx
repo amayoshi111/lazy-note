@@ -21,50 +21,51 @@ interface PostNavigationProps {
   newerPost: PostSummary | null;
 }
 
-// 親レイアウト (PostDetailPage) の bg.canvas 上に置かれる前後ナビの区切り線。
-// Issue #409 で導入した border 専用 token (border.subtle) に置換 (Issue #419)。
-// - 旧実装は bg.surface を使用していたが、light の bg.surface (cream-100) は
-//   外側 bg.canvas (cream-50) との差が 1.06:1 で視覚消失していた。
-// - border.subtle は WCAG 1.4.11 (Non-text Contrast) の 3:1 を満たす:
-//   light: cream-300 × cream-50 (bg.canvas) = 3.49:1
-//   dark : sumi-450  × sumi-950 (bg.canvas) = 6.18:1 (Issue #423 で sumi-400 から変更、Calm 思想と整合)
+// 本文の列の末尾に置く前後ナビ。本文との間は 64px (セクションどうしの間隔)。
+// 768px 以上は左右 2 列、未満は縦に積む。
+//
+// 上端の区切り線は border 専用 token (border.subtle)。bg.canvas 上で WCAG 1.4.11
+// (Non-text Contrast) の 3:1 を満たす (light 3.49:1 / dark 6.18:1)。
 const navStyles = css({
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "md",
-  marginTop: "xl",
-  paddingTop: "xl",
+  display: "grid",
+  gridTemplateColumns: {
+    base: "minmax(0, 1fr)",
+    md: "repeat(2, minmax(0, 1fr))",
+  },
+  columnGap: "gutter",
+  rowGap: "3x",
+  marginTop: "8x",
+  paddingTop: "3x",
   borderTop: "1px solid",
-  borderColor: "border.subtle",
+  borderTopColor: "border.subtle",
 });
 
 const linkContainerStyles = css({
-  flex: "1",
   minWidth: "0",
 });
 
 const linkContainerRightStyles = css({
-  textAlign: "right",
+  md: { textAlign: "right" },
 });
 
 const labelStyles = css({
   display: "block",
-  fontSize: "sm",
+  textStyle: "std-16n-170",
   // 「前/次の記事」ラベルは記事間の重要な誘導 UI のため fg.secondary を採用 (R-2b 修正)。
   // 当初 fg.muted (補助情報用) を当てていたが、devils-advocate レビュー (Q1) で
   // 「重要な誘導 UI に muted は弱すぎる」と指摘されたため fg.secondary に格上げ。
   // light: cream-50 上 9.59:1 AAA / dark: sumi-950 上 14.84:1 AAA を確保。
   color: "fg.secondary",
-  marginBottom: "sm",
 });
 
+// 記事タイトル。リンクであることを色と下線の両方で示す (長いタイトルは折り返す)。
 const titleStyles = css({
   display: "block",
-  fontSize: "base",
-  fontWeight: "600",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
+  textStyle: "std-16b-170",
+  color: "accent.link",
+  textDecoration: "underline",
+  textDecorationThickness: "1px",
+  textUnderlineOffset: "0.2em",
 });
 
 export const PostNavigation = memo(

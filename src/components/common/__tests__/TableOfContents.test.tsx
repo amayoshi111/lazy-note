@@ -62,6 +62,23 @@ describe("TableOfContents", () => {
     expect(h3Link.className).not.toBe(h2Link.className);
   });
 
+  it("h3 だけの目次では、最も浅い階層として字下げしない", () => {
+    const h3OnlyToc: TocItem[] = [
+      { id: "heading-0", text: "ひとつめ", level: 3 },
+      { id: "heading-1", text: "ふたつめ", level: 3 },
+    ];
+    render(<TableOfContents toc={mockToc} />);
+    const indentedClassName = screen.getByText("詳細な説明").className;
+
+    render(<TableOfContents toc={h3OnlyToc} />);
+
+    // h2 と h3 が混ざる目次の h3 (字下げあり) とは異なるクラスになる
+    expect(screen.getByText("ひとつめ").className).not.toBe(indentedClassName);
+    expect(screen.getByText("ふたつめ").className).toBe(
+      screen.getByText("ひとつめ").className,
+    );
+  });
+
   it("TOCが空の場合は何も表示しない", () => {
     const { container } = render(<TableOfContents toc={[]} />);
 

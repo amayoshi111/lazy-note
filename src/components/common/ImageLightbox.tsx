@@ -22,7 +22,7 @@ const containerStyle = css({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "md",
+  padding: "2x",
 });
 
 const panelStyle = css({
@@ -57,21 +57,21 @@ const imageStyle = css({
 // は手動確認推奨だが、ボタン本体 bg.surface との 3.29:1 で枠線が縁取れる。
 const closeButtonStyle = css({
   position: "absolute",
-  top: "sm",
-  right: "sm",
+  top: "1x",
+  right: "1x",
   background: "bg.surface",
   color: "fg.primary",
   border: "1px solid",
   borderColor: "border.subtle",
   borderRadius: "full",
-  width: "xl",
-  height: "xl",
+  // 押せる要素の最小の大きさ (44px)。
+  width: "target",
+  height: "target",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
-  fontSize: "base",
-  lineHeight: 1,
+  textStyle: "oln-16b-100",
   _hover: {
     background: "bg.muted",
   },
@@ -81,15 +81,15 @@ const spinnerContainerStyle = css({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "xl",
+  padding: "5x",
 });
 
 // スピナーの軌道色とリング色を Editorial Citrus トークンに置換 (R-2b)
 // - 環色: bg.surface
 // - 進捗ハイライト: accent.link (リンク誘導と同色、汎用 UI ハイライト)
 const spinnerStyle = css({
-  width: "xl",
-  height: "xl",
+  width: "target",
+  height: "target",
   border: "4px solid",
   borderColor: "bg.surface",
   borderTopColor: "accent.link",

@@ -32,8 +32,8 @@ const mockPosts: Post[] = [
 ];
 
 /**
- * Editorial Bento レイアウト (Issue #395) の振り分けを検証するため、
- * Featured (1) / Bento (6) / Index (>=8) を埋められるだけのモックを生成する。
+ * 一覧の振り分け (最新 1 件 / 抜粋つき 6 件 / タイトルだけ 8 件目以降) を検証する
+ * ための記事を、指定した件数だけ生成する。
  */
 const buildMockPosts = (count: number): PostSummary[] =>
   Array.from({ length: count }, (_, i) => ({
@@ -135,28 +135,6 @@ describe("HomePage", () => {
     expect(link2).toHaveAttribute("href", "/posts/test-post-2");
   });
 
-  // Issue #419 / Issue #422: HomePage (bg.canvas) 上に置かれる Magazine 風
-  // Index の上端区切り線について、border 専用 token (border.subtle) を参照
-  // していることを `data-token-border` 意味属性で検証する (hash 化耐性)。
-  it("Index リストは border.subtle 専用 token を border として宣言する", () => {
-    const posts = buildMockPosts(10);
-    const { container } = render(
-      <MemoryRouter>
-        <HomePage
-          posts={posts}
-          currentPage={1}
-          totalPages={1}
-          onPageChange={mockOnPageChange}
-        />
-      </MemoryRouter>,
-    );
-
-    // 8 件目以降は Magazine 風 Index (ul) としてレンダリングされる。
-    const indexList = container.querySelector("ul");
-    expect(indexList).toBeInTheDocument();
-    expect(indexList).toHaveAttribute("data-token-border", "border.subtle");
-  });
-
   it("タイトルがない記事は「無題の記事」と表示される", () => {
     const postsWithoutTitle: Post[] = [
       {
@@ -187,13 +165,14 @@ describe("HomePage", () => {
   });
 
   // ===================================================================
-  // Editorial Bento レイアウト (Issue #395) の振り分けテスト
+  // 一覧の振り分け
   //
-  // 1 件目 = Featured / 2-7 件目 = Bento / 8 件目以降 = Index と分割し、
-  // 各ロールが正しく描画されるかを検証する。
+  // 1 ページ目は最新 1 件を「最新の記事」に、続く 6 件を抜粋つきの行に、
+  // それ以降をタイトルだけの行に振り分ける。2 ページ目以降は「最新の記事」を
+  // 出さず、全件を「記事一覧」に並べる。
   // ===================================================================
-  describe("Editorial Bento レイアウト振り分け", () => {
-    it("最新 1 件を Featured として大きく表示できる", () => {
+  describe("一覧の振り分け", () => {
+    it("1 ページ目では最新 1 件を「最新の記事」として表示できる", () => {
       const posts = buildMockPosts(1);
       render(
         <MemoryRouter>
@@ -206,15 +185,19 @@ describe("HomePage", () => {
         </MemoryRouter>,
       );
 
-      // Featured ラベルが存在
-      expect(screen.getByText("Featured")).toBeInTheDocument();
-      // 最新記事のタイトルが H2 として表示される (FeaturedCard)
       expect(
-        screen.getByRole("heading", { name: "テスト記事1", level: 2 }),
+        screen.getByRole("heading", { name: "最新の記事", level: 2 }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("article")).toHaveAttribute(
+        "data-variant",
+        "lead",
+      );
+      expect(
+        screen.getByRole("heading", { name: "テスト記事1", level: 3 }),
       ).toBeInTheDocument();
     });
 
-    it("2-7 件目を Bento グリッドに表示できる", () => {
+    it("2〜7 件目を「記事一覧」に抜粋つきの行として表示できる", () => {
       const posts = buildMockPosts(7);
       render(
         <MemoryRouter>
@@ -227,19 +210,22 @@ describe("HomePage", () => {
         </MemoryRouter>,
       );
 
-      // 2-7 件目は h3 (BentoCard) として表示される
-      for (let i = 2; i <= 7; i++) {
-        expect(
-          screen.getByRole("heading", { name: `テスト記事${i}`, level: 3 }),
-        ).toBeInTheDocument();
-      }
-      // 1 件目は h2 (FeaturedCard) のままで h3 ではない
       expect(
-        screen.queryByRole("heading", { name: "テスト記事1", level: 3 }),
-      ).not.toBeInTheDocument();
+        screen.getByRole("heading", { name: "記事一覧", level: 2 }),
+      ).toBeInTheDocument();
+      const rows = screen.getAllByRole("listitem");
+      expect(rows.map((row) => row.getAttribute("data-variant"))).toEqual([
+        "default",
+        "default",
+        "default",
+        "default",
+        "default",
+        "default",
+      ]);
+      expect(screen.getByText("抜粋7")).toBeInTheDocument();
     });
 
-    it("8 件目以降を Magazine 風 Index として表示できる", () => {
+    it("8 件目以降をタイトルだけの行として表示できる", () => {
       const posts = buildMockPosts(10);
       render(
         <MemoryRouter>
@@ -252,26 +238,20 @@ describe("HomePage", () => {
         </MemoryRouter>,
       );
 
-      // Index 見出しが表示される
+      // 記事一覧は 2〜10 件目の 9 行。うち後ろの 3 行 (8〜10 件目) がタイトルだけ。
+      const rows = screen.getAllByRole("listitem");
       expect(
-        screen.getByRole("heading", { name: "Index" }),
-      ).toBeInTheDocument();
+        rows.slice(6).map((row) => row.getAttribute("data-variant")),
+      ).toEqual(["compact", "compact", "compact"]);
+      expect(screen.queryByText("抜粋8")).not.toBeInTheDocument();
 
-      // 8-10 件目は IndexRow として表示される (zero-padded 番号)。
-      // 全体連番 (Featured 1 + Bento 6 = 7 件オフセット) なので
-      // 8 件目=08, 9 件目=09, 10 件目=10。
-      expect(screen.getByText("08")).toBeInTheDocument();
-      expect(screen.getByText("09")).toBeInTheDocument();
-      expect(screen.getByText("10")).toBeInTheDocument();
-
-      // Index リンクが正しい記事 ID を持つ
       const link8 = screen.getByRole("link", { name: "テスト記事8" });
       expect(link8).toHaveAttribute("href", "/posts/post-008");
     });
 
-    it("7 件以下では Index セクションは表示されない", () => {
+    it("7 件以下ではタイトルだけの行を表示しない", () => {
       const posts = buildMockPosts(7);
-      render(
+      const { container } = render(
         <MemoryRouter>
           <HomePage
             posts={posts}
@@ -282,12 +262,10 @@ describe("HomePage", () => {
         </MemoryRouter>,
       );
 
-      expect(
-        screen.queryByRole("heading", { name: "Index" }),
-      ).not.toBeInTheDocument();
+      expect(container.querySelector('[data-variant="compact"]')).toBeNull();
     });
 
-    it("1 件のみの場合 Bento セクションは表示されない", () => {
+    it("1 件のみの場合は「記事一覧」セクションを表示しない", () => {
       const posts = buildMockPosts(1);
       render(
         <MemoryRouter>
@@ -300,10 +278,29 @@ describe("HomePage", () => {
         </MemoryRouter>,
       );
 
-      // 注目の記事 region は表示されない
       expect(
-        screen.queryByRole("region", { name: "注目の記事" }),
+        screen.queryByRole("heading", { name: "記事一覧" }),
       ).not.toBeInTheDocument();
+      expect(screen.queryByRole("list")).not.toBeInTheDocument();
+    });
+
+    it("2 ページ目以降では「最新の記事」を出さず全件を「記事一覧」に並べる", () => {
+      const posts = buildMockPosts(3);
+      render(
+        <MemoryRouter>
+          <HomePage
+            posts={posts}
+            currentPage={2}
+            totalPages={2}
+            onPageChange={mockOnPageChange}
+          />
+        </MemoryRouter>,
+      );
+
+      expect(
+        screen.queryByRole("heading", { name: "最新の記事" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getAllByRole("listitem")).toHaveLength(3);
     });
   });
 

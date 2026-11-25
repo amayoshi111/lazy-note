@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isUpdatedAfterCreated, parsePostDateToEpoch } from "../postDate";
+import {
+  extractPostDate,
+  isUpdatedAfterCreated,
+  parsePostDateToEpoch,
+} from "../postDate";
 
 /**
  * JST 壁時計時刻 (年月日時分) から期待 epoch(ms) を算出するテスト用ヘルパー。
@@ -155,5 +159,27 @@ describe("isUpdatedAfterCreated", () => {
     expect(isUpdatedAfterCreated("2026/03/10 09:30", "2026/13/11 10:00")).toBe(
       false,
     );
+  });
+});
+
+describe("extractPostDate", () => {
+  it("時刻つきの投稿日時から日付だけを取り出せる", () => {
+    expect(extractPostDate("2024/03/10 09:30")).toBe("2024/03/10");
+  });
+
+  it("ダッシュ区切り・T 区切りの投稿日時から日付だけを取り出せる", () => {
+    expect(extractPostDate("2024-03-10T09:30")).toBe("2024-03-10");
+  });
+
+  it("時刻が無い投稿日時はそのまま返す", () => {
+    expect(extractPostDate("2024/03/10")).toBe("2024/03/10");
+  });
+
+  it("投稿日時の形式でない文字列はそのまま返す", () => {
+    expect(extractPostDate("Tuesday 9 pm")).toBe("Tuesday 9 pm");
+  });
+
+  it("空文字に対し空文字を返す", () => {
+    expect(extractPostDate("")).toBe("");
   });
 });

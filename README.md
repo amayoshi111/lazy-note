@@ -154,13 +154,6 @@ bun run contrast:check
 # コントラスト比マトリクスを CSV 出力
 bun run contrast:matrix
 
-# --- フォント ---
-# self-host フォントの再取得
-bun run fonts:download
-
-# フォントの SHA-256 検証
-bun run fonts:verify
-
 # --- 記事 ---
 # 新しい記事を作成
 bun run new-post
@@ -174,10 +167,7 @@ src/
 │   ├── atoms/        # 基本的な UI コンポーネント
 │   │   ├── Button.tsx
 │   │   ├── Link.tsx
-│   │   ├── Typography.tsx
-│   │   ├── BentoCard.tsx
-│   │   ├── FeaturedCard.tsx
-│   │   ├── IndexRow.tsx
+│   │   ├── PostRow.tsx   # 記事一覧の 1 行
 │   │   └── icons/    # アイコンコンポーネント群
 │   ├── common/       # 汎用コンポーネント
 │   │   ├── BrandName.tsx
@@ -218,7 +208,8 @@ src/
 │   ├── markdown.ts / markdownParser.ts  # Markdown 解析
 │   ├── sanitize.ts   # HTML サニタイズ
 │   ├── anchors.ts / milestonesSchema.ts # アンカー / 節目
-│   ├── colorTokens.ts                   # デザイントークン
+│   ├── colorTokens.ts                   # 色のデザイントークン
+│   ├── textStyles.ts                    # 文字のスタイル（大きさ・太さ・行間・文字間）
 │   ├── i18nLiterals.ts / resurface.ts / viewTransition.ts
 ├── pages/            # ページコンポーネント配置（src/main.tsx の Routes に手動登録）
 │   ├── __tests__/    # pages のテスト
@@ -227,7 +218,7 @@ src/
 │   ├── notFound.tsx  # どのルートにも当たらないパスの「ページが見つかりません」画面
 │   └── posts/
 │       └── Post.tsx  # 記事詳細ページ
-├── styles/           # 共通スタイル定義（focusRing）
+├── styles/           # 共通スタイル定義（focusRing / layout）
 ├── test/             # テスト共通設定
 └── main.tsx          # アプリケーションエントリーポイント
 
@@ -238,9 +229,7 @@ datasources/         # データソース
 scripts/             # ユーティリティスクリプト
 ├── newPost.ts          # 新規記事作成スクリプト
 ├── calculateContrast.ts # コントラスト比計算
-├── bunTestGuard.ts      # bun test の取り違え防止（bunfig.toml の test.preload が読み込む。直接実行・import しない）
-└── download-fonts.sh    # self-host フォント取得
-public/fonts/        # self-host する欧文フォント（詳細は public/fonts/README.md）
+└── bunTestGuard.ts      # bun test の取り違え防止（bunfig.toml の test.preload が読み込む。直接実行・import しない）
 styled-system/       # Panda CSS 自動生成ファイル（.gitignore 済み、ビルド時に自動生成）
 ```
 
@@ -305,3 +294,5 @@ UI/UX フルリニューアル「Editorial Citrus」の設計ドキュメント�
 
 - [README (エントリポイント)](./docs/rfc/editorial-citrus/README.md)
 - [Phase1 計画 (v2) ── 唯一の単一ソース](./docs/rfc/editorial-citrus/10-renewal-phase1-plan.md)
+
+文字（書体・大きさ・行間）、余白、レイアウトは、その後のリニューアルでデジタル庁デザインシステムの規定に沿う形へ置き換えています。現行の規定は [CLAUDE.md](./CLAUDE.md) の「文字・余白・レイアウトの規定（デジタル庁デザインシステム）」を参照してください。色は Editorial Citrus のカラートークンを引き続き使用しています。

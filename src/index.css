@@ -1,89 +1,16 @@
 @layer reset, base, tokens, recipes, utilities;
 @import "../styled-system/styles.css";
 
-/* Editorial Citrus 移行 (R-2b / Issue #389):
-   旧 Gruvbox 直接参照の CSS 変数 (旧 5 段階の fg / bg の変数 3 つと
-   --colors-blue-light / --colors-aqua-light) を
-   新 semantic token (--colors-fg-primary / --colors-bg-canvas /
-   --colors-accent-link / --colors-fg-secondary) に置換する。
-   R-2c で旧 token を削除する際、本ファイルの旧参照が残ると undefined となり
-   light/dark でページ全体が崩壊するため必ず先行修正する (DA 重大 5)。
-   注: hover 時の色相変化用に旧 --colors-aqua-light を別 token として用意して
-   いたが、Editorial Citrus は accent 単色運用方針のため accent.link を流用 */
-
 /*
- * Newsreader VF (OFL 1.1) self-host 定義 (Issue #387)。
- * - font-display: swap で FOUT を許容 (CLS が発生する代わりに blank を出さない)。
- * - format("woff2-variations") で Variable Font として認識させる
- *   (古いブラウザは format("woff2") にフォールバック)。
- * - size-adjust で和文フォールバック (Hiragino Mincho ProN / Yu Mincho) と
- *   x-height を揃え、英日混在時のレイアウトシフトを抑制する。
- *   ascent-override / descent-override も併用して行送りの差分を吸収。
+ * 書体はデジタル庁デザインシステムの指定 (Noto Sans JP、無ければ OS のゴシック体)
+ * に従う。Web フォントは配信しない (同システムは OS 標準の書体の使用を制限していない)。
+ * 出典: https://design.digital.go.jp/dads/foundations/typography/
  *
- * 算出式 (Newsreader / Hiragino Mincho ProN W3 のメトリクス突合):
- *   - Newsreader: UPM 1000, ascent 1100, descent 250, x-height 約 504
- *   - Hiragino Mincho ProN W3: UPM 1000, ascent 880, descent 120, x-height 約 545
- *   - size-adjust ≒ Hiragino x-height / Newsreader x-height
- *       = 545 / 504 ≒ 108%
- *   - ascent-override = Hiragino ascent / (Newsreader UPM × size-adjust)
- *       = 880 / 1080 ≒ 81% → 行送り余裕で 90% を採用
- *   - descent-override = Hiragino descent / 1080 ≒ 11%
- *       → 視覚バランス調整で 22% に拡張 (見出し / 本文のディセンダ余白)
- *   - line-gap-override = 0% (line-height は CSS で別途制御)
- * 数値は Phase2 で実機 CLS を測って再調整予定 (Issue #387)。
- *
- * - ライセンス本文は public/fonts/Newsreader-LICENSE.txt に同梱。
- *
- * Italic woff2 は本 Issue では同梱しない (フォント合計 KB 削減のため)。
- * 本文で Italic 強調が必要なケースが出てきた場合は Phase2 で再導入する。
- * それまでは OS フォールバック (Hiragino Mincho ProN の synthesized italic) で描画。
+ * :root の文字サイズは変更しない (1rem = 16px)。文字の大きさは rem で持つので、
+ * 利用者がブラウザで設定した文字サイズに追従する。
  */
-@font-face {
-  font-family: "Newsreader";
-  font-style: normal;
-  font-weight: 200 800;
-  font-display: swap;
-  src:
-    url("/fonts/Newsreader-VF-Latin.woff2") format("woff2-variations"),
-    url("/fonts/Newsreader-VF-Latin.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
-    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
-    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  size-adjust: 108%;
-  ascent-override: 90%;
-  descent-override: 22%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Newsreader";
-  font-style: normal;
-  font-weight: 200 800;
-  font-display: swap;
-  src:
-    url("/fonts/Newsreader-VF-LatinExt.woff2") format("woff2-variations"),
-    url("/fonts/Newsreader-VF-LatinExt.woff2") format("woff2");
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
-    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
-    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
-    U+A720-A7FF;
-  size-adjust: 108%;
-  ascent-override: 90%;
-  descent-override: 22%;
-  line-gap-override: 0%;
-}
-
 :root {
-  /*
-   * Editorial Citrus 本文タイポグラフィ (Issue #387)。
-   * 一次フォント Newsreader (英文セリフ、VF) が来るまでは
-   * 和文 OS 既定の明朝 (Hiragino Mincho ProN / Yu Mincho) で繋ぐ。
-   * unicode-range で和文は OS 明朝に流れる。
-   */
-  font-family: "Newsreader", "Noto Serif JP", "Hiragino Mincho ProN",
-    "Yu Mincho", "YuMincho", serif;
-  font-size: 62.5%;
-  line-height: 1.6;
+  font-family: "Noto Sans JP", sans-serif;
   font-weight: 400;
 
   color: var(--colors-fg-primary);
@@ -95,16 +22,47 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: var(--colors-accent-link);
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-a:hover {
-  /* hover 時の派生色は将来 accent.link-hover を導入予定。本 PR では accent.link
-     を流用 (Editorial Citrus は accent 単色運用方針のため filter/opacity で表現)。 */
-  color: var(--colors-accent-link);
+/*
+ * 要素の既定スタイルは base レイヤーに置く。
+ * レイヤーの外に書くと Panda の recipes / utilities より優先され、コンポーネント側の
+ * 指定 (リンクの色、リストの余白、ボタンの枠線など) を上書きしてしまうため。
+ */
+@layer base {
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: inherit;
+    /* 既定の文字は Std-16N-170 (16px / 行間 170% / 文字間 0.02em) */
+    font-size: 1rem;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+    line-break: strict;
+    overflow-wrap: anywhere;
+  }
+
+  a {
+    color: var(--colors-accent-link);
+    text-decoration: none;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /*
@@ -123,64 +81,6 @@ a:hover {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: inherit;
-}
-
-/* Typography Base Styles */
-h1, h2, h3 {
-  font-weight: bold;
-  color: var(--colors-fg-primary);
-  line-height: 1.2; /* snug */
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1; /* tight */
-}
-
-p {
-  line-height: 1.7; /* body */
-  color: var(--colors-fg-secondary);
-}
-
-/* List Base Styles */
-ul, ol {
-  padding-left: 2em;
-  margin: 1em 0;
-}
-
-ul {
-  list-style-type: disc;
-}
-
-li {
-  margin: 0.5em 0;
-  line-height: 1.7;
-}
-
-/* Button Base Styles */
-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  border: none;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /*
@@ -207,17 +107,19 @@ button:focus {
   }
 }
 
-/* Code Block Copy Button */
+/* コードブロックのコピーボタン (文字は Oln-16B-100) */
 .code-block-wrapper {
   position: relative;
 }
 
 .copy-btn {
   position: absolute;
-  top: var(--spacing-sm);
-  right: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-sizes-xs);
+  top: var(--spacing-1x);
+  right: var(--spacing-1x);
+  padding: var(--spacing-1x) var(--spacing-2x);
+  font-size: 1rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
   border-radius: var(--radii-sm);
   cursor: pointer;
   opacity: 0;
@@ -269,13 +171,12 @@ button:focus {
 /*
  * View Transitions API による Hero morph (Issue #397)。
  *
- * SPA 内の Featured / Bento カードのタイトル → 記事詳細の H1 を
- * `view-transition-name: post-{id}` でペアリングし、ブラウザに morph
- * (位置・大きさ・角丸の補間) させる。
+ * 一覧の記事タイトル → 記事詳細の H1 を `view-transition-name: post-{id}` で
+ * ペアリングし、ブラウザに morph (位置・大きさの補間) させる。
  *
  * - root の transition は subtle に短く (0.4s) して読書フローを邪魔しない。
  * - cubic-bezier(0.32, 0.72, 0, 1) は Apple HIG 寄りの「素早く出て丁寧に止まる」
- *   イージング (Editorial 風の落ち着きと morph の機敏さの両立)。
+ *   イージング。
  * - `::view-transition-group(*)` は root 以外の名前付き group (post-{id} 等) に
  *   も同じ duration / easing を適用する (Reviewer Major 2 対応)。これがないと
  *   名前付き group はブラウザ既定 (約 0.25s, ease) で動き、root との timing
@@ -288,7 +189,7 @@ button:focus {
  * - 未対応ブラウザ (Safari 17 以前等) では本ルール自体が無視され、通常の遷移と
  *   なるため graceful degrade で機能する (Issue #397 AC v)。
  *
- * 注意: post-{id} の名前付与は各 atom 側 (FeaturedCard / BentoCard / IndexRow /
+ * 注意: post-{id} の名前付与は各コンポーネント側 (PostRow / Resurface /
  * PostDetailPage) のインラインスタイルで行う。本 CSS では root と name 付き
  * 要素共通のアニメーション挙動のみを定義する。
  */
@@ -307,4 +208,3 @@ button:focus {
     animation: none !important;
   }
 }
-

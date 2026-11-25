@@ -11,45 +11,47 @@ interface TableOfContentsProps {
   toc: TocItem[];
 }
 
-// Editorial Citrus トークン (R-2b / Issue #389)
-// - 目次は本文と同じレイヤーに配置するため bg.canvas を使用
-// - ボーダーは border.subtle で薄く差別化 (Issue #419 で bg.surface から置換)
-// - 見出し / リンクの hover 背景は bg.elevated
+// 目次。枠で囲まず、上端の区切り線と見出しだけで示す (1024px 未満では本文との
+// 境目として下端にも線を引く)。
 //
-// Issue #409 で導入した border 専用 token (border.subtle) を採用 (Issue #419)。
-// - 旧実装は bg.surface を使用していたが、light の bg.surface (cream-100) は
-//   外側 bg.canvas (cream-50) との差が 1.06:1 で視覚消失していた。
-// - border.subtle は WCAG 1.4.11 (Non-text Contrast) の 3:1 を満たす:
-//   light: cream-300 × cream-50 (bg.canvas) = 3.49:1
-//   dark : sumi-450  × sumi-950 (bg.canvas) = 6.18:1 (Issue #423 で sumi-400 から変更、Calm 思想と整合)
+// 区切り線は border 専用 token (border.subtle)。bg.canvas 上で WCAG 1.4.11
+// (Non-text Contrast) の 3:1 を満たす (light 3.49:1 / dark 6.18:1)。
 const containerStyle = css({
-  background: "bg.canvas",
-  borderRadius: "sm",
-  border: "1px solid",
-  borderColor: "border.subtle",
-  marginTop: "md",
-  marginBottom: "md",
+  borderTop: "1px solid",
+  borderTopColor: "border.subtle",
+  borderBottom: { base: "1px solid", lg: "none" },
+  borderBottomColor: "border.subtle",
 });
 
+// 開閉ボタン。押せる要素として 44px の高さを確保する。
+// 右端の山形は開閉の状態を示す装飾 (開いているとき上向き)。
 const buttonStyle = css({
   width: "100%",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: "sm-md md",
+  minHeight: "target",
   background: "transparent",
   color: "fg.primary",
-  fontWeight: "bold",
-  fontSize: "base",
+  textStyle: "std-16b-170",
   cursor: "pointer",
   borderRadius: "sm",
-  "&:hover": {
-    background: "bg.elevated",
+  "&::after": {
+    content: '""',
+    width: "8px",
+    height: "8px",
+    marginRight: "1x",
+    borderRight: "2px solid",
+    borderBottom: "2px solid",
+    transform: "rotate(45deg)",
+  },
+  "&[data-open]::after": {
+    transform: "rotate(-135deg)",
   },
 });
 
 const panelStyle = css({
-  padding: "0 md md",
+  paddingBottom: "2x",
 });
 
 const listStyle = css({
@@ -62,22 +64,26 @@ const listItemStyle = css({
   margin: "0",
 });
 
+// 項目のリンク。上下 8px の余白で、指でも押しやすい高さ (約 43px) にする。
+// fg.secondary は bg.canvas 上で AAA (light 9.59:1 / dark 14.84:1)。
 const linkBaseStyle = css({
   display: "block",
-  padding: "xs-sm sm-md",
+  paddingY: "1x",
   color: "fg.secondary",
-  textDecoration: "none",
-  borderRadius: "xs",
-  fontSize: "sm-lg",
-  lineHeight: "1.4",
+  textStyle: "std-16n-170",
+  textDecoration: "underline",
+  textDecorationThickness: "1px",
+  textUnderlineOffset: "0.2em",
+  borderRadius: "sm",
   "&:hover": {
-    color: "fg.primary",
-    background: "bg.elevated",
+    color: "accent.link",
+    textDecorationThickness: "2px",
   },
 });
 
+// 最も浅い見出しより深い階層の項目 (h2 の下の h3 など) は 16px 字下げする。
 const indentedLinkStyle = css({
-  paddingLeft: "lg",
+  paddingLeft: "2x",
 });
 
 /**
@@ -104,6 +110,10 @@ export const TableOfContents = React.memo(({ toc }: TableOfContentsProps) => {
     return null;
   }
 
+  // 目次の中で最も浅い見出しの階層。これより深い項目だけを字下げする
+  // (h3 だけの記事で、親の無い字下げにならないようにする)。
+  const topLevel = Math.min(...toc.map((item) => item.level));
+
   return (
     <Disclosure defaultOpen>
       <div className={containerStyle} data-token-border="border.subtle">
@@ -115,7 +125,7 @@ export const TableOfContents = React.memo(({ toc }: TableOfContentsProps) => {
                 <a
                   href={`#${item.id}`}
                   onClick={handleSmoothScroll}
-                  className={`${linkBaseStyle} ${item.level === 3 ? indentedLinkStyle : ""}`}
+                  className={`${linkBaseStyle} ${item.level > topLevel ? indentedLinkStyle : ""}`}
                 >
                   {item.text}
                 </a>

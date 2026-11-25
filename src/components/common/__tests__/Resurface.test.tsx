@@ -107,16 +107,20 @@ describe("Resurface", () => {
       expect(region).toBeInTheDocument();
     });
 
-    it("見出しは h3 で Index と並列 (h2 逆転を避ける)", () => {
+    it("セクションの見出しは h2 で、記事タイトルはその下の h3 になる", () => {
       render(
         <MemoryRouter>
           <Resurface entry={buildEntry()} />
         </MemoryRouter>,
       );
 
-      // 見出し階層: HomePage h2 (Featured) → BentoCard/Index h3 → Resurface h3
+      // 見出し階層: HomePage の他のセクション (最新の記事 / 記事一覧) と同じく
+      // セクション見出しが h2、記事タイトルが h3。
       expect(
-        screen.getByRole("heading", { name: "過去の記事", level: 3 }),
+        screen.getByRole("heading", { name: "過去の記事", level: 2 }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "過去のテスト記事", level: 3 }),
       ).toBeInTheDocument();
     });
 

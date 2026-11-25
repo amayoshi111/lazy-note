@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Calendar, FileQuestion, FileText } from "../../atoms/icons";
+import { FileQuestion, FileText } from "../../atoms/icons";
 import { EmptyState } from "../EmptyState";
 
 interface MockLinkProps {
@@ -88,9 +88,9 @@ describe("EmptyState", () => {
   });
 
   it("異なるアイコンが表示できる", () => {
-    // inline SVG の Calendar に切り替えても常に 1 つの装飾 svg が描画される。
+    // 別の inline SVG (FileQuestion) に切り替えても常に 1 つの装飾 svg が描画される。
     const { container } = render(
-      <EmptyState {...defaultProps} icon={Calendar} />,
+      <EmptyState {...defaultProps} icon={FileQuestion} />,
     );
 
     const decorativeIcons = container.querySelectorAll(

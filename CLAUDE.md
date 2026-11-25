@@ -103,6 +103,18 @@ Panda CSSを使用しているため、スタイルは以下のパターンで�
 - `styled` コンポーネント作成
 - デザイントークンベースの一貫したスタイリング
 
+#### 文字・余白・レイアウトの規定（デジタル庁デザインシステム）
+
+文字の大きさ・余白・レイアウトは、デジタル庁デザインシステム（β版 v2.18.3 を 2026-11 に確認）の規定に沿う。出典: [タイポグラフィ](https://design.digital.go.jp/dads/foundations/typography/) / [余白](https://design.digital.go.jp/dads/foundations/spacing/) / [レイアウト](https://design.digital.go.jp/dads/foundations/layout/)
+
+- **文字は `textStyle` だけで指定する**: `fontSize` / `lineHeight` / `letterSpacing` を個別に書かない（`src/lib/__tests__/textStyles.test.ts` が検出する）。使えるスタイルは `src/lib/textStyles.ts` の一覧のみで、名前は同システムのトークン名（例: `std-16n-170` = Standard / 16px / Normal / 行間 170%）。本文と UI は 16px 以上、14px はフッターの著作権表記のみ
+- **太さは 400 と 700 のみ**
+- **余白は 5 段階のみ**: 基準単位 8px の 1・2・3・5・8 倍（トークン名 `1x` / `2x` / `3x` / `5x` / `8x` = 8 / 16 / 24 / 40 / 64px）。関連の強い要素どうしは狭く、弱い要素どうしは広く取る。5 段階という選び方は本プロジェクトの判断（同システムが定めるのは基準単位と考え方まで）
+- **レイアウトは 12 カラム**: カラム 64px・段間 32px（`gutter`）・左右マージン 40px（768px 未満は 16px）。共通スタイルは `src/styles/layout.ts`。左 2 カラム（日付・戻るリンク）/ 中央 7 カラム（本文、640px = 全角約 39 字）/ 右 3 カラム（補助情報・目次）の 3 列で組む。3 列に分けるのは 1024px 以上（768〜1023px はカラムが細く左 2 カラムに日付が収まらないため 1 列に積む）
+- **押せる要素は 44px 以上**（`sizes.target`）
+- **書体は `"Noto Sans JP", sans-serif`**: Web フォントは配信しない（同システムは OS 標準の書体の使用を制限していない）。検証は `src/lib/__tests__/fontStack.test.ts`
+- **線の色は辺を指定して書く**: `borderTop: "1px solid"` と `borderColor` を併用すると、生成される CSS の並び順によって線の色が文字色に戻ることがある。`borderTopColor` のように辺を指定する
+
 #### cva (Panda recipe) 採用基準
 
 スタイリングの**デフォルトは `css()`** で、`cva` recipe は限定的に先行導入した方式。新規コンポーネント追加時は原則 `css()` を使い、`cva` 化は以下の条件をすべて満たす場合に限る：
@@ -112,7 +124,7 @@ Panda CSSを使用しているため、スタイルは以下のパターンで�
 
 現状 `cva` を使うのは `Button`（variant 3 × size 3）と `Link`（variant 4）のみ。PR #474 で Tripwire テストを Panda recipe + data-* 属性方式へ刷新した際、中核 atom 2 つに `cva` 導入を留めた。`cva` の適用範囲は段階的に拡大する方針で、variant 数だけを基準にはしない。
 
-- **反例に注意**: `Typography`（Heading1/2/3、atom・variant 3）や `MetaInfo`（variant 4）は variant 数が多いが `css()` のスタイルオブジェクト lookup を使う。「variant が多い」だけでは `cva` 化の理由にならない
+- **反例に注意**: `PostRow`（atom・variant 3）は variant を持つが `css()` のスタイルオブジェクト lookup を使う。「variant がある」だけでは `cva` 化の理由にならない
 
 #### data-* 属性命名規約
 
@@ -137,9 +149,9 @@ Tripwire テスト用に吐く data-* 属性の命名は以下を指針とする
   - **属性名は名前空間化しない**（`data-meta-field`。`data-domain-*` のような名前空間化はしない。`data-token-*` 等と意味が衝突しないため不要）
   - **属性値は有限・離散の役割名**: 当面 `updated`（更新日時行）のみ。値の集合を将来拡張する場合（`published` 等）も同属性名で役割名を増やす
   - **enum 属性（`data-tone` 等）との切り分け**: 属性値が**コンポーネント外部のドメインモデル由来の分類**なら enum 属性 / **コンポーネント内部のレイアウト構成要素（行など）の役割**なら構造的行マーカー、を機械的基準にする。`data-meta-field="updated"` は `MetaInfo` という単一コンポーネント内の「更新日時行」というレイアウト役割を指すため後者（enum 属性も構造的行マーカーも値は有限・離散だが、上記「有限・離散の役割名」と識別子節の「有限・離散なら enum」が表面上ぶつかって見えるのはこのため。値が有限・離散かどうかではなく、役割の出所がドメイン側か単一コンポーネント内のレイアウト側かで機械的に切り分ける）
-  - **行の構造的識別子は `data-meta-field` を唯一とする**: 更新行はアイコン（`Clock`）が読了時間行と重複するため、行の識別はアイコンに依存させず `data-meta-field` 単独で行う
+  - **行の構造的識別子は `data-meta-field` を唯一とする**: 更新行は他の行と同じ見た目の文字列なので、行の識別は文言やスタイルに依存させず `data-meta-field` 単独で行う
   - **付与範囲は最小限（YAGNI）**: 現状は更新行のみに付与し、他項目（日付 / 著者 / 読了時間）への付与は需要が出た別 Issue で拡張する（先回り付与はしない）。この付与範囲は `MetaInfo.test.tsx` の負回帰テスト（Issue #814）で固定する
-  - 採用例: `MetaInfo` の更新日時行（`<div ... data-meta-field="updated">`）（Issue #809 で導入、Issue #814 で規約化）
+  - 採用例: `MetaInfo` の更新日時行（`<p ... data-meta-field="updated">`）（Issue #809 で導入、Issue #814 で規約化）
 
 ### 設定ファイル
 

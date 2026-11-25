@@ -7,8 +7,21 @@ import {
   type Milestone,
   type MilestoneTone,
 } from "../../lib/anchors";
-import { SITE_NAME, UNTITLED_POST } from "../../lib/i18nLiterals";
+import {
+  DATE_FALLBACK,
+  SITE_NAME,
+  UNTITLED_POST,
+} from "../../lib/i18nLiterals";
 import type { PostSummary } from "../../lib/markdown";
+import { extractPostDate } from "../../lib/postDate";
+import {
+  bodyColumnStyles,
+  gridStyles,
+  pageContainerStyles,
+  pageMainStyles,
+  sectionLabelStyles,
+  sectionStackStyles,
+} from "../../styles/layout";
 
 interface AnchorPageProps {
   /**
@@ -116,7 +129,7 @@ interface AnchorPageProps {
  *
  * デザイン語彙:
  * - Resurface / Coordinate と同じ補助情報トーン (fg.muted / border.subtle)
- * - Editorial 雑誌風の小型見出し (uppercase + tracking) で章間を意識
+ * - ホームの記事一覧と同じ行の組み (左に日付、中央に名称、右に補助情報)
  *
  * AA 担保 (calculateContrast.ts による実測値):
  * - bg.canvas × fg.primary: 17.16:1 (light) / 16.98:1 (dark) AAA
@@ -130,127 +143,67 @@ interface AnchorPageProps {
  * - border.subtle × bg.canvas: light 3.49:1 / dark 6.18:1 (WCAG 1.4.11 非テキスト 3:1)
  */
 
-const containerStyles = css({
-  maxWidth: "content",
-  margin: "0 auto",
-  padding: "content",
-  paddingX: "md",
-  md: {
-    paddingX: "xl",
-  },
-});
-
-const sectionGapStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  gap: "section",
-  paddingTop: "sm-md",
-});
-
 const pageHeadingStyles = css({
-  fontSize: "2xl",
-  fontWeight: "bold",
+  textStyle: { base: "std-28b-150", md: "std-36b-140" },
   color: "fg.primary",
-  marginBottom: "xs",
 });
 
 const pageDescriptionStyles = css({
-  fontSize: "sm",
-  lineHeight: "relaxed",
+  textStyle: "std-16n-170",
   color: "fg.secondary",
+  marginTop: "2x",
 });
 
-const sectionHeadingStyles = css({
-  fontSize: "xs",
-  fontWeight: "700",
-  textTransform: "uppercase",
-  letterSpacing: "0.15em",
-  color: "fg.muted",
-  marginBottom: "md",
+// 節目一覧 / 各記事の座標の ul。区切り線は行 (li) 側に持たせる。
+const listStyles = css({
+  listStyle: "none",
+  margin: 0,
+  padding: 0,
 });
 
-const sectionBlockStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  gap: "md",
-  paddingTop: "lg",
+// 1 行。12 カラムのうち、左 2 カラムに日付、3〜7 カラム目に名称 (節目名 / 記事
+// タイトル)、8〜12 カラム目に補助情報 (tone / 座標) を置く。1024px 未満は縦に積む。
+// 上端の区切り線は border 専用 token (bg.canvas 上で WCAG 1.4.11 の 3:1 を満たす)。
+const rowStyles = css({
+  rowGap: "1x",
+  alignItems: "baseline",
+  paddingY: "2x",
   borderTop: "1px solid",
   borderTopColor: "border.subtle",
 });
 
-// 節目一覧用の ul。list marker を除去し、Editorial に詰めて並べる。
-const milestoneListStyles = css({
-  listStyle: "none",
-  margin: 0,
-  padding: 0,
-  display: "flex",
-  flexDirection: "column",
-  gap: "sm",
-});
-
-// 節目 1 件の行。日付 / label / tone を素朴に並べる。
-// tone 別の色分けはしない (= 過剰可視化を避ける)。tone は data-tone で構造に出す。
-const milestoneItemStyles = css({
-  display: "flex",
-  alignItems: "baseline",
-  gap: "sm-md",
-  paddingY: "xs",
-  fontSize: "sm",
-  lineHeight: "relaxed",
-  color: "fg.primary",
+const rowDateStyles = css({
+  textStyle: "std-16n-170",
+  color: "fg.secondary",
   fontVariantNumeric: "tabular-nums",
+  lg: { gridColumn: "1 / span 2" },
 });
 
-const milestoneDateStyles = css({
-  fontSize: "xs",
+const rowNameStyles = css({
+  minWidth: 0,
+  textStyle: "std-16b-170",
+  color: "fg.primary",
+  lg: { gridColumn: "3 / span 5" },
+});
+
+// 補助情報の列。tone 別の色分けはしない (= 過剰可視化を避ける)。tone は data-tone で
+// 構造に出す。fg.muted は bg.canvas 上で AA (light 6.54:1 / dark 14.84:1)。
+const rowAsideStyles = css({
+  minWidth: 0,
+  textStyle: "std-16n-170",
   color: "fg.muted",
   fontVariantNumeric: "tabular-nums",
+  lg: { gridColumn: "8 / span 5" },
 });
 
-const milestoneToneLabelStyles = css({
-  fontSize: "xs",
-  color: "fg.muted",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-});
-
-// 各記事の座標 section 内のリスト。1 記事 1 ブロック。
-const postListStyles = css({
-  listStyle: "none",
-  margin: 0,
-  padding: 0,
-  display: "flex",
-  flexDirection: "column",
-  gap: "md",
-});
-
-const postItemStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  gap: "xs",
-  paddingY: "sm",
-  borderBottom: "1px solid",
-  borderBottomColor: "border.subtle",
-  "&:last-child": {
-    borderBottom: "none",
-  },
-});
-
-const postTitleStyles = css({
-  fontSize: "sm-lg",
-  fontWeight: "600",
-  color: "fg.primary",
-  lineHeight: "snug",
-});
-
+// 座標は節目ごとに列を揃えて並べる (1024px 未満は縦に積む)。
 const postCoordinatesStyles = css({
-  fontSize: "xs",
-  color: "fg.muted",
-  lineHeight: "snug",
-  fontVariantNumeric: "tabular-nums",
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "xs-sm",
+  display: "grid",
+  gridTemplateColumns: {
+    base: "minmax(0, 1fr)",
+    lg: "repeat(2, minmax(0, 1fr))",
+  },
+  columnGap: "gutter",
 });
 
 // 空状態テキストは穏やかなトーン優先で fg.muted を採用。AnchorPage の bg.canvas
@@ -258,22 +211,17 @@ const postCoordinatesStyles = css({
 // dark 14.84:1。light は AAA 7:1 未達のため補助情報専用で本文転用は不可。
 // 検証は colorTokens.test.ts §"Issue #537")。
 const emptyStateStyles = css({
-  fontSize: "sm",
+  textStyle: "std-16n-170",
   color: "fg.muted",
-  lineHeight: "relaxed",
-  paddingY: "md",
 });
 
 // publishedAt 推定不可でスキップした記事の件数注記。Issue #544 で追加。
-// 運用画面の透明性を優先するため、件数 N >= 1 のとき末尾に小さく出す。
-// emptyStateStyles と同じ補助情報トーン (fg.muted: bg.canvas 上 light 6.54:1 /
-// dark 14.84:1 で AA pass、AAA は light のみ未達) に揃え、過剰可視化を避ける。
-// section の枠 (= border.subtle の境界) は重ねず、文章として控えめに添える。
+// 運用画面の透明性を優先するため、件数 N >= 1 のとき末尾に出す。
+// emptyStateStyles と同じ補助情報トーン (fg.muted) に揃え、過剰可視化を避ける。
 const skippedNoteStyles = css({
-  fontSize: "xs",
+  textStyle: "std-16n-170",
   color: "fg.muted",
-  lineHeight: "relaxed",
-  paddingTop: "md",
+  paddingTop: "2x",
   fontVariantNumeric: "tabular-nums",
 });
 
@@ -464,17 +412,22 @@ export const AnchorPage = memo(
     const skippedCount = posts.length - postEntries.length;
 
     return (
-      <div className={containerStyles}>
+      <div className={`${pageContainerStyles} ${pageMainStyles}`}>
         {/* React 19 ネイティブ Document Metadata。<head> へ hoist される。
           本ページが描画する <title> はこの 1 つだけ (1 ルート 1 タイトル)。 */}
         <AnchorPageMetadata />
-        <div className={sectionGapStyles}>
-          <div>
-            <h1 className={pageHeadingStyles}>{ANCHOR_PAGE_HEADING}</h1>
-            <p className={pageDescriptionStyles}>{ANCHOR_PAGE_DESCRIPTION}</p>
-            {/* 「サイトの読み方」を伝える補助説明文 (Issue #839)。Footer の入口
-              リンクからの導線に呼応する。過剰可視化なし・件数/頻度語彙なし。 */}
-            <p className={pageDescriptionStyles}>{ANCHOR_PAGE_READING_GUIDE}</p>
+        <div className={sectionStackStyles}>
+          {/* ページ見出しと説明は、他のページの本文と同じ中央の列に置く。 */}
+          <div className={gridStyles}>
+            <div className={bodyColumnStyles}>
+              <h1 className={pageHeadingStyles}>{ANCHOR_PAGE_HEADING}</h1>
+              <p className={pageDescriptionStyles}>{ANCHOR_PAGE_DESCRIPTION}</p>
+              {/* 「サイトの読み方」を伝える補助説明文 (Issue #839)。Footer の入口
+                リンクからの導線に呼応する。過剰可視化なし・件数/頻度語彙なし。 */}
+              <p className={pageDescriptionStyles}>
+                {ANCHOR_PAGE_READING_GUIDE}
+              </p>
+            </div>
           </div>
 
           {/* 節目一覧 (showHeavy により heavy 表示可否を切替 / Issue #839)
@@ -482,12 +435,8 @@ export const AnchorPage = memo(
             visibleMilestones を描画し、showHeavy=true では全 tone を見せる。
             tone は data-tone 属性で構造に出し、視覚は色で分けない
             (= 過剰可視化を避ける)。 */}
-          <section
-            aria-labelledby={milestonesHeadingId}
-            className={sectionBlockStyles}
-            data-token-border="border.subtle"
-          >
-            <h2 id={milestonesHeadingId} className={sectionHeadingStyles}>
+          <section aria-labelledby={milestonesHeadingId}>
+            <h2 id={milestonesHeadingId} className={sectionLabelStyles}>
               {ANCHOR_MILESTONES_SECTION_HEADING}
             </h2>
             {visibleMilestones.length === 0 ? (
@@ -497,7 +446,7 @@ export const AnchorPage = memo(
             ) : (
               <ul
                 aria-label={ANCHOR_MILESTONES_LIST_ARIA_LABEL}
-                className={milestoneListStyles}
+                className={listStyles}
                 // biome-ignore lint/a11y/noRedundantRoles: Safari/VoiceOver で list-style: none を当てた ul の list セマンティクスが剥奪される既知の WebKit バグへの防御として role="list" を明示する
                 role="list"
               >
@@ -506,20 +455,15 @@ export const AnchorPage = memo(
                     // 同 date + 同 label の節目は意味的に重複であるため、
                     // 複合キーで一意性を担保する (React duplicate key warning 回避)
                     key={`${milestone.date}-${milestone.label}`}
-                    className={milestoneItemStyles}
+                    className={`${gridStyles} ${rowStyles}`}
+                    data-token-border="border.subtle"
                     data-tone={milestone.tone}
                   >
-                    <span className={milestoneDateStyles}>
-                      {milestone.date}
-                    </span>
-                    <span>{milestone.label}</span>
+                    <span className={rowDateStyles}>{milestone.date}</span>
+                    <span className={rowNameStyles}>{milestone.label}</span>
                     {/* tone の英字タグ。aria-hidden で SR からは隠す
-                      (data-tone 属性で SR 非依存の構造表現を別途行うため)。
-                      視覚は Editorial 雑誌風の控えめな小型タグとして残す。 */}
-                    <span
-                      aria-hidden="true"
-                      className={milestoneToneLabelStyles}
-                    >
+                      (data-tone 属性で SR 非依存の構造表現を別途行うため)。 */}
+                    <span aria-hidden="true" className={rowAsideStyles}>
                       {milestone.tone}
                     </span>
                   </li>
@@ -534,19 +478,12 @@ export const AnchorPage = memo(
             残らない)。 posts は存在するが publishedAt 推定不可な id を持つもの
             (= テスト用 id) は素直にスキップする。 */}
           {posts.length === 0 ? (
-            <div
-              className={sectionBlockStyles}
-              data-token-border="border.subtle"
-            >
+            <div>
               <p className={emptyStateStyles}>{ANCHOR_EMPTY_POSTS_MESSAGE}</p>
             </div>
           ) : (
-            <section
-              aria-labelledby={postsHeadingId}
-              className={sectionBlockStyles}
-              data-token-border="border.subtle"
-            >
-              <h2 id={postsHeadingId} className={sectionHeadingStyles}>
+            <section aria-labelledby={postsHeadingId}>
+              <h2 id={postsHeadingId} className={sectionLabelStyles}>
                 {ANCHOR_POSTS_SECTION_HEADING}
               </h2>
               {postEntries.length === 0 ? (
@@ -559,11 +496,11 @@ export const AnchorPage = memo(
               ) : (
                 <>
                   {/* biome-ignore lint/a11y/noRedundantRoles: Safari/VoiceOver で list-style: none を当てた ul の list セマンティクスが剥奪される既知の WebKit バグへの防御として role="list" を明示する */}
-                  <ul className={postListStyles} role="list">
+                  <ul className={listStyles} role="list">
                     {postEntries.map((entry) => (
                       <li
                         key={entry.post.id}
-                        className={postItemStyles}
+                        className={`${gridStyles} ${rowStyles}`}
                         data-token-border="border.subtle"
                         // Issue #624 AC3 / PR #617 M3: 各記事 li の構造に post.id を
                         // 機械可読な形で出す。これにより `AnchorPage.test.tsx`
@@ -582,15 +519,21 @@ export const AnchorPage = memo(
                         //   (後発ドメインが ID 属性を必要とする場合は別 prefix を使う)
                         data-post-id={entry.post.id}
                       >
-                        <span className={postTitleStyles}>
+                        <span className={rowDateStyles}>
+                          {extractPostDate(entry.post.createdAt) ||
+                            DATE_FALLBACK}
+                        </span>
+                        <span className={rowNameStyles}>
                           {entry.post.title || UNTITLED_POST}
                         </span>
                         {entry.coordinates.length === 0 ? (
-                          <span className={emptyStateStyles}>
+                          <span className={rowAsideStyles}>
                             {ANCHOR_EMPTY_COORDINATES_MESSAGE}
                           </span>
                         ) : (
-                          <div className={postCoordinatesStyles}>
+                          <div
+                            className={`${rowAsideStyles} ${postCoordinatesStyles}`}
+                          >
                             {entry.coordinates.map((coordinate) => (
                               <span
                                 key={`${coordinate.label}-${coordinate.daysSince}`}

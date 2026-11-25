@@ -31,7 +31,7 @@ interface ButtonProps {
  * (Issue #422 DA レビューで jsdom の var() 解決不能が物理的に確認済み)。
  *
  * - primary: CTA。accent.brand 背景 + 文字色 light=cream.50 / dark=ink.900。
- * - secondary: bg.surface 背景 + border.subtle 枠線。hover で bg.muted に沈み込み。
+ * - secondary: 透明背景 + border.subtle 枠線。hover で bg.muted に沈み込み。
  * - ghost: 透明背景 + accent.link 文字色。
  *
  * border / hover token の根拠は src/components/atoms/Button.tsx の旧版 JSDoc
@@ -43,7 +43,8 @@ const buttonRecipe = cva({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "md",
-    fontWeight: "medium",
+    // 文字は 1 行で完結する UI 用のスタイル (Oln-16B-100)。大きさは size に依らず 16px。
+    textStyle: "oln-16b-100",
     transition: "all 0.2s ease",
     _motionReduce: {
       transition: "none",
@@ -69,13 +70,12 @@ const buttonRecipe = cva({
         },
       },
       secondary: {
-        background: "bg.surface",
+        background: "transparent",
         color: "fg.primary",
         border: "1px solid",
         borderColor: "border.subtle",
         "&:hover:not(:disabled)": {
           background: "bg.muted",
-          transform: "translateY(-1px)",
         },
       },
       ghost: {
@@ -88,20 +88,22 @@ const buttonRecipe = cva({
       },
     },
     size: {
+      // どの大きさでも高さ 44px 以上 (押せる要素の最小の大きさ) を保つ。
       small: {
-        padding: "sm sm-md",
-        fontSize: "sm",
-        gap: "xs",
+        minHeight: "target",
+        paddingX: "2x",
+        gap: "1x",
       },
       medium: {
-        padding: "sm-md md",
-        fontSize: "base",
-        gap: "xs-sm",
+        minHeight: "target",
+        paddingX: "3x",
+        gap: "1x",
       },
       large: {
-        padding: "md lg",
-        fontSize: "lg",
-        gap: "sm",
+        minHeight: "target",
+        paddingX: "5x",
+        paddingY: "2x",
+        gap: "1x",
       },
     },
   },
@@ -143,7 +145,7 @@ const variantTokenAttrs: Record<
     colorTodo: "fg.onBrand",
   },
   secondary: {
-    bg: "bg.surface",
+    bg: "transparent",
     color: "fg.primary",
     border: "border.subtle",
     hoverBg: "bg.muted",

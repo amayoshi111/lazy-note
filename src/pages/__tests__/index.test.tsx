@@ -106,9 +106,10 @@ describe("Indexコンポーネント", () => {
       ).toBeInTheDocument();
     });
 
-    it("記事の投稿日時を表示できる", async () => {
-      expect(screen.getByText("2024-01-02 12:00")).toBeInTheDocument();
-      expect(screen.getByText("2024-01-01 10:00")).toBeInTheDocument();
+    it("記事の投稿日を時刻なしで表示できる", async () => {
+      expect(screen.getByText("2024-01-02")).toBeInTheDocument();
+      expect(screen.getByText("2024-01-01")).toBeInTheDocument();
+      expect(screen.queryByText(/12:00/)).not.toBeInTheDocument();
     });
 
     it("記事の筆者名を表示できる", async () => {
@@ -205,7 +206,7 @@ describe("Indexコンポーネント", () => {
   });
 
   it("記事が投稿日時の新しい順でソートされている", async () => {
-    // Resurface 非発火条件 (allPosts: []) で Featured/Bento の並びだけを検証する。
+    // Resurface 非発火条件 (allPosts: []) で新着の並びだけを検証する。
     mockUsePosts.mockReturnValue({
       posts: mockPosts,
       allPosts: [],
@@ -223,17 +224,15 @@ describe("Indexコンポーネント", () => {
       </TestWrapper>,
     );
 
-    const articles = screen.getAllByRole("article");
-    expect(articles).toHaveLength(2);
+    // 新しい方が「最新の記事」(article)、古い方が「記事一覧」の行 (listitem) になる。
+    const latest = screen.getByRole("article");
+    const listRows = screen.getAllByRole("listitem");
+    expect(listRows).toHaveLength(1);
 
-    // 最初の記事（新しい方）が上に表示されていることを確認
-    const firstArticle = articles[0];
-    const secondArticle = articles[1];
-
-    expect(firstArticle).toHaveTextContent("2つ目の記事");
-    expect(firstArticle).toHaveTextContent("2024-01-02 12:00");
-    expect(secondArticle).toHaveTextContent("最初の記事");
-    expect(secondArticle).toHaveTextContent("2024-01-01 10:00");
+    expect(latest).toHaveTextContent("2つ目の記事");
+    expect(latest).toHaveTextContent("2024-01-02");
+    expect(listRows[0]).toHaveTextContent("最初の記事");
+    expect(listRows[0]).toHaveTextContent("2024-01-01");
   });
 
   describe("Resurface 連携 (Issue #492 / N-5)", () => {

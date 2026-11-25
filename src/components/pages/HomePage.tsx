@@ -1,12 +1,15 @@
 import { memo, useId } from "react";
-import { css } from "../../../styled-system/css";
 import { SITE_NAME } from "../../lib/i18nLiterals";
 import type { PostSummary } from "../../lib/markdown";
 import type { ResurfacedEntry } from "../../lib/resurface";
-import { BentoCard } from "../atoms/BentoCard";
-import { FeaturedCard } from "../atoms/FeaturedCard";
-import { IndexRow } from "../atoms/IndexRow";
+import {
+  pageContainerStyles,
+  pageMainStyles,
+  sectionLabelStyles,
+  sectionStackStyles,
+} from "../../styles/layout";
 import { FileText } from "../atoms/icons";
+import { PostRow } from "../atoms/PostRow";
 import { EmptyState } from "../common/EmptyState";
 import { Pagination } from "../common/Pagination";
 import { Resurface } from "../common/Resurface";
@@ -21,8 +24,11 @@ import { Resurface } from "../common/Resurface";
 const HOMEPAGE_EMPTY_STATE_TITLE = "新しい記事をお楽しみに" as const;
 const HOMEPAGE_EMPTY_STATE_DESCRIPTION =
   "まもなく素晴らしい記事が公開される予定です。創造性に満ちたコンテンツをお届けします。" as const;
-const HOMEPAGE_BENTO_ARIA_LABEL = "注目の記事" as const;
-const HOMEPAGE_INDEX_HEADING = "Index" as const;
+const HOMEPAGE_LATEST_HEADING = "最新の記事" as const;
+const HOMEPAGE_LIST_HEADING = "記事一覧" as const;
+
+/** 「記事一覧」のうち、抜粋つきで出す行の数。これより後ろはタイトルだけの行にする */
+const EXCERPT_ROW_COUNT = 6;
 
 /**
  * `/` ルートの Document Metadata 文言 (React 19 ネイティブ metadata)。
@@ -90,144 +96,20 @@ interface HomePageProps {
 }
 
 /**
- * Editorial Bento ホームレイアウト (Issue #395)
+ * ホームページ。記事を 1 記事 1 行の一覧で並べる。
  *
- * 全 16 記事が同サイズ・縦一列で並ぶ平板さを解消し、雑誌風の階層構造で
- * 「読みたくなる」第一印象を作る。
+ * 行の高さは中身で決まるので、記事の件数や文章量が変わっても空白ができない
+ * (以前のカードのグリッドは枠の高さが先に決まり、短い記事で枠の中が空いていた)。
  *
- * 構成:
- * - Featured: 最新 1 記事 (FeaturedCard) - 巨大タイトル + 控えめメタ
- * - Bento: 2-7 記事目 (最大 6 件、BentoCard) - 2x2 + 非対称 grid
- * - Index: 8 記事目以降 (IndexRow) - Magazine 風 `01 — タイトル ─── 著者 ── 日付`
+ * 構成 (上から):
+ * - 最新の記事: 1 ページ目の先頭 1 件。タイトルを大きくし抜粋を 3 行まで出す
+ * - 記事一覧: 残りの記事。先頭 6 件は抜粋つき、それ以降はタイトルだけの行
+ * - 過去の記事: Resurface (1 ページ目のみ。該当が無ければ出さない)
  *
- * 件数前提:
- * - usePosts.ts の POSTS_PER_PAGE = 16 に揃え、1 ページに Featured 1 + Bento 6
- *   + Index 9 が収まる構成を基準とする。Magazine 風 Index TOC が意味を持つには
- *   1 ページ目に Index が複数件並ぶ必要があり、10 件区切りでは TOC が成立しない。
- * - 件数依存の挙動 (3〜6 件の Bento 配列縮退、7 件で Index 出現境界、16 件超で
- *   Pagination 起動) は VR snapshot で確認する想定。本 PR ではエッジケース
- *   (1〜6 件運用時のレイアウト微調整) は別 Issue で対応する。
+ * 2 ページ目以降の先頭は「最新」ではないので、「最新の記事」を出さず全件を
+ * 記事一覧に並べる。
  *
- * レスポンシブ:
- * - mobile (< 768px):  Featured 大 + Bento 1col + Index (leader 非表示で改行)
- * - tablet (768-1024): Featured 大 + Bento 2col + Index
- * - desktop (>= 1024): Featured 大 + Bento 3col 非対称 + Index
- *
- * AC (Issue #395):
- * - (i) Featured full-bleed: FeaturedCard で実装
- * - (ii) 2-7 番目 Bento: 6 セル非対称 (1 件目 wide, 4 件目 tall, 残り default)
- * - (iii) 8 番目以降 Index: IndexRow で羅列 (zero-padded 2 桁番号)
- * - (iv) レスポンシブ: 上記の grid template
- * - (v) WCAG AA: calculateContrast.ts で全ペア実測済み
- * - (vi) UI 用絵文字なし: MetaInfo は inline SVG icon、IndexRow は dash と dotted leader
- * - (vii) hover/focus: 各 atom に subtle elevation + accent underline 実装済み
- * - (viii) VR snapshot: 大幅変更を許容
- */
-
-// Page コンテナ。Featured は full-bleed 寄りに広く取れるよう、container 幅を採用。
-const containerStyles = css({
-  maxWidth: "container",
-  margin: "0 auto",
-  padding: "content",
-  paddingX: "md",
-  md: {
-    paddingX: "xl",
-  },
-});
-
-// セクション間の余白。Editorial 雑誌の章間隔を意識して section スペース。
-const sectionGapStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  gap: "section",
-  paddingTop: "sm-md",
-});
-
-// Bento グリッド。
-// - mobile (< 768px): 1col (1fr)
-// - tablet (768-1024): 2col (1fr 1fr)
-// - desktop (>= 1024px): 3col 非対称 grid。BentoCard 側の size prop で
-//   "wide" は 2col、"tall" は 2row 占有することで非対称性を実現する。
-//
-// 各セルが揃いすぎないよう、grid-auto-rows: minmax で最低高を担保しつつ
-// セル毎の高さに応じて自動で伸びるように設定。
-const bentoGridStyles = css({
-  display: "grid",
-  gridTemplateColumns: "1fr",
-  gap: "md",
-  md: {
-    gridTemplateColumns: "1fr 1fr",
-    gap: "lg",
-  },
-  lg: {
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gridAutoRows: "minmax(220px, auto)",
-    gap: "lg",
-  },
-});
-
-// Index リスト (Magazine 風 TOC)。ul のデフォルトリストマーカーは消す。
-//
-// 親レイアウト (HomePage / bg.canvas) 上に置かれる Magazine 風 Index の
-// 上端区切り線。Issue #409 で導入した border 専用 token (border.subtle) に
-// 置換 (Issue #419)。
-// - 旧実装は bg.elevated を使用していたが、light の bg.elevated (cream-100)
-//   は外側 bg.canvas (cream-50) との差が 1.06:1 で視覚消失していた。
-// - border.subtle は WCAG 1.4.11 (Non-text Contrast) の 3:1 を満たす:
-//   light: cream-300 × cream-50 (bg.canvas) = 3.49:1
-//   dark : sumi-450  × sumi-950 (bg.canvas) = 6.18:1 (Issue #423 で sumi-400 から変更、Calm 思想と整合)
-const indexListStyles = css({
-  listStyle: "none",
-  margin: 0,
-  padding: 0,
-  // 上部に小さな見出し的な余白
-  borderTop: "1px solid",
-  borderTopColor: "border.subtle",
-});
-
-// Index セクションの見出し (Editorial 風)。
-// "Index" のような小さな目印で雑誌の章タイトルを意識。
-// 補助情報のため fg.muted を採用 (Resurface / AnchorPage 見出しと同じ語彙)。
-// HomePage の bg.canvas 上に置かれる前提で WCAG 1.4.3 AA (4.5:1) を満たす
-// (実測 light 6.54:1 / dark 14.84:1。light は AAA 7:1 未達のため補助情報専用で
-//  本文転用は不可。検証は colorTokens.test.ts §"Issue #537")。
-const indexHeadingStyles = css({
-  fontSize: "xs",
-  fontWeight: "700",
-  textTransform: "uppercase",
-  letterSpacing: "0.15em",
-  color: "fg.muted",
-  marginBottom: "md",
-});
-
-/**
- * 6 件以下の Bento 用 size 配列。
- *
- * 非対称性を出すパターンとして:
- * - 0: wide (2col) - Bento 内のサブヘッダー的な大セル
- * - 1: default
- * - 2: default
- * - 3: tall (2row) - 縦方向のリズム
- * - 4: default
- * - 5: default
- *
- * 結果として 3col grid 内では:
- *   row1: [wide___][_____][3-tall]
- *   row2: [1_____][2____][3-tall]
- *   row3: [4_____][5____]
- * のような階段状の非対称配置になる。実セル数に応じて自動的に切り詰められる。
- */
-const bentoSizes = [
-  "wide",
-  "default",
-  "default",
-  "tall",
-  "default",
-  "default",
-] as const;
-
-/**
- * ホームページコンポーネント (Editorial Bento レイアウト)。
+ * 見出し階層はセクションの見出しが h2、記事タイトルが h3。
  */
 export const HomePage = memo(
   ({
@@ -238,26 +120,15 @@ export const HomePage = memo(
     resurfaceEntry = null,
     showResurface = true,
   }: HomePageProps) => {
-    // Index セクション見出しの動的 ID (React 19 useId)。静的 id の重複を避け
-    // (useUniqueElementIds)、section の aria-labelledby と heading を紐付ける。
+    // セクション見出しの動的 ID (React 19 useId)。静的 id の重複を避け、
+    // section の aria-labelledby と見出しを紐付ける。
     // 早期 return (posts.length === 0) より前で呼び、Rules of Hooks を守る。
-    const indexHeadingId = useId();
-
-    // 記事を Featured (1) / Bento (2-7) / Index (8+) に分割。
-    //
-    // 件数別の表示挙動:
-    //   - 0 件: EmptyState のみ (下記 if 分岐)
-    //   - 1 件: Featured のみ。bentoPosts / indexPosts は空なので Bento / Index
-    //           セクション (条件付き render) は描画されない
-    //   - 2〜7 件: Featured + Bento (1〜6 件) のみ。Index は非表示
-    //   - 8 件以上: Featured + Bento (6 件) + Index (8 件目以降) を全て描画
-    const featured = posts[0];
-    const bentoPosts = posts.slice(1, 7);
-    const indexPosts = posts.slice(7);
+    const latestHeadingId = useId();
+    const listHeadingId = useId();
 
     if (posts.length === 0) {
       return (
-        <div className={containerStyles}>
+        <div className={pageContainerStyles}>
           {/* Document Metadata は EmptyState 分岐でも同一文言を 1 度だけ描画する
               (= ルートとして常に 1 つの <title> を保証する)。 */}
           <HomePageMetadata />
@@ -270,58 +141,47 @@ export const HomePage = memo(
       );
     }
 
+    const lead = currentPage === 1 ? posts[0] : undefined;
+    const listPosts = lead ? posts.slice(1) : posts;
+
     return (
-      <div className={containerStyles}>
+      <div className={`${pageContainerStyles} ${pageMainStyles}`}>
         {/* React 19 ネイティブ Document Metadata。<head> へ hoist される。
             本ページが描画する <title> はこの 1 つだけ (1 ルート 1 タイトル)。 */}
         <HomePageMetadata />
-        <div className={sectionGapStyles}>
-          {/* Featured: 最新 1 記事 */}
-          {featured && <FeaturedCard post={featured} />}
-
-          {/* Bento: 2-7 記事目 */}
-          {bentoPosts.length > 0 && (
-            <section
-              className={bentoGridStyles}
-              aria-label={HOMEPAGE_BENTO_ARIA_LABEL}
-            >
-              {bentoPosts.map((post, idx) => (
-                <BentoCard key={post.id} post={post} size={bentoSizes[idx]} />
-              ))}
+        <div className={sectionStackStyles}>
+          {lead && (
+            <section aria-labelledby={latestHeadingId}>
+              <h2 id={latestHeadingId} className={sectionLabelStyles}>
+                {HOMEPAGE_LATEST_HEADING}
+              </h2>
+              <PostRow post={lead} variant="lead" />
             </section>
           )}
 
-          {/* Index: 8 記事目以降 (Magazine 風 TOC)
-              見出し階層: FeaturedCard h2 → BentoCard h3 + Index h3 (並列) で
-              論理的な heading hierarchy を維持する (h3 → h2 逆転を回避)。
-              section は aria-labelledby で可視見出しと紐付け、SR 読み上げを統一。 */}
-          {indexPosts.length > 0 && (
-            <section aria-labelledby={indexHeadingId}>
-              <h3 id={indexHeadingId} className={indexHeadingStyles}>
-                {HOMEPAGE_INDEX_HEADING}
-              </h3>
-              <ul className={indexListStyles} data-token-border="border.subtle">
-                {indexPosts.map((post, idx) => (
-                  // 全体連番 (Featured 1 件 + Bento 6 件 = 7 件オフセット)。
-                  // POSTS_PER_PAGE = 16 で 1 ページ完結を前提としているため、
-                  // currentPage は加味せず idx + 7 で 8, 9, ... を表示する。
-                  // 16 件超で Pagination が発生した場合は、Featured / Bento は
-                  // 1 ページ目限定の意味付けを維持しつつ Index 番号は 1 ページ
-                  // 完結のままで良い (各ページが独立した Magazine の章扱い)。
-                  <IndexRow key={post.id} post={post} index={idx + 7} />
+          {listPosts.length > 0 && (
+            <section aria-labelledby={listHeadingId}>
+              <h2 id={listHeadingId} className={sectionLabelStyles}>
+                {HOMEPAGE_LIST_HEADING}
+              </h2>
+              <ul>
+                {listPosts.map((post, index) => (
+                  <PostRow
+                    key={post.id}
+                    post={post}
+                    as="li"
+                    variant={index < EXCERPT_ROW_COUNT ? "default" : "compact"}
+                  />
                 ))}
               </ul>
             </section>
           )}
 
           {/* Resurface: Anchor 顔3「再浮上」(Issue #492 / N-5)。
-              新着セクション (Featured / Bento / Index) の下に独立スロットで配置し、
-              過去記事を 1 件浮上させる。
-              - currentPage === 1 のときのみ表示 (Featured が "全期間の最新" 意味を
-                持つのは 1 ページ目限定なので、Resurface も 1 ページ目限定にする)。
+              新着の下に独立したセクションで置き、過去記事を 1 件浮上させる。
+              - currentPage === 1 のときのみ表示する。
               - resurfaceEntry===null または showResurface===false で非表示
-                (Resurface コンポーネント側で early return)。
-              - 新着とは aria-label="過去の記事" で意味的に分離 (Resurface 内部)。 */}
+                (Resurface コンポーネント側で early return)。 */}
           {currentPage === 1 && (
             <Resurface entry={resurfaceEntry} show={showResurface} />
           )}

@@ -7,8 +7,13 @@ import { SITE_NAME, UNTITLED_POST } from "../../lib/i18nLiterals";
 import type { Post, PostSummary } from "../../lib/markdown";
 import { sanitizePostHtml } from "../../lib/sanitize";
 import { buildPostHeroTransitionName } from "../../lib/viewTransition";
+import {
+  gridStyles,
+  leftColumnStyles,
+  pageContainerStyles,
+  pageMainStyles,
+} from "../../styles/layout";
 import { Link } from "../atoms/Link";
-import { Heading1 } from "../atoms/Typography";
 import { Coordinate } from "../common/Coordinate";
 import { ImageLightbox } from "../common/ImageLightbox";
 import { MetaInfo } from "../common/MetaInfo";
@@ -21,23 +26,16 @@ import { TableOfContents } from "../common/TableOfContents";
 //
 // Issue #708: 矢印「←」をテキストから分離し、JSX 側で
 // `<span aria-hidden="true">{矢印}</span>` の装飾要素として描画する。
-// 連結 1 定数 (`"← TOPに戻る"`) から分離した理由:
-// - 再評価トリガー3 (同種の「矢印 + テキスト」ラベルが 3 箇所以上発生) が
-//   充足したため横断的に方針統一する (BackToTop / PostNavigation / Post と揃える)。
-// - 矢印を aria-hidden にすることで SR のアクセシブル名から外れる a11y 改善。
+// - 矢印を aria-hidden にすることで SR のアクセシブル名から外れる。
 // - 矢印を構造的に分離することが将来の i18n / RTL 対応の土台になる
 //   (実際の `[dir=rtl]` 反転 CSS は RTL 要件発生時まで先送り = YAGNI)。
 // 矢印は SVG / アイコンフォントではなく純粋な glyph のため BackToTop に倣い
 // `ICON` ではなく `ARROW` と命名する。
 //
 // 「統一」したのは処理パターン (矢印を aria-hidden 分離する扱い) であって、
-// コードの共通化 (共有コンポーネント化 / 定数集約) はしない。根拠: (a) 矢印
-// `←`/`→`/`↑` は aria-hidden の装飾文字であり、装飾文字を i18nLiterals.ts へ
-// 集約しない先例がある (IndexRow.tsx の `INDEX_ROW_META_SEPARATOR = "—"` は
-// ローカル定数 / i18nLiterals.ts の「単一ファイル完結はファイル内局所定数」方針)。
-// (b) CLAUDE.md「過度に抽象化しない」+ 参照実装 BackToTop も矢印をローカル定数の
-// まま持つ。この根拠は本ファイル 1 箇所のみに記す (他 3 ファイルは #708 横断統一の
-// 記載から辿れるため重複させない)。
+// コードの共通化 (共有コンポーネント化 / 定数集約) はしない。矢印
+// `←`/`→`/`↑` は aria-hidden の装飾文字であり、装飾文字は i18nLiterals.ts へ
+// 集約せずファイル内の局所定数にする方針 (参照実装 BackToTop も同じ)。
 const POST_DETAIL_NAV_ARIA_LABEL = "ページナビゲーション" as const;
 const POST_DETAIL_BACK_TO_TOP_ARROW = "←" as const;
 const POST_DETAIL_BACK_TO_TOP_TEXT = "TOPに戻る" as const;
@@ -92,6 +90,200 @@ const PostDetailMetadata = ({ post }: { post: Post }) => {
   );
 };
 
+/*
+ * レイアウト (デジタル庁デザインシステムのレイアウト規定に沿う 12 カラム):
+ *
+ *   1024px 以上
+ *   | 戻るリンク (2) | タイトル・メタ情報 (10)          |
+ *   |               | 本文 (7 = 640px)     | 目次 (3) |
+ *
+ *   1024px 未満は 1 カラムで、戻るリンク → タイトル・メタ情報 → 目次 → 本文 の順。
+ *   (768〜1023px では 3 列に分けるとカラムが細すぎるため。src/styles/layout.ts 参照)
+ *
+ * - 本文は 7 カラム (640px)。16px の文字で全角約 39 字になり、同システムの目安
+ *   (全角 40 字程度) に収まる。1 カラムに積んだときも 640px までに抑える
+ * - 戻るリンクとタイトルは 1 行目のベースラインで揃える
+ * - article は外側の 12 カラムのうち 3〜12 カラム目を使い、内側は subgrid で同じ
+ *   カラム線に乗せる (subgrid 非対応の環境では 1 カラムに積まれるだけで崩れない)
+ */
+
+// 外側のグリッド。戻るリンクと article を並べる。
+const pageGridStyles = css({
+  rowGap: "3x",
+  alignItems: "baseline",
+});
+
+// article (3〜12 カラム目)。内側のタイトル / 目次 / 本文を同じカラム線に乗せる。
+const articleStyles = css({
+  minWidth: 0,
+  display: "grid",
+  gridTemplateColumns: { base: "minmax(0, 1fr)", lg: "subgrid" },
+  rowGap: { base: "3x", lg: "5x" },
+  lg: { gridColumn: "3 / span 10" },
+});
+
+const headerStyles = css({
+  minWidth: 0,
+  lg: { gridColumn: "1 / -1" },
+});
+
+const titleStyles = css({
+  textStyle: { base: "std-28b-150", md: "std-36b-140" },
+  color: "fg.primary",
+  marginBottom: "2x",
+});
+
+// 目次。1024px 以上では本文の右 (3 カラム) に置き、スクロールに追従させる。
+// 1 カラムに積んだときは本文と同じ幅 (640px まで) に揃える。
+const tocColumnStyles = css({
+  minWidth: 0,
+  maxWidth: "measure",
+  lg: {
+    gridColumn: "8 / span 3",
+    gridRow: "2",
+    alignSelf: "start",
+    position: "sticky",
+    top: "3x",
+  },
+});
+
+// 本文の列 (7 カラム)。前後の記事へのリンクもこの列に置く。
+const bodyColumnStyles = css({
+  minWidth: 0,
+  maxWidth: "measure",
+  lg: { gridColumn: "1 / span 7", gridRow: "2" },
+});
+
+/*
+ * 本文 (Markdown から生成した HTML) のスタイル。
+ *
+ * 余白は基準単位 8px の 5 段階だけを使う:
+ * - ブロックどうし (段落・リスト・引用・表・コードなど) は 40px。同システムの
+ *   「段落の間はフォントサイズの 2.25 倍以上」(16px なら 36px 以上) を満たす
+ * - 見出しの上は 64px、見出しの下は階層が深いほど狭く (h2: 24px / h3: 16px / h4: 8px)
+ * - リストの項目どうしは 8px
+ *
+ * 出典: https://design.digital.go.jp/dads/foundations/typography/accessibility/
+ *       https://design.digital.go.jp/dads/foundations/spacing/
+ *
+ * 生成された HTML は内側の div の直下に並ぶので、ブロックの間隔は
+ * 「& > div > 隣接する要素」に付ける (リストの中のリストなどには波及させない)。
+ */
+const proseStyles = css({
+  textStyle: "std-16n-170",
+  color: "fg.primary",
+
+  "& > div > * + *": { marginTop: "5x" },
+  "& > div > h1, & > div > h2, & > div > h3": { marginTop: "8x" },
+  "& > div > h1 + *, & > div > h2 + *": { marginTop: "3x" },
+  "& > div > h3 + *": { marginTop: "2x" },
+  "& > div > h4 + *": { marginTop: "1x" },
+  // 見出しが続くとき (h2 の直後の h3 など) は、上の見出しの下の余白を優先する。
+  "& > div > h2 + h3": { marginTop: "3x" },
+  "& > div > h3 + h4": { marginTop: "2x" },
+
+  "& h1, & h2": { textStyle: "std-24b-150", color: "fg.primary" },
+  "& h3": { textStyle: "std-20b-150", color: "fg.primary" },
+  "& h4": { textStyle: "std-16b-170", color: "fg.primary" },
+
+  "& strong": { fontWeight: "700" },
+
+  // リスト。Panda の reset が消したマーカーと字下げを本文の中だけ戻す。
+  "& ul, & ol": { paddingLeft: "3x" },
+  "& ul": { listStyleType: "disc" },
+  "& ol": { listStyleType: "decimal" },
+  "& li + li, & li > ul, & li > ol": { marginTop: "1x" },
+
+  // 引用。左の線は border 専用 token。
+  "& blockquote": {
+    paddingLeft: "3x",
+    borderLeft: "2px solid",
+    borderLeftColor: "border.subtle",
+    color: "fg.secondary",
+  },
+  "& blockquote > * + *": { marginTop: "2x" },
+
+  // 定義リスト (GFM)。
+  "& dt": { fontWeight: "700" },
+  "& dd": { marginLeft: "3x" },
+  "& dd + dt": { marginTop: "2x" },
+
+  "& figcaption": {
+    color: "fg.secondary",
+    textAlign: "center",
+    marginTop: "1x",
+  },
+
+  // 区切り線 (GFM <hr>)。bg.canvas 上で WCAG 1.4.11 の 3:1 を満たす。
+  "& hr": {
+    border: "none",
+    borderTop: "1px solid",
+    borderTopColor: "border.subtle",
+  },
+
+  // 表 (GFM)。内容が広い場合は表の中だけ横スクロールさせる。
+  // display: block にすることで幅の上限が効く。
+  "& table": {
+    display: "block",
+    maxWidth: "100%",
+    overflowX: "auto",
+    borderCollapse: "collapse",
+  },
+  "& th, & td": {
+    border: "1px solid",
+    borderColor: "border.subtle",
+    paddingY: "1x",
+    paddingX: "2x",
+    textAlign: "left",
+  },
+  "& th": {
+    background: "bg.muted",
+    fontWeight: "700",
+  },
+
+  // リンク: 本文のリンクは常に下線を付ける (WCAG 1.4.1。色だけに依存しない)。
+  // hover では下線を太くする。
+  "& a": {
+    color: "accent.link",
+    textDecoration: "underline",
+    textDecorationThickness: "1px",
+    textUnderlineOffset: "0.2em",
+    "&:hover": {
+      textDecorationThickness: "2px",
+    },
+  },
+
+  // コード。配色は従来のコードブロック用 token を使う。
+  "& code": {
+    textStyle: "mono-16n-150",
+    background: "bg.codeInline",
+    color: "fg.code",
+    paddingX: "1x",
+    borderRadius: "sm",
+  },
+  "& pre": {
+    textStyle: "mono-16n-150",
+    background: "bg.code",
+    color: "fg.code",
+    padding: "3x",
+    borderRadius: "md",
+    overflow: "auto",
+  },
+  // コードブロックの中の code には、インラインコード用の背景と余白を付けない。
+  "& pre code": {
+    background: "transparent",
+    padding: "0",
+  },
+
+  "& img": {
+    maxWidth: "100%",
+    height: "auto",
+    borderRadius: "sm",
+    display: "block",
+    cursor: "zoom-in",
+  },
+});
+
 interface PostDetailPageProps {
   post: Post;
   olderPost: PostSummary | null;
@@ -117,9 +309,6 @@ interface PostDetailPageProps {
    *
    * Issue #533: 本フラグは「明示的に OFF にしたいとき専用」のスイッチで、
    * 既定 true (= 通常時は何も指定せず Coordinate を描画する) として扱う。
-   * required 化はせず optional のまま据え置く方針 (呼び出し側で都度 true を
-   * 書かせる負担を避けるため)。OFF にしたい呼び出し側だけ `showCoordinate={false}`
-   * を明示する。
    */
   showCoordinate?: boolean;
 }
@@ -136,10 +325,9 @@ export const PostDetailPage = ({
   const { isOpen, imageSrc, imageAlt, close } = useImageLightbox(contentRef);
 
   // Hero morph (Issue #397): 記事詳細の H1 に `view-transition-name: post-{id}`
-  // を付与する。HomePage 側の Featured / Bento / Index タイトルと同じ name に
-  // することで、SPA 遷移時にブラウザが H1 へ morph する。VT 未対応 / reduced
-  // motion 時はこの style があってもアニメーションは発火しない (CSS 側の
-  // メディアクエリで disable される)。
+  // を付与する。一覧の行 (PostRow) のタイトルと同じ name にすることで、SPA 遷移時に
+  // ブラウザが H1 へ morph する。VT 未対応 / reduced motion 時はこの style が
+  // あってもアニメーションは発火しない (CSS 側のメディアクエリで disable される)。
   const heroNameStyle: CSSProperties = {
     viewTransitionName: buildPostHeroTransitionName(String(post.id)),
   };
@@ -149,376 +337,74 @@ export const PostDetailPage = ({
   // 適合しない id (例: テスト用 "test-post") の場合は undefined となり、Coordinate
   // は何も描画しない (= 撤退可能性の一形態として無害な早期 return が成立する)。
   const publishedAt = inferPublishedAt(post.id);
+
   return (
-    <>
+    <div className={`${pageContainerStyles} ${pageMainStyles}`}>
       {/* React 19 ネイティブ Document Metadata。<head> へ hoist される。
           本ページが描画する <title> はこの 1 つだけ (1 ルート 1 タイトル)。 */}
       <PostDetailMetadata post={post} />
 
-      {/* Navigation */}
-      <nav
-        aria-label={POST_DETAIL_NAV_ARIA_LABEL}
-        data-token-border="border.subtle"
-        className={css({
-          background: "bg.surface",
-          borderBottom: "1px solid",
-          // Issue #409: border 専用 token に置換 (R-2b の bg.elevated 反転は
-          // light で外側 bg.canvas と同色化する制約があったため、1.4.11 3:1 を
-          // 確保できる border.subtle に統一)。
-          borderColor: "border.subtle",
-          paddingY: "sm-md",
-          paddingX: "md",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          md: {
-            paddingX: "0",
-          },
-        })}
-      >
-        <div
-          className={css({
-            maxWidth: "content",
-            width: "100%",
-          })}
+      <div className={`${gridStyles} ${pageGridStyles}`}>
+        <nav
+          aria-label={POST_DETAIL_NAV_ARIA_LABEL}
+          className={leftColumnStyles}
         >
           <Link to="/" variant="navigation">
             {/* Issue #708: 矢印は aria-hidden な装飾要素として分離し、
-                アクセシブル名はテキスト「TOPに戻る」のみにする。
-                navigation variant は inline-flex + gap:sm のため矢印と
-                テキストの間隔は gap token が担う (旧連結時の半角スペースの代替)。 */}
+                アクセシブル名はテキスト「TOPに戻る」のみにする。 */}
             <span aria-hidden="true">{POST_DETAIL_BACK_TO_TOP_ARROW}</span>
             {POST_DETAIL_BACK_TO_TOP_TEXT}
           </Link>
-        </div>
-      </nav>
+        </nav>
 
-      <div
-        className={css({
-          background: "bg.canvas",
-          minHeight: "100vh",
-        })}
-      >
-        <div
-          className={css({
-            maxWidth: "article",
-            margin: "0 auto",
-            padding: "md",
-            md: {
-              padding: "content",
-            },
-          })}
-        >
-          {/*
-           * article の border (Issue #409 で border.subtle に置換):
-           * - 親 wrapper bg.canvas (light: cream-50) 上に article bg.surface
-           *   (light: cream-100) を乗せている。
-           * - 旧実装は border に bg.elevated を流用していたが、light では
-           *   bg.canvas (cream-50) と bg.elevated (cream-50) が同値で 1.0:1 の
-           *   完全消失となっていた。
-           * - border.subtle は border 専用色で、light は cream-300、dark は
-           *   sumi-450 (Issue #423 で sumi-400 から変更)。1.4.11 (Non-text
-           *   Contrast) の 3:1 を bg.canvas / bg.surface 上で満たす
-           *   (light: 3.29-3.49:1 / dark: 3.29-6.18:1)。
-           */}
-          <article
-            data-token-border="border.subtle"
-            className={css({
-              background: "bg.surface",
-              borderRadius: "lg",
-              overflow: "hidden",
-              boxShadow: "card-hover",
-              border: "1px solid",
-              borderColor: "border.subtle",
-            })}
-          >
-            {/* Article Header (R-4 / Issue #392 でグラデヘッダを廃止し
-                bg.surface のフラット背景に統一。Calm 思想 - 装飾ノイズの
-                徹底削除 - と editorial 思想に沿った変更。) */}
-            <header
-              className={css({
-                background: "bg.surface",
-                color: "fg.primary",
-                padding: "md",
-                md: {
-                  padding: "section",
-                },
-              })}
-            >
-              <Heading1
-                variant="page"
-                className={css({ marginBottom: "card" })}
-                style={heroNameStyle}
-              >
-                {post.title || UNTITLED_POST}
-              </Heading1>
+        <article className={articleStyles}>
+          <header className={headerStyles}>
+            <h1 className={titleStyles} style={heroNameStyle}>
+              {post.title || UNTITLED_POST}
+            </h1>
 
-              <MetaInfo
-                createdAt={post.createdAt}
-                updatedAt={post.updatedAt}
-                author={post.author}
-                variant="header"
-              />
-              {/*
-               * Coordinate (Issue #491 / Anchor の3つの顔のひとつ「座標」):
-               * MetaInfo (公開日 / 著者) の直下に「{label} から N 日目」を
-               * 静かに一行で添える。publishedAt 推定不可・座標 0 件・
-               * milestones 空・showCoordinate=false のいずれかで何も描画
-               * しない (Coordinate 内部で early return)。
-               */}
-              {publishedAt !== undefined && (
-                <Coordinate
-                  publishedAt={publishedAt}
-                  milestones={milestones}
-                  show={showCoordinate}
-                />
-              )}
-            </header>
-
-            {/* Divider
-             *
-             * Issue #458: 旧実装は bg.elevated を background に流用していたが、
-             * light テーマでは bg.surface (cream-100) と bg.elevated (cream-50)
-             * の差が 1.06:1 と薄く、視覚的にほぼ消失していた。
-             * border.subtle (border 専用色) で borderTop を引くことで、
-             * bg.surface 上に 3.29:1 (light) / 3.29:1 (dark) のコントラストを
-             * 確保し WCAG 1.4.11 (3:1) を満たす static divider にする。
-             * 関連: article 全体の border / nav の borderBottom と同一 token。
-             */}
-            {/* Issue #477: divider は border.subtle token を borderTop に参照する
-             * だけのため、PR #474 (Issue #422) で導入された `data-divider` ではなく
-             * 他の border 参照箇所と同じ `data-token-border` 命名に統一する
-             * (token 参照属性の命名一本化)。
-             */}
-            <div
-              data-token-border="border.subtle"
-              className={css({
-                borderTop: "1px solid",
-                borderColor: "border.subtle",
-              })}
+            <MetaInfo
+              createdAt={post.createdAt}
+              updatedAt={post.updatedAt}
+              author={post.author}
+              readingTimeMinutes={post.readingTimeMinutes}
             />
-
             {/*
-             * 目次 (TOC) は本文 prose セレクタの影響を受けないよう
-             * contentRef の外に配置する (Issue #391)。
-             * - TOC は独自の line-height (1.4) / padding 0 を持ち、本文の
-             *   max-width 57.6rem や line-height 1.85 とは別仕様 (RFC 04 §"Sticky TOC")。
-             * - contentRef 内に置くと "& ul" セレクタが TOC の <ul> にも割り込み、
-             *   レイアウトが破壊されるため物理的に分離する。
+             * Coordinate (Issue #491 / Anchor の3つの顔のひとつ「座標」):
+             * メタ情報の直下に「{label} から N 日目」を静かに一行で添える。
+             * publishedAt 推定不可・座標 0 件・milestones 空・showCoordinate=false の
+             * いずれかで何も描画しない (Coordinate 内部で early return)。
              */}
-            <div
-              className={css({
-                paddingRight: "md",
-                paddingLeft: "md",
-                paddingTop: "md",
-                md: {
-                  paddingRight: "section",
-                  paddingLeft: "section",
-                  paddingTop: "section",
-                },
-              })}
-            >
+            {publishedAt !== undefined && (
+              <Coordinate
+                publishedAt={publishedAt}
+                milestones={milestones}
+                show={showCoordinate}
+              />
+            )}
+          </header>
+
+          {/*
+           * 目次は本文のスタイル (下の data-prose-scope の中の "& ul" など) の影響を
+           * 受けないよう、本文コンテナの外に置く (Issue #391)。
+           * 項目が無い記事では置き場所ごと描画しない (空の行を作らない)。
+           */}
+          {post.toc.length > 0 && (
+            <div className={tocColumnStyles}>
               <TableOfContents toc={post.toc} />
             </div>
+          )}
 
-            {/* Article Content */}
+          <div className={bodyColumnStyles}>
             {/*
-             * Issue #391: 本文要素 (p / h1-h3 / ul / ol / blockquote / dl /
-             * figure / table / hr) に prose レイアウト制約 (max-width prose +
-             * margin auto + line-height prose、table は overflow-x auto) を
-             * 適用する本文コンテナ。
-             *
-             * Issue #480: Tripwire テストは旧来この div の className に Panda が
-             * 生成する arbitrary selector (`[&_p]:max-w_prose` 等) が含まれるか
-             * を `toContain` で検証していたが、`hash: true` で class 名が hash
-             * 化されると破綻する。PR #474 の Option A に倣い、本文コンテナで
-             * あることを `data-prose-scope` 意味属性で宣言し、テストは
-             * `toHaveAttribute` で検証する。
+             * 本文コンテナ。本文用のスタイルを当てる範囲であることを
+             * `data-prose-scope` 意味属性で宣言し、テストはこの属性で検証する
+             * (Issue #480: class 名の文字列に依存しない)。
              */}
             <div
               ref={contentRef}
               data-prose-scope="article-content"
-              className={css({
-                paddingRight: "md",
-                paddingLeft: "md",
-                paddingBottom: "md",
-                md: {
-                  paddingRight: "section",
-                  paddingLeft: "section",
-                  paddingBottom: "section",
-                },
-                fontSize: "base",
-                color: "fg.primary",
-                // Editorial Citrus 本文タイポグラフィ (Issue #391)。
-                // - 本文要素 (p / ul / ol / blockquote / dl / figure / table / hr) に
-                //   max-width 57.6rem (= 576px、62.5% 補正後) と margin auto を適用し
-                //   1 行の文字数を読みやすい範囲 (全角 36-40 字程度) に制限する。
-                // - line-height 1.85 で Newsreader + 日本語明朝混植時の行送りを確保。
-                // - 見出し (h1-h3) も同 max-width で中央寄せに揃える (左端ずれ防止)。
-                // - pre / code は max-width を制約せず、line-height: relaxed を維持
-                //   (コード/出力の横スクロール許容、装飾追加なし)。
-
-                // 見出しは本文と同じ max-width で中央寄せにすることで、
-                // 段落と見出しの左端が揃い Editorial の段組らしさを保つ。
-                "& h1, & h2, & h3": {
-                  color: "fg.primary",
-                  fontWeight: "bold",
-                  maxWidth: "prose",
-                  marginRight: "auto",
-                  marginLeft: "auto",
-                  marginTop: "xl",
-                  marginBottom: "md",
-                  lineHeight: "snug",
-                },
-                "& h1": { fontSize: "2xl" },
-                "& h2": { fontSize: "xl" },
-                "& h3": { fontSize: "lg" },
-
-                // 段落: prose 適用範囲の中核。
-                "& p": {
-                  maxWidth: "prose",
-                  marginRight: "auto",
-                  marginLeft: "auto",
-                  marginBottom: "md",
-                  lineHeight: "prose",
-                },
-
-                // リスト類: 箇条書きも本文 measure に揃える。
-                "& ul, & ol": {
-                  maxWidth: "prose",
-                  marginRight: "auto",
-                  marginLeft: "auto",
-                  paddingLeft: "lg",
-                  marginBottom: "md",
-                  lineHeight: "prose",
-                },
-                "& li": {
-                  marginBottom: "sm",
-                },
-
-                // 引用: prose 同等の measure / 行送り。
-                "& blockquote": {
-                  maxWidth: "prose",
-                  marginRight: "auto",
-                  marginLeft: "auto",
-                  marginBottom: "md",
-                  lineHeight: "prose",
-                },
-
-                // 定義リスト (GFM): RFC 04 の本文 measure に統一。
-                "& dl": {
-                  maxWidth: "prose",
-                  marginRight: "auto",
-                  marginLeft: "auto",
-                  marginBottom: "md",
-                  lineHeight: "prose",
-                },
-
-                // 画像注釈: figure 単位で中央寄せ measure に統一。
-                "& figure": {
-                  maxWidth: "prose",
-                  marginRight: "auto",
-                  marginLeft: "auto",
-                  marginBottom: "md",
-                },
-                "& figcaption": {
-                  fontSize: "sm",
-                  color: "fg.secondary",
-                  textAlign: "center",
-                  marginTop: "xs",
-                },
-
-                // 区切り線 (GFM <hr>): prose と同じ幅で中央寄せ。
-                // Issue #409 で border 専用 token (border.subtle) に置換。
-                // bg.surface 上に置かれるため 3.29:1 (light) / 3.29:1 (dark) で 1.4.11 PASS。
-                "& hr": {
-                  maxWidth: "prose",
-                  marginRight: "auto",
-                  marginLeft: "auto",
-                  marginTop: "lg",
-                  marginBottom: "lg",
-                  border: "none",
-                  borderTop: "1px solid",
-                  borderColor: "border.subtle",
-                },
-
-                // テーブル (GFM): max-width: prose で中央寄せしつつ、
-                // 内容が広い場合は overflow-x: auto で横スクロールに退避する。
-                // display: block にすることで max-width を効かせる
-                // (既定の display: table では width 制約が効かない場合がある)。
-                "& table": {
-                  display: "block",
-                  maxWidth: "prose",
-                  marginRight: "auto",
-                  marginLeft: "auto",
-                  marginBottom: "md",
-                  overflowX: "auto",
-                  borderCollapse: "collapse",
-                  fontSize: "sm-lg",
-                  lineHeight: "relaxed",
-                },
-                // Issue #409: th/td の罫線も border.subtle に置換。
-                // td 部分 (bg.surface 上) は 1.4.11 PASS。th 部分は背景 bg.elevated
-                // 上で 3:1 未達となるが、これは th 自身の "面の差" として表現する
-                // 仕様で旧実装 (bg.elevated 同値で 1.0:1) より状態悪化はしない。
-                "& th, & td": {
-                  border: "1px solid",
-                  borderColor: "border.subtle",
-                  padding: "xs sm-md",
-                  textAlign: "left",
-                },
-                "& th": {
-                  background: "bg.elevated",
-                  fontWeight: "bold",
-                },
-
-                // リンク: 本文インラインリンクは常時 underline (R-5 / Issue #393 AC (ii))。
-                // - WCAG 1.4.1 (Use of Color) 補強。色覚多様性配慮で色だけに依存しない。
-                // - Header / Footer / カード等のナビは下線なし (Link variant 側で制御)。
-                // - hover 時は色相を保ったまま下線の太さ感を強調する (text-underline-offset)。
-                "& a": {
-                  color: "accent.link",
-                  textDecoration: "underline",
-                  textUnderlineOffset: "2px",
-                  "&:hover": {
-                    color: "accent.link",
-                  },
-                },
-
-                // インラインコードの文字色は fg.code (Gruvbox 温存) を使用。
-                // 強調色 (旧 orange.light) は本 R-2c で UI 用 token に集約するため、
-                // ここはコードハイライトと整合する fg.code に揃える。
-                // prose 制約から外す (固定幅を保ち折り返さない)。
-                "& code": {
-                  background: "bg.codeInline",
-                  color: "fg.code",
-                  padding: "2xs xs-sm",
-                  borderRadius: "xs",
-                  fontSize: "sm-lg",
-                  lineHeight: "relaxed",
-                },
-
-                // コードブロック: max-width 制約を付けない (横スクロール許容)。
-                "& pre": {
-                  background: "bg.code",
-                  color: "fg.code",
-                  padding: "lg",
-                  borderRadius: "sm",
-                  overflow: "auto",
-                  margin: "lg 0",
-                  lineHeight: "relaxed",
-                },
-
-                // 画像: 親要素いっぱいに広げる (figure 内なら prose に従う)。
-                "& img": {
-                  maxWidth: "100%",
-                  height: "auto",
-                  borderRadius: "sm",
-                  margin: "md 0",
-                  display: "block",
-                  cursor: "zoom-in",
-                },
-              })}
+              className={proseStyles}
             >
               <div
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: MarkdownをHTMLとして表示するために必要。sanitizePostHtml (DOMPurify) でサニタイズ済み
@@ -527,16 +413,17 @@ export const PostDetailPage = ({
                 }}
               />
             </div>
-          </article>
-          <ImageLightbox
-            isOpen={isOpen}
-            imageSrc={imageSrc}
-            imageAlt={imageAlt}
-            onClose={close}
-          />
-          <PostNavigation olderPost={olderPost} newerPost={newerPost} />
-        </div>
+            <PostNavigation olderPost={olderPost} newerPost={newerPost} />
+          </div>
+        </article>
       </div>
-    </>
+
+      <ImageLightbox
+        isOpen={isOpen}
+        imageSrc={imageSrc}
+        imageAlt={imageAlt}
+        onClose={close}
+      />
+    </div>
   );
 };

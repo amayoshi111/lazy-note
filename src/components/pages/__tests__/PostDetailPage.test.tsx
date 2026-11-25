@@ -104,9 +104,7 @@ describe("PostDetailPage", () => {
       </MemoryRouter>,
     );
 
-    expect(
-      screen.getByRole("link", { name: "TOPに戻る" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "TOPに戻る" })).toBeInTheDocument();
     // 矢印付きの名前ではアクセシブル名として一致しないことも保証する。
     expect(
       screen.queryByRole("link", { name: "← TOPに戻る" }),
@@ -338,86 +336,45 @@ describe("PostDetailPage", () => {
     });
   });
 
-  // ==========================================================================
-  // Issue #409 / Issue #422: bg.muted / border.subtle 階層 token 新設の Tripwire。
-  //
-  // R-2b/R-2c で旧 5 段階を 3 段階に圧縮した結果、border に bg.elevated を流用
-  // すると外側 bg.canvas と同色化して視覚消失する設計上の問題があった。
-  // border.subtle (border 専用色) で 1.4.11 (3:1) を確保している。
-  //
-  // Issue #422 (PR #474): className 文字列マッチを `data-token-border` /
-  // `data-divider` 意味属性に置換 (Panda `hash: true` 耐性、Option A)。
-  // これらの data 属性は master には存在せず PR #474 で導入された。
-  // Issue #477: divider も border token を参照するだけのため、PR #474 で導入した
-  // `data-divider` を他の border 参照と同じ `data-token-border` 命名に統一した。
-  // ==========================================================================
-  describe("border.subtle 階層 token 適用", () => {
-    it("article は border.subtle 専用 token を border として宣言する", () => {
-      const { container } = render(
-        <MemoryRouter>
-          <PostDetailPage
-            post={mockPost}
-            olderPost={null}
-            newerPost={null}
-            milestones={[]}
-          />
-        </MemoryRouter>,
-      );
+  // 記事詳細では、一覧と同じ読了時間をタイトルの下に表示する。
+  it("読了時間を表示できる", () => {
+    render(
+      <MemoryRouter>
+        <PostDetailPage
+          post={{ ...mockPost, readingTimeMinutes: 4 }}
+          olderPost={null}
+          newerPost={null}
+          milestones={[]}
+        />
+      </MemoryRouter>,
+    );
 
-      const article = container.querySelector("article");
-      expect(article).toBeInTheDocument();
-      expect(article).toHaveAttribute("data-token-border", "border.subtle");
-    });
+    expect(screen.getByText("4分で読了")).toBeInTheDocument();
+  });
 
-    it("ページナビゲーションは border.subtle を border として宣言する", () => {
-      const { container } = render(
-        <MemoryRouter>
-          <PostDetailPage
-            post={mockPost}
-            olderPost={null}
-            newerPost={null}
-            milestones={[]}
-          />
-        </MemoryRouter>,
-      );
+  // 目次が無い記事では、目次の置き場所ごと描画しない (空の領域を作らない)。
+  it("目次の項目が無い記事では目次を表示しない", () => {
+    render(
+      <MemoryRouter>
+        <PostDetailPage
+          post={{ ...mockPost, toc: [] }}
+          olderPost={null}
+          newerPost={null}
+          milestones={[]}
+        />
+      </MemoryRouter>,
+    );
 
-      const nav = container.querySelector(
-        'nav[aria-label="ページナビゲーション"]',
-      );
-      expect(nav).toBeInTheDocument();
-      expect(nav).toHaveAttribute("data-token-border", "border.subtle");
-    });
-
-    // Issue #458: header と本文の間の 1px divider は、旧実装で bg.elevated を
-    // background に流用しており light テーマでは bg.surface との差が 1.06:1 と
-    // 薄く視覚消失していた。borderTop + border.subtle に変更したことを
-    // `data-token-border` 意味属性で保証する (PR #474 で導入された `data-divider`
-    // を Issue #477 で他の border 参照と同じ命名に統一)。
-    it("header と本文の間の divider が borderTop + border.subtle を宣言する", () => {
-      const { container } = render(
-        <MemoryRouter>
-          <PostDetailPage
-            post={mockPost}
-            olderPost={null}
-            newerPost={null}
-            milestones={[]}
-          />
-        </MemoryRouter>,
-      );
-
-      const article = container.querySelector("article");
-      const header = article?.querySelector("header");
-      const divider = header?.nextElementSibling as HTMLElement | null;
-      expect(divider).not.toBeNull();
-      expect(divider).toHaveAttribute("data-token-border", "border.subtle");
-    });
+    expect(
+      screen.queryByRole("button", { name: "目次" }),
+    ).not.toBeInTheDocument();
   });
 
   // ==========================================================================
   // View Transitions Hero morph (Issue #397)
   //
   // 記事詳細の H1 に `view-transition-name: post-{id}` のインラインスタイルが
-  // 付与され、HomePage 側 (FeaturedCard / BentoCard / IndexRow) のタイトルと
+  // 付与され、HomePage 側の一覧の行 (PostRow) のタイトルと
   // 同じ name で morph が成立することを検証する。
   // ==========================================================================
   describe("View Transitions Hero morph", () => {

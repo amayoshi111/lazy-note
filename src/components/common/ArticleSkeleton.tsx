@@ -1,200 +1,126 @@
 import { memo } from "react";
 import { css } from "../../../styled-system/css";
+import {
+  bodyColumnStyles,
+  gridStyles,
+  leftColumnStyles,
+  pageContainerStyles,
+  pageMainStyles,
+} from "../../styles/layout";
 
-const wrapperStyles = css({
-  background: "bg.canvas",
-  minHeight: "100vh",
+/**
+ * 記事詳細の読み込み中に出す骨組み。
+ *
+ * 記事詳細 (PostDetailPage) と同じ列の位置 (左 2 カラムに戻るリンク、3 カラム目から
+ * タイトルと本文) に帯を置き、読み込み後に配置がずれないようにする。
+ */
+
+const gridRowGapStyles = css({
+  rowGap: "3x",
 });
 
-const innerStyles = css({
-  maxWidth: "article",
-  margin: "0 auto",
-  padding: "md",
-  md: {
-    padding: "content",
-  },
-});
-
-// border は bg.surface 同色 / bg.elevated 同色で視覚消失していたため border.subtle
-// に置換 (Issue #409)。R-2b では bg.elevated 反転で凌いでいたが、light テーマでは
-// 外側 bg.canvas (cream-50) と同色になり 1.0:1 で再消失する設計上の限界があった。
-// border.subtle は border 専用色で、WCAG 1.4.11 の 3:1 を bg.canvas / bg.surface
-// 上で満たす (light: 3.29-3.49:1 / dark: 3.29-6.18:1)。
-const articleStyles = css({
-  background: "bg.surface",
-  borderRadius: "lg",
-  overflow: "hidden",
-  boxShadow: "card-hover",
-  border: "1px solid",
-  borderColor: "border.subtle",
-});
-
-// R-4 (Issue #392) で gradients.primary をフラットな bg.surface に置換。
-// Calm 思想 (装飾ノイズの徹底削除) に沿ってグラデヘッダを廃止し、
-// 紙面的な editorial 表現に揃える。
-const headerStyles = css({
-  background: "bg.surface",
-  padding: "md",
-  md: {
-    padding: "section",
-  },
-});
-
-// Issue #458: 旧実装は bg.elevated を background に流用していたが、light テーマ
-// では bg.surface (cream-100) と bg.elevated (cream-50) の差が 1.06:1 と薄く
-// 視覚的にほぼ消失していた。border.subtle (border 専用色) で borderTop を引く
-// ことで、bg.surface 上に 3.29:1 (light) / 3.29:1 (dark) のコントラストを確保し
-// WCAG 1.4.11 (3:1) を満たす static divider にする。
-// 関連: articleStyles の border / navStyles の borderBottom と同一 token。
-const dividerStyles = css({
-  borderTop: "1px solid",
-  borderColor: "border.subtle",
-});
-
-const contentStyles = css({
-  paddingRight: "md",
-  paddingLeft: "md",
-  paddingBottom: "md",
-  paddingTop: "lg",
-  md: {
-    paddingRight: "section",
-    paddingLeft: "section",
-    paddingBottom: "section",
-    paddingTop: "xl",
-  },
-});
-
+// 帯。bg.muted は bg.canvas との差が小さい面の色 (読み込み中であることは
+// aria-busy と点滅で伝える)。
 const skeletonBase = css({
-  background: "bg.elevated",
+  background: "bg.muted",
   borderRadius: "sm",
   animation: "skeleton-pulse 1.5s ease-in-out infinite",
 });
 
-const headerTitleStyles = css({
-  height: "32px",
+// 戻るリンクの位置。
+const backLinkStyles = css({
+  height: "27px",
+  width: "112px",
+});
+
+// タイトル (36px の文字の 1 行分) とメタ情報。
+const titleStyles = css({
+  height: "50px",
   width: "70%",
-  marginBottom: "card",
-  opacity: 0.6,
 });
 
-const headerMetaStyles = css({
-  height: "16px",
-  width: "200px",
-  opacity: 0.6,
+const metaStyles = css({
+  height: "27px",
+  width: "240px",
+  marginTop: "2x",
 });
 
-const paragraphFullStyles = css({
-  height: "16px",
-  width: "100%",
-  marginBottom: "sm-md",
-});
-
-const paragraphPartialStyles = css({
-  height: "16px",
-  width: "85%",
-  marginBottom: "sm-md",
-});
-
-const paragraphShortStyles = css({
-  height: "16px",
-  width: "60%",
-  marginBottom: "lg",
-});
-
-const headingStyles = css({
-  height: "22px",
-  width: "40%",
-  marginTop: "xl",
-  marginBottom: "md",
-});
-
-// borderBottom も bg.surface 同色で視覚消失していたため border.subtle に置換
-// (Issue #409。R-2b の bg.elevated 反転は light で外側 canvas と同色化する
-// 制約があり、border 専用色に置き換えて 1.4.11 3:1 を確保する)。
-const navStyles = css({
-  background: "bg.surface",
-  borderBottom: "1px solid",
-  borderColor: "border.subtle",
-  paddingY: "sm-md",
-  paddingX: "md",
+// 本文。段落の間は 40px、行の間は 8px。
+const paragraphStyles = css({
   display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  md: {
-    paddingX: "0",
+  flexDirection: "column",
+  gap: "1x",
+  marginTop: "5x",
+});
+
+const lineStyles = css({
+  height: "19px",
+});
+
+const lineWidthStyles = {
+  full: css({ width: "100%" }),
+  partial: css({ width: "85%" }),
+  short: css({ width: "60%" }),
+};
+
+/** 段落ごとの行 (id は key 用、width は帯の幅)。同じ並びを繰り返さないよう段落で変える */
+const PARAGRAPHS = [
+  {
+    id: "p1",
+    lines: [
+      { id: "l1", width: "full" },
+      { id: "l2", width: "partial" },
+      { id: "l3", width: "short" },
+    ],
   },
-});
+  {
+    id: "p2",
+    lines: [
+      { id: "l1", width: "full" },
+      { id: "l2", width: "full" },
+      { id: "l3", width: "partial" },
+      { id: "l4", width: "short" },
+    ],
+  },
+  {
+    id: "p3",
+    lines: [
+      { id: "l1", width: "full" },
+      { id: "l2", width: "partial" },
+      { id: "l3", width: "full" },
+      { id: "l4", width: "short" },
+    ],
+  },
+] as const;
 
-const navInnerStyles = css({
-  maxWidth: "content",
-  width: "100%",
-});
-
-const navLinkStyles = css({
-  height: "16px",
-  width: "120px",
-});
-
-/**
- * 記事詳細ページ用スケルトンローディング
- *
- * Issue #422: Tripwire テストを className 文字列マッチから `data-token-*`
- * 属性ベースに刷新。Panda `hash: true` 有効化時にも破綻しないよう、
- * border.subtle / borderTop divider を参照していることを意味属性で宣言する。
- *
- * Issue #477: divider 要素も実態は `border.subtle` token を borderTop に
- * 参照しているだけのため、PR #474 (Issue #422) で導入された
- * `data-divider="border.subtle"` を他の border 参照と同じ `data-token-border`
- * 命名に統一する (token 参照属性の命名スキーマを一本化)。
- */
 export const ArticleSkeleton = memo(() => {
   return (
-    <div role="status" aria-busy="true" aria-label="記事を読み込み中">
-      {/* ナビゲーションスケルトン */}
-      <nav className={navStyles} data-token-border="border.subtle">
-        <div className={navInnerStyles}>
-          <div className={`${skeletonBase} ${navLinkStyles}`} />
-        </div>
-      </nav>
-
-      <div className={wrapperStyles}>
-        <div className={innerStyles}>
-          <article className={articleStyles} data-token-border="border.subtle">
-            {/* ヘッダースケルトン */}
-            <header className={headerStyles}>
-              <div className={`${skeletonBase} ${headerTitleStyles}`} />
-              <div className={`${skeletonBase} ${headerMetaStyles}`} />
-            </header>
-
-            <div className={dividerStyles} data-token-border="border.subtle" />
-
-            {/* コンテンツスケルトン */}
-            <div className={contentStyles}>
-              {/* 段落1 */}
-              <div className={`${skeletonBase} ${paragraphFullStyles}`} />
-              <div className={`${skeletonBase} ${paragraphPartialStyles}`} />
-              <div className={`${skeletonBase} ${paragraphShortStyles}`} />
-
-              {/* 見出し */}
-              <div className={`${skeletonBase} ${headingStyles}`} />
-
-              {/* 段落2 */}
-              <div className={`${skeletonBase} ${paragraphFullStyles}`} />
-              <div className={`${skeletonBase} ${paragraphFullStyles}`} />
-              <div className={`${skeletonBase} ${paragraphPartialStyles}`} />
-              <div className={`${skeletonBase} ${paragraphShortStyles}`} />
-
-              {/* 見出し */}
-              <div className={`${skeletonBase} ${headingStyles}`} />
-
-              {/* 段落3 */}
-              <div className={`${skeletonBase} ${paragraphFullStyles}`} />
-              <div className={`${skeletonBase} ${paragraphPartialStyles}`} />
-              <div className={`${skeletonBase} ${paragraphFullStyles}`} />
-              <div className={`${skeletonBase} ${paragraphShortStyles}`} />
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="記事を読み込み中"
+      className={`${pageContainerStyles} ${pageMainStyles}`}
+    >
+      <div className={`${gridStyles} ${gridRowGapStyles}`}>
+        <nav className={leftColumnStyles}>
+          <div className={`${skeletonBase} ${backLinkStyles}`} />
+        </nav>
+        <article className={bodyColumnStyles}>
+          <header>
+            <div className={`${skeletonBase} ${titleStyles}`} />
+            <div className={`${skeletonBase} ${metaStyles}`} />
+          </header>
+          {PARAGRAPHS.map((paragraph) => (
+            <div key={paragraph.id} className={paragraphStyles}>
+              {paragraph.lines.map((line) => (
+                <div
+                  key={line.id}
+                  className={`${skeletonBase} ${lineStyles} ${lineWidthStyles[line.width]}`}
+                />
+              ))}
             </div>
-          </article>
-        </div>
+          ))}
+        </article>
       </div>
     </div>
   );
