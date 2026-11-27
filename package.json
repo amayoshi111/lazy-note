@@ -39,7 +39,7 @@
     "@pandacss/preset-base": "^2.5.0",
     "@pandacss/preset-panda": "^2.5.0",
     "@playwright/test": "^1.65.1",
-    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/jest-dom": "^8.0.0",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.12",
     "@types/culori": "~4.0.0",
